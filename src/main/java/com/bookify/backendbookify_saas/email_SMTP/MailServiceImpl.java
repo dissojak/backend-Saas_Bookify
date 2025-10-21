@@ -26,7 +26,7 @@ public class MailServiceImpl implements MailService {
     @Value("${application.base-url:http://localhost:8088}")
     private String baseUrl;
 
-    @Value("${application.logo-url:https://asset.cloudinary.com/duvougrqx/83076dd6e21bdecc8a5c3484f4324805}")
+    @Value("${application.logo-url:https://res.cloudinary.com/duvougrqx/image/upload/v1761066622/Bookify/favicon_ivhxzf.png}")
     private String logoUrl;
 
     @Override
@@ -66,7 +66,7 @@ public class MailServiceImpl implements MailService {
                 "<div style=\"max-width:520px;margin:0 auto;padding:28px;background:#ffffff;border-radius:10px;box-shadow:0 4px 18px rgba(15,23,42,0.06);\">" +
 
                 "<div style=\"text-align:left;margin-bottom:18px;\">" +
-                "<img src=\"" + logoUrl + "\" alt=\"Bookify\" style=\"height:34px;display:inline-block;vertical-align:middle;\" onerror=\"this.style.display='none'\" />" +
+                "<img src=\"" + logoUrl + "\" alt=\"Bookify\" style=\"height:102px;display:inline-block;vertical-align:middle;\" onerror=\"this.style.display='none'\" />" +
                 "</div>" +
 
                 "<h2 style=\"color:" + accent + ";margin:0 0 8px;font-size:20px;\">Account Deletion Notice</h2>" +
@@ -137,7 +137,7 @@ public class MailServiceImpl implements MailService {
 
                 "<div style=\"max-width:520px;margin:0 auto;padding:28px;background:#ffffff;border-radius:10px;box-shadow:0 4px 18px rgba(15,23,42,0.06);\">" +
                 "<div style=\"text-align:left;margin-bottom:18px;\">" +
-                "<img src=\"" + logoUrl + "\" alt=\"Bookify\" style=\"height:34px;display:inline-block;vertical-align:middle;\" onerror=\"this.style.display='none'\" />" +
+                "<img src=\"" + logoUrl + "\" alt=\"Bookify\" style=\"height:102px;display:inline-block;vertical-align:middle;\" onerror=\"this.style.display='none'\" />" +
                 "</div>" +
 
                 "<h2 style=\"color:" + accent + ";margin:0 0 8px;font-size:20px;\">Welcome to Bookify</h2>" +

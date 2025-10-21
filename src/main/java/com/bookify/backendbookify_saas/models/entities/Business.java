@@ -36,6 +36,9 @@ public class Business {
     private String phone;
     private String email;
 
+    @Column(length = 2000)
+    private String description;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private BusinessStatus status = BusinessStatus.DRAFT;
@@ -73,6 +76,11 @@ public class Business {
     @OneToMany(mappedBy = "business", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<BusinessRating> ratings = new ArrayList<>();
 
+    // Add evaluations: cascade from Business -> BusinessEvaluation so saving the parent persists children
+    @OneToMany(mappedBy = "business", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonManagedReference
+    private List<BusinessEvaluation> evaluations = new ArrayList<>();
+
     // helper methods
     public void addService(Service s) {
         services.add(s);
@@ -105,6 +113,17 @@ public class Business {
     public void removeRating(BusinessRating br) {
         ratings.remove(br);
         br.setBusiness(null);
+    }
+
+    // helper for evaluations
+    public void addEvaluation(BusinessEvaluation ev) {
+        evaluations.add(ev);
+        ev.setBusiness(this);
+    }
+
+    public void removeEvaluation(BusinessEvaluation ev) {
+        evaluations.remove(ev);
+        ev.setBusiness(null);
     }
 
     @PrePersist

@@ -1,10 +1,13 @@
 package com.bookify.backendbookify_saas.controllers;
 
 import com.bookify.backendbookify_saas.models.dtos.BusinessCreateRequest;
+import com.bookify.backendbookify_saas.models.dtos.BusinessEvaluationResponse;
 import com.bookify.backendbookify_saas.models.dtos.BusinessResponse;
 import com.bookify.backendbookify_saas.models.dtos.BusinessUpdateRequest;
 import com.bookify.backendbookify_saas.models.entities.Business;
+import com.bookify.backendbookify_saas.models.entities.BusinessEvaluation;
 import com.bookify.backendbookify_saas.models.entities.Category;
+import com.bookify.backendbookify_saas.repositories.BusinessEvaluationRepository;
 import com.bookify.backendbookify_saas.services.BusinessService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -16,6 +19,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/v1/owner/businesses")
 @RequiredArgsConstructor
@@ -23,6 +28,7 @@ import org.springframework.web.bind.annotation.*;
 public class BusinessOwnerController {
 
     private final BusinessService businessService;
+    private final BusinessEvaluationRepository evaluationRepository;
 
     @PostMapping
     @PreAuthorize("hasRole('BUSINESS_OWNER')")
@@ -38,8 +44,11 @@ public class BusinessOwnerController {
                 request.getLocation(),
                 request.getPhone(),
                 request.getEmail(),
-                request.getCategoryId()
+                request.getCategoryId(),
+                request.getDescription()
         );
+
+        BusinessEvaluationResponse evalDto = mapLatestEvaluation(created);
 
         BusinessResponse response = BusinessResponse.builder()
                 .id(created.getId())
@@ -51,6 +60,8 @@ public class BusinessOwnerController {
                 .categoryId(created.getCategory() != null ? created.getCategory().getId() : null)
                 .categoryName(created.getCategory() != null ? created.getCategory().getName() : null)
                 .ownerId(created.getOwner() != null ? created.getOwner().getId() : null)
+                .description(created.getDescription())
+                .evaluation(evalDto)
                 .build();
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -79,6 +90,7 @@ public class BusinessOwnerController {
         if (request.getLocation() != null) input.setLocation(request.getLocation());
         if (request.getPhone() != null) input.setPhone(request.getPhone());
         if (request.getEmail() != null) input.setEmail(request.getEmail());
+        if (request.getDescription() != null) input.setDescription(request.getDescription());
         if (request.getCategoryId() != null) {
             Category stub = new Category();
             stub.setId(request.getCategoryId());
@@ -86,6 +98,8 @@ public class BusinessOwnerController {
         }
 
         var updated = businessService.updateBusiness(businessId, input, null);
+
+        BusinessEvaluationResponse evalDto = mapLatestEvaluation(updated);
 
         BusinessResponse response = BusinessResponse.builder()
                 .id(updated.getId())
@@ -97,7 +111,37 @@ public class BusinessOwnerController {
                 .categoryId(updated.getCategory() != null ? updated.getCategory().getId() : null)
                 .categoryName(updated.getCategory() != null ? updated.getCategory().getName() : null)
                 .ownerId(updated.getOwner() != null ? updated.getOwner().getId() : null)
+                .description(updated.getDescription())
+                .evaluation(evalDto)
                 .build();
         return ResponseEntity.ok(response);
+    }
+
+    private BusinessEvaluationResponse mapLatestEvaluation(Business business) {
+        List<BusinessEvaluation> list = evaluationRepository.findByBusinessOrderByCreatedAtDesc(business);
+        if (list.isEmpty()) return null;
+        BusinessEvaluation e = list.get(0);
+        return BusinessEvaluationResponse.builder()
+                .id(e.getId())
+                .brandingScore(e.getBrandingScore())
+                .nameProfessionalismScore(e.getNameProfessionalismScore())
+                .emailProfessionalismScore(e.getEmailProfessionalismScore())
+                .descriptionProfessionalismScore(e.getDescriptionProfessionalismScore())
+                .locationScore(e.getLocationScore())
+                .categoryScore(e.getCategoryScore())
+                .overallScore(e.getOverallScore())
+                .nameDetails(e.getNameDetails())
+                .emailDetails(e.getEmailDetails())
+                .descriptionDetails(e.getDescriptionDetails())
+                .brandingDetails(e.getBrandingDetails())
+                .locationDetails(e.getLocationDetails())
+                .categoryDetails(e.getCategoryDetails())
+                .nameSuggestions(e.getNameSuggestions())
+                .emailSuggestions(e.getEmailSuggestions())
+                .descriptionSuggestions(e.getDescriptionSuggestions())
+                .brandingSuggestions(e.getBrandingSuggestions())
+                .source(e.getSource())
+                .createdAt(e.getCreatedAt())
+                .build();
     }
 }

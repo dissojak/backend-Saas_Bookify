@@ -20,5 +20,8 @@ public class BusinessResponse {
     private Long categoryId;
     private String categoryName;
     private Long ownerId;
-}
+    private String description;
 
+    // Embed the latest evaluation in the response
+    private BusinessEvaluationResponse evaluation;
+}

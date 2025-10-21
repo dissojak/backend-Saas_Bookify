@@ -31,5 +31,8 @@ public class BusinessCreateRequest {
 
     @NotNull(message = "La catégorie est obligatoire")
     private Long categoryId;
+
+    @Size(max = 2000, message = "La description ne doit pas dépasser 2000 caractères")
+    private String description;
 }
 

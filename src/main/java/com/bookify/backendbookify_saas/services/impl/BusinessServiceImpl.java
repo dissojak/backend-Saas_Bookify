@@ -32,7 +32,7 @@ public class BusinessServiceImpl implements BusinessService {
 
     @Override
     @Transactional
-    public Business createBusinessForOwner(String ownerEmail, String name, String location, String phone, String email, Long categoryId) {
+    public Business createBusinessForOwner(String ownerEmail, String name, String location, String phone, String email, Long categoryId, String description) {
         // Récupérer l'utilisateur
         User user = userRepository.findByEmail(ownerEmail)
                 .orElseThrow(() -> new IllegalArgumentException("Utilisateur non trouvé"));
@@ -63,9 +63,15 @@ public class BusinessServiceImpl implements BusinessService {
         business.setLocation(location);
         business.setPhone(phone);
         business.setEmail(email);
+        business.setDescription(description);
         business.setOwner((BusinessOwner) userRepository.findByEmail(ownerEmail).orElseThrow());
         business.setCategory(category);
-        return businessRepository.save(business); // le listener déclenchera l'évaluation
+        Business saved = businessRepository.save(business);
+
+        // Trigger evaluation after business is fully persisted
+        evaluationService.evaluateAndSave(saved);
+
+        return saved;
     }
 
     @Override
@@ -73,18 +79,55 @@ public class BusinessServiceImpl implements BusinessService {
     public Business updateBusiness(Long id, Business businessInput, String tenantId) {
         Business existing = businessRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Business introuvable"));
-        if (businessInput.getName() != null) existing.setName(businessInput.getName());
-        if (businessInput.getLocation() != null) existing.setLocation(businessInput.getLocation());
-        if (businessInput.getPhone() != null) existing.setPhone(businessInput.getPhone());
-        if (businessInput.getEmail() != null) existing.setEmail(businessInput.getEmail());
+
+        // Track which fields were updated
+        boolean nameChanged = false;
+        boolean emailChanged = false;
+        boolean phoneChanged = false;
+        boolean locationChanged = false;
+        boolean descriptionChanged = false;
+        boolean categoryChanged = false;
+
+        if (businessInput.getName() != null) {
+            nameChanged = !businessInput.getName().equals(existing.getName());
+            existing.setName(businessInput.getName());
+        }
+        if (businessInput.getLocation() != null) {
+            locationChanged = !businessInput.getLocation().equals(existing.getLocation());
+            existing.setLocation(businessInput.getLocation());
+        }
+        if (businessInput.getPhone() != null) {
+            phoneChanged = !businessInput.getPhone().equals(existing.getPhone());
+            existing.setPhone(businessInput.getPhone());
+        }
+        if (businessInput.getEmail() != null) {
+            emailChanged = !businessInput.getEmail().equals(existing.getEmail());
+            existing.setEmail(businessInput.getEmail());
+        }
+        if (businessInput.getDescription() != null) {
+            descriptionChanged = (existing.getDescription() == null ||
+                                !businessInput.getDescription().equals(existing.getDescription()));
+            existing.setDescription(businessInput.getDescription());
+        }
         if (businessInput.getCategory() != null && businessInput.getCategory().getId() != null) {
             Category cat = entityManager.find(Category.class, businessInput.getCategory().getId());
             if (cat == null) {
                 throw new IllegalArgumentException("Catégorie introuvable");
             }
+            categoryChanged = existing.getCategory() == null ||
+                            !existing.getCategory().getId().equals(cat.getId());
             existing.setCategory(cat);
         }
-        return businessRepository.save(existing); // le listener déclenchera l'évaluation
+        Business updated = businessRepository.save(existing);
+
+        // Only update evaluation if relevant fields changed
+        if (nameChanged || emailChanged || phoneChanged || locationChanged ||
+            descriptionChanged || categoryChanged) {
+            evaluationService.updateEvaluation(updated, nameChanged, emailChanged,
+                phoneChanged, locationChanged, descriptionChanged, categoryChanged);
+        }
+
+        return updated;
     }
 
     @Override

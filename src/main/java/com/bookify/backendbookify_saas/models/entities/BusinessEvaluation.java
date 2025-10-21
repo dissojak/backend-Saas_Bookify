@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import java.time.LocalDateTime;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 
 @Entity
 @Table(name = "business_evaluations")
@@ -23,22 +24,29 @@ public class BusinessEvaluation {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "business_id", nullable = false, foreignKey = @ForeignKey(name = "fk_eval_business"))
+    @JsonBackReference
     private Business business;
 
     @Column(name = "branding_score")
-    private int brandingScore; // 0..100
+    private Integer brandingScore; // 0..100
 
     @Column(name = "name_professionalism_score")
-    private int nameProfessionalismScore; // 0..100
+    private Integer nameProfessionalismScore; // 0..100
 
     @Column(name = "email_professionalism_score")
-    private int emailProfessionalismScore; // 0..100
+    private Integer emailProfessionalismScore; // 0..100
 
     @Column(name = "description_professionalism_score")
-    private int descriptionProfessionalismScore; // 0..100
+    private Integer descriptionProfessionalismScore; // 0..100
+
+    @Column(name = "location_score")
+    private Integer locationScore; // 0..100
+
+    @Column(name = "category_score")
+    private Integer categoryScore; // 0..100 - how well the business matches the selected category
 
     @Column(name = "overall_score")
-    private int overallScore; // 0..100
+    private Integer overallScore; // 0..100
 
     @Column(name = "name_details", length = 1000)
     private String nameDetails;
@@ -51,6 +59,12 @@ public class BusinessEvaluation {
 
     @Column(name = "branding_details", length = 1000)
     private String brandingDetails;
+
+    @Column(name = "location_details", length = 1000)
+    private String locationDetails;
+
+    @Column(name = "category_details", length = 1000)
+    private String categoryDetails;
 
     @Column(name = "name_suggestions", length = 1000)
     private String nameSuggestions;

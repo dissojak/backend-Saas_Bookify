@@ -26,5 +26,8 @@ public class BusinessUpdateRequest {
     private String email;          // optionnel
 
     private Long categoryId;       // optionnel
+
+    @Size(max = 2000, message = "La description ne doit pas dépasser 2000 caractères")
+    private String description;  // optionnel
 }
 

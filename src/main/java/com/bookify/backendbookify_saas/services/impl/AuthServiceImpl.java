@@ -119,41 +119,42 @@ public class AuthServiceImpl implements AuthService {
     }
 
     /**
-     * Active un compte utilisateur
+     * Activate a user account
      */
     @Override
     @Transactional
     public String activateAccount(String token) {
-        // 1. Récupérer le token d'activation
+        // 1. Retrieve the activation token
         ActivationToken activationToken = activationTokenRepository.findByToken(token)
-                .orElseThrow(() -> new InvalidTokenException("Token d'activation invalide"));
+                .orElseThrow(() -> new InvalidTokenException("Invalid activation token or already used"));
 
-        // 2. Vérifier si le token a expiré
+        // 2. Check if the token has expired
         if (activationToken.isExpired()) {
             activationTokenRepository.delete(activationToken);
-            throw new InvalidTokenException("Le token d'activation a expiré");
+            throw new InvalidTokenException("Activation token has expired");
         }
 
-        // 3. Récupérer l'utilisateur
+        // 3. Retrieve the user
         User user = activationToken.getUser();
 
-        // 4. Vérifier si le compte n'est pas déjà activé
+        // 4. Check if the account is already activated
         if (user.getStatus() == UserStatusEnum.VERIFIED) {
             activationTokenRepository.delete(activationToken);
-            return "Votre compte est déjà activé";
+            return "Account is already activated.";
         }
 
-        // 5. Activer le compte
+        // 5. Activate the account
         user.setStatus(UserStatusEnum.VERIFIED);
         userRepository.save(user);
 
-        // 6. Supprimer le token d'activation
+        // 6. Delete the activation token
         activationTokenRepository.delete(activationToken);
 
-        // 7. Envoyer un email de confirmation
+        // 7. Send activation confirmation email
         mailService.sendActivationConfirmationEmail(user.getEmail(), user.getName());
 
-        return "Votre compte a été activé avec succès. Vous pouvez maintenant vous connecter.";
+        // 8. Return success message in English
+        return "Your account has been activated successfully. You can now log in.";
     }
 
     /**

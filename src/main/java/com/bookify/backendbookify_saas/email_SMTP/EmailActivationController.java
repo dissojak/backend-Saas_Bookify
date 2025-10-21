@@ -33,7 +33,7 @@ public class EmailActivationController {
     @Operation(summary = "Activate a user account", description = "Activates the account using the token received by email")
     public Object activateAccount(@RequestParam("token") String token) {
         String message = authService.activateAccount(token);
-        boolean success = message.toLowerCase().contains("success");
+        boolean success = message.toLowerCase().contains("successfully");
 
         if ("prod".equals(activeProfile)) {
             // Production → always redirect to production frontend

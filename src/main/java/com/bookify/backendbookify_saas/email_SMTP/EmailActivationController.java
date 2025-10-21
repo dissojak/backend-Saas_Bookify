@@ -1,14 +1,9 @@
-package com.bookify.backendbookify_saas.email;
+package com.bookify.backendbookify_saas.email_SMTP;
 
-import com.bookify.backendbookify_saas.models.dtos.AuthResponse;
-import com.bookify.backendbookify_saas.models.dtos.LoginRequest;
-import com.bookify.backendbookify_saas.models.dtos.SignupRequest;
 import com.bookify.backendbookify_saas.services.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

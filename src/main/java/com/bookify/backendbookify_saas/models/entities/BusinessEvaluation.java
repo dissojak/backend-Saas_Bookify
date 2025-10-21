@@ -1,4 +1,77 @@
 package com.bookify.backendbookify_saas.models.entities;
 
-public class ivaluation {
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "business_evaluations")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class BusinessEvaluation {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "business_id", nullable = false, foreignKey = @ForeignKey(name = "fk_eval_business"))
+    private Business business;
+
+    @Column(name = "branding_score")
+    private int brandingScore; // 0..100
+
+    @Column(name = "name_professionalism_score")
+    private int nameProfessionalismScore; // 0..100
+
+    @Column(name = "email_professionalism_score")
+    private int emailProfessionalismScore; // 0..100
+
+    @Column(name = "description_professionalism_score")
+    private int descriptionProfessionalismScore; // 0..100
+
+    @Column(name = "overall_score")
+    private int overallScore; // 0..100
+
+    @Column(name = "name_details", length = 1000)
+    private String nameDetails;
+
+    @Column(name = "email_details", length = 1000)
+    private String emailDetails;
+
+    @Column(name = "description_details", length = 1000)
+    private String descriptionDetails;
+
+    @Column(name = "branding_details", length = 1000)
+    private String brandingDetails;
+
+    @Column(name = "name_suggestions", length = 1000)
+    private String nameSuggestions;
+
+    @Column(name = "email_suggestions", length = 1000)
+    private String emailSuggestions;
+
+    @Column(name = "description_suggestions", length = 1000)
+    private String descriptionSuggestions;
+
+    @Column(name = "branding_suggestions", length = 1000)
+    private String brandingSuggestions;
+
+    @Column(name = "source", length = 50)
+    private String source; // ex: "AI" or "HEURISTIC"
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    void onCreate() {
+        createdAt = LocalDateTime.now();
+    }
 }

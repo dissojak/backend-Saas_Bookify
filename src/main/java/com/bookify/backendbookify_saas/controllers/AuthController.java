@@ -1,4 +1,4 @@
-package com.bookify.backendbookify_saas.controllers.client;
+package com.bookify.backendbookify_saas.controllers;
 
 import com.bookify.backendbookify_saas.models.dtos.AuthResponse;
 import com.bookify.backendbookify_saas.models.dtos.LoginRequest;
@@ -12,14 +12,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
-
 /**
  * Contrôleur pour gérer l'authentification (inscription et connexion)
  * Architecture Clean: Reçoit les requêtes, valide les données, appelle le service
  */
 @RestController
-@RequestMapping("/v1/client/auth")
+@RequestMapping("/v1/auth")
 @RequiredArgsConstructor
 @Tag(name = "Authentification", description = "Endpoints pour l'inscription et la connexion")
 public class AuthController {
@@ -27,11 +25,11 @@ public class AuthController {
     private final AuthService authService;
 
     /**
-     * Inscription d'un nouveau client
+     * Inscription d'un nouveau utilisateur
      * Les exceptions sont gérées par le GlobalExceptionHandler
      */
     @PostMapping("/signup")
-    @Operation(summary = "Inscription d'un nouveau client", description = "Crée un nouveau compte client")
+    @Operation(summary = "Inscription d'un nouveau utilisateur", description = "Crée un nouveau compte utilisateur")
     public ResponseEntity<AuthResponse> signup(@Valid @RequestBody SignupRequest request) {
         AuthResponse response = authService.signup(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);

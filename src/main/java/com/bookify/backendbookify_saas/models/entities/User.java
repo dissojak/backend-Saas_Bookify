@@ -45,6 +45,9 @@ public class User {
     @Column(nullable = false)
     private UserStatusEnum status;
 
+    // Map avatarUrl to a large text column so long URLs don't get truncated by default VARCHAR(255)
+    @Lob
+    @Column(name = "avatar_url", columnDefinition = "TEXT")
     private String avatarUrl;
 
     @Column(name = "created_at", nullable = false, updatable = false)

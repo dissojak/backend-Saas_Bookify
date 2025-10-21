@@ -1,8 +1,8 @@
-# Architecture Clean - Signup Feature
+# Clean Architecture - Signup Feature
 
-## 📐 Structure Stricte Implémentée
+## 📐 Implemented Strict Structure
 
-L'architecture suit strictement le pattern Clean Architecture pour le flux d'inscription :
+The architecture strictly follows the Clean Architecture pattern for the signup flow:
 
 ```
 Controller → DTO → Service Interface → Service Implementation → Repository → Entity
@@ -10,21 +10,21 @@ Controller → DTO → Service Interface → Service Implementation → Reposito
 
 ---
 
-## 🏗️ Composants de l'Architecture
+## 🏗️ Architecture Components
 
-### 1. **Controller Layer** (Présentation)
-**Fichier:** `AuthController.java`
+### 1. Controller Layer (Presentation)
+**File:** `AuthController.java`
 
-**Responsabilité:** 
-- Recevoir les requêtes HTTP
-- Valider les données avec `@Valid`
-- Appeler le service via l'interface
-- Retourner les réponses HTTP avec codes de statut appropriés
+**Responsibility:**
+- Receive HTTP requests
+- Validate input with `@Valid`
+- Call the service via its interface
+- Return HTTP responses with appropriate status codes
 
-**Règles strictes:**
-- ❌ **JAMAIS** accéder au Repository directement
-- ❌ **JAMAIS** contenir de logique métier
-- ✅ Seulement appeler l'interface `AuthService`
+**Strict rules:**
+- ❌ NEVER access the Repository directly
+- ❌ NEVER contain business logic
+- ✅ Only call the `AuthService` interface
 
 ```java
 @PostMapping("/signup")
@@ -36,19 +36,19 @@ public ResponseEntity<AuthResponse> signup(@Valid @RequestBody SignupRequest req
 
 ---
 
-### 2. **DTO Layer** (Data Transfer Objects)
-**Fichiers:** `SignupRequest.java`, `AuthResponse.java`
+### 2. DTO Layer (Data Transfer Objects)
+**Files:** `SignupRequest.java`, `AuthResponse.java`
 
-**Responsabilité:**
-- Transporter les données entre les couches
-- Valider les données d'entrée avec annotations Jakarta Validation
+**Responsibility:**
+- Carry data between layers
+- Validate incoming data using Jakarta Validation annotations
 
 **SignupRequest (Input DTO):**
 ```java
 @Data
 @Builder
 public class SignupRequest {
-    @NotBlank(message = "Le nom est obligatoire")
+    @NotBlank(message = "Name is required")
     @Size(min = 2, max = 100)
     private String name;
     
@@ -63,7 +63,7 @@ public class SignupRequest {
     
     private String avatarUrl;
 
-    // Champ optionnel: si null, sera considéré comme CLIENT côté service
+    // Optional field: if null, default to CLIENT in the service
     private RoleEnum role;
 }
 ```
@@ -73,8 +73,8 @@ public class SignupRequest {
 @Data
 @Builder
 public class AuthResponse {
-    private String token;        // null à l'inscription tant que le compte n'est pas activé
-    private String refreshToken; // null à l'inscription
+    private String token;        // null at signup until account activation
+    private String refreshToken; // null at signup
     private Long userId;
     private String name;
     private String email;
@@ -85,12 +85,12 @@ public class AuthResponse {
 
 ---
 
-### 3. **Service Interface** (Contrat)
-**Fichier:** `AuthService.java`
+### 3. Service Interface (Contract)
+**File:** `AuthService.java`
 
-**Responsabilité:**
-- Définir le contrat du service
-- Abstraction pour l'implémentation
+**Responsibility:**
+- Define the service contract
+- Provide an abstraction for the implementation
 
 ```java
 public interface AuthService {
@@ -100,24 +100,24 @@ public interface AuthService {
 }
 ```
 
-**Avantages:**
-- ✅ Facilite les tests unitaires (mocking)
-- ✅ Permet plusieurs implémentations
-- ✅ Découplage des couches
+**Benefits:**
+- ✅ Easier unit testing (mocking)
+- ✅ Allows multiple implementations
+- ✅ Decouples layers
 
 ---
 
-### 4. **Service Implementation** (Logique Métier)
-**Fichier:** `AuthServiceImpl.java`
+### 4. Service Implementation (Business Logic)
+**File:** `AuthServiceImpl.java`
 
-**Responsabilité:**
-- Implémenter toute la logique métier
-- Orchestrer les appels au Repository
-- Encoder les mots de passe
-- Gérer l'activation par email (token 7 jours)
-- Transformer Entity → DTO
+**Responsibility:**
+- Implement business logic
+- Orchestrate repository calls
+- Encode passwords
+- Handle email activation (7-day token)
+- Map Entity → DTO
 
-**Flow d'inscription détaillé (rôle-aware):**
+**Signup flow (role-aware):**
 
 ```java
 @Service
@@ -125,15 +125,15 @@ public interface AuthService {
 public class AuthServiceImpl implements AuthService {
     @Override
     public AuthResponse signup(SignupRequest request) {
-        // 1) Email unique
+        // 1) Unique email
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new UserAlreadyExistsException("Un utilisateur avec cet email existe déjà");
+            throw new UserAlreadyExistsException("A user with this email already exists");
         }
 
-        // 2) Déterminer le rôle (par défaut CLIENT)
+        // 2) Determine role (default CLIENT)
         RoleEnum role = request.getRole() == null ? RoleEnum.CLIENT : request.getRole();
 
-        // 3) Instancier le bon sous-type
+        // 3) Instantiate the correct subtype
         User user = switch (role) {
             case ADMIN -> new Admin();
             case BUSINESS_OWNER -> new BusinessOwner();
@@ -141,25 +141,25 @@ public class AuthServiceImpl implements AuthService {
             case CLIENT -> new Client();
         };
 
-        // 4) Champs communs
+        // 4) Common fields
         user.setName(request.getName());
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setRole(role);
 
-        // 5) Champs client/staff
+        // 5) Client/staff specific fields
         if (user instanceof Client) {
             user.setPhoneNumber(request.getPhoneNumber());
             user.setAvatarUrl(request.getAvatarUrl());
         }
 
-        // 6) Statut initial
+        // 6) Initial status
         user.setStatus(role == RoleEnum.ADMIN ? UserStatusEnum.VERIFIED : UserStatusEnum.PENDING);
 
-        // 7) Sauvegarde
+        // 7) Persist
         User saved = userRepository.save(user);
 
-        // 8) Si PENDING → créer token d'activation (7 jours) et envoyer email
+        // 8) If PENDING → create activation token (7 days) and send email
         if (saved.getStatus() != UserStatusEnum.VERIFIED) {
             ActivationToken token = ActivationToken.builder()
                 .token(UUID.randomUUID().toString())
@@ -170,7 +170,7 @@ public class AuthServiceImpl implements AuthService {
             mailService.sendActivationEmail(saved.getEmail(), saved.getName(), token.getToken());
         }
 
-        // 9) Réponse: pas de JWT au signup
+        // 9) Response: no JWT at signup
         return AuthResponse.builder()
             .token(null)
             .refreshToken(null)
@@ -179,26 +179,26 @@ public class AuthServiceImpl implements AuthService {
             .email(saved.getEmail())
             .role(saved.getRole())
             .message(saved.getStatus() == UserStatusEnum.VERIFIED
-                ? "Inscription administrateur réussie. Le compte est déjà vérifié."
-                : "Inscription réussie. Veuillez vérifier votre email pour activer votre compte.")
+                ? "Admin signup successful. Account is already verified."
+                : "Signup successful. Please check your email to activate your account.")
             .build();
     }
 }
 ```
 
-**Règles strictes:**
-- ✅ Utilise uniquement le Repository pour accéder aux données
-- ✅ Ne retourne jamais d'entités, seulement des DTOs
-- ✅ Gère les statuts et l'activation par email
+**Strict rules:**
+- ✅ Use Repository only for data access
+- ✅ Never return entities directly — always use DTOs
+- ✅ Manage statuses and email activation within the service
 
 ---
 
-### 5. **Repository Layer** (Accès aux Données)
-**Fichier:** `UserRepository.java`
+### 5. Repository Layer (Data Access)
+**File:** `UserRepository.java`
 
-**Responsabilité:**
-- Accès à la base de données
-- Requêtes JPA
+**Responsibility:**
+- Database access
+- JPA queries
 
 ```java
 @Repository
@@ -208,88 +208,88 @@ public interface UserRepository extends JpaRepository<User, Long> {
 }
 ```
 
-**Règles strictes:**
-- ❌ **JAMAIS** appelé directement par le Controller
-- ✅ Seulement utilisé par le Service Implementation
+**Strict rules:**
+- ❌ NEVER called directly by the Controller
+- ✅ Only used by the Service Implementation
 
 ---
 
-### 6. **Entity Layer** (Domaine)
-**Fichiers:** `User` (base), sous-classes `Client`, `BusinessOwner`, `Staff`, `Admin`
+### 6. Entity Layer (Domain)
+**Files:** `User` (base), subtypes `Client`, `BusinessOwner`, `Staff`, `Admin`
 
-**Responsabilité:**
-- Représentation des données en base
-- Héritage JPA (JOINED)
+**Responsibility:**
+- Represent database records
+- JPA inheritance (JOINED strategy)
 
 ```java
 @Entity
 @Table(name = "clients")
 public class Client extends User {
-    // ... relations spécifiques client
+    // ... client-specific relations
 }
 ```
 
 ---
 
-## 🔄 Flow Complet du Signup
+## 🔄 Complete Signup Flow
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│ 1. CLIENT HTTP REQUEST                                          │
-│    POST /api/v1/auth/signup                                     │
-│    Body: { name, email, password, phoneNumber?, avatarUrl?,     │
-│            role?=CLIENT }                                       │
+│ 1. HTTP CLIENT REQUEST                                           │
+│    POST /api/v1/auth/signup                                      │
+│    Body: { name, email, password, phoneNumber?, avatarUrl?,      │
+│            role?=CLIENT }                                        │
 └─────────────────────────────────────────────────────────────────┘
                               ↓
 ┌─────────────────────────────────────────────────────────────────┐
 │ 2. CONTROLLER (AuthController)                                  │
-│    - Reçoit SignupRequest DTO                                   │
-│    - Valide avec @Valid                                         │
-│    - Appelle authService.signup(request)                        │
+│    - Receives SignupRequest DTO                                  │
+│    - Validates with @Valid                                        │
+│    - Calls authService.signup(request)                           │
 └─────────────────────────────────────────────────────────────────┘
                               ↓
 ┌─────────────────────────────────────────────────────────────────┐
-│ 3. SERVICE IMPLEMENTATION (AuthServiceImpl)                     │
-│    ✓ Vérifie email unique                                       │
-│    ✓ Détermine le rôle et le sous-type                          │
-│    ✓ Encode le mot de passe                                     │
-│    ✓ Statut initial: ADMIN=VERIFIED, autres=PENDING             │
-│    ✓ Si PENDING → génère token (7 jours) + envoie email         │
-│    ✓ Construit AuthResponse (sans JWT au signup)                │
+│ 3. SERVICE IMPLEMENTATION (AuthServiceImpl)                      │
+│    ✓ Checks unique email                                         │
+│    ✓ Determines role and subtype                                 │
+│    ✓ Encodes password                                             │
+│    ✓ Initial status: ADMIN=VERIFIED, others=PENDING              │
+│    ✓ If PENDING → generates token (7 days) + sends email         │
+│    ✓ Builds AuthResponse (no JWT at signup)                      │
 └─────────────────────────────────────────────────────────────────┘
                               ↓
 ┌─────────────────────────────────────────────────────────────────┐
-│ 4. ACTIVATION PAR EMAIL                                         │
-│    GET /api/v1/auth/activate?token=<uuid>                       │
-│    → Passage à VERIFIED                                         │
+│ 4. EMAIL ACTIVATION                                              │
+│    GET /api/v1/auth/activate?token=<uuid>                        │
+│    → Status set to VERIFIED                                      │
 └─────────────────────────────────────────────────────────────────┘
                               ↓
 ┌─────────────────────────────────────────────────────────────────┐
-│ 5. LOGIN                                                        │
-│    POST /api/v1/auth/login → JWT + refreshToken                │
+│ 5. LOGIN                                                         │
+│    POST /api/v1/auth/login → JWT + refreshToken                  │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## ✅ Règles Strictes Respectées
+## ✅ Strict Rules Enforced
 
-- Controller → appelle uniquement `AuthService`
-- DTOs pour les entrées/sorties
-- Logique métier et accès données encapsulés dans le service
-
----
-
-## 🎯 Avantages de cette Architecture
-
-- Séparation des responsabilités (SRP)
-- Testabilité (mock du service via interface)
-- Maintenabilité et évolutivité
-- Sécurité (activation par email, mots de passe encodés)
+- Controller → only calls `AuthService`
+- DTOs for input/output
+- Business logic and data access encapsulated in the service
 
 ---
 
-## 📝 Exemple de Test Unitaire (extrait)
+## 🎯 Architecture Benefits
+
+- Separation of responsibilities (SRP)
+- Testability (mockable service via interface)
+- Maintainability and scalability
+- Security (email activation, encoded passwords)
+
+---
+
+## 📝 Unit Test Example (excerpt)
 
 ```java
 @ExtendWith(MockitoExtension.class)
@@ -307,7 +307,7 @@ class AuthServiceImplTest {
         AuthResponse response = authService.signup(request);
 
         assertNotNull(response);
-        assertNull(response.getToken()); // pas de JWT au signup
+        assertNull(response.getToken()); // no JWT at signup
         verify(userRepository).save(any(User.class));
         verify(mailService).sendActivationEmail(anyString(), anyString(), anyString());
     }
@@ -316,9 +316,9 @@ class AuthServiceImplTest {
 
 ---
 
-## 🚀 Points Clés à Retenir
+## 🚀 Key Points to Remember
 
-✅ Signup supporte un champ `role` optionnel (par défaut `CLIENT`)  
-✅ Pas de JWT au signup; activation par email (token 7 jours)  
-✅ `ADMIN` créé directement `VERIFIED`, pas d'email d'activation  
-✅ Login inchangé: retourne les JWT si compte `VERIFIED`
+✅ Signup supports an optional `role` field (defaults to `CLIENT`)  
+✅ No JWT at signup; email activation required (7-day token)  
+✅ `ADMIN` users are created `VERIFIED` and do not receive an activation email  
+✅ Login unchanged: returns JWTs when account is `VERIFIED`

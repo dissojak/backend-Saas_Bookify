@@ -1,5 +1,8 @@
 package com.bookify.backendbookify_saas;
 
+import io.github.cdimascio.dotenv.Dotenv;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -14,9 +17,14 @@ public class BackendBookifySaasApplication {
     public static void main(String[] args) {
         SpringApplication.run(BackendBookifySaasApplication.class, args);
     }
-
+    private static final Logger logger = LoggerFactory.getLogger(BackendBookifySaasApplication.class);
     @Bean
     public CommandLineRunner commandLineRunner(Environment environment) {
+        Dotenv dotenv = Dotenv.configure().load();
+        logger.info("SPRING_MAIL_PASSWORD from .env: " + dotenv.get("SPRING_MAIL_PASSWORD"));
+        logger.info("GEMINI_API_KEY from .env: " + dotenv.get("GEMINI_API_KEY"));
+
+
         return args -> {
             String port = environment.getProperty("server.port", "8080");
             String contextPath = environment.getProperty("server.servlet.context-path", "");

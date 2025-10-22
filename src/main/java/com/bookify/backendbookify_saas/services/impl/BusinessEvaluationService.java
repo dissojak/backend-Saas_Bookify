@@ -172,6 +172,55 @@ public class BusinessEvaluationService {
         return evaluationRepository.save(existing);
     }
 
+    @Transactional(readOnly = true)
+    public java.util.Map<String, Object> aiHealth() {
+        java.util.Map<String, Object> out = new java.util.HashMap<>();
+        out.put("enabled", aiEnabled);
+        out.put("model", geminiModel);
+        if (!aiEnabled) {
+            out.put("ok", false);
+            out.put("reason", "Gemini API key is not configured");
+            return out;
+        }
+        try {
+            String prompt = "Return ONLY this exact JSON: {\\n  \\\"ping\\\": \\\"ok\\\"\\n}";
+            String body = objectMapper.writeValueAsString(java.util.Map.of(
+                    "contents", new Object[]{
+                            java.util.Map.of("parts", new Object[]{
+                                    java.util.Map.of("text", prompt)
+                            })
+                    },
+                    "generationConfig", java.util.Map.of(
+                            "temperature", 0.0,
+                            "maxOutputTokens", 50
+                    )
+            ));
+
+            HttpRequest req = HttpRequest.newBuilder()
+                    .uri(URI.create("https://generativelanguage.googleapis.com/v1beta/models/" + geminiModel + ":generateContent?key=" + geminiApiKey))
+                    .header("Content-Type", "application/json")
+                    .timeout(Duration.ofSeconds(15))
+                    .POST(HttpRequest.BodyPublishers.ofString(body, StandardCharsets.UTF_8))
+                    .build();
+
+            HttpResponse<String> resp = HttpClient.newHttpClient().send(req, HttpResponse.BodyHandlers.ofString());
+            out.put("status", resp.statusCode());
+            if (resp.statusCode() >= 200 && resp.statusCode() < 300) {
+                String content = objectMapper.readTree(resp.body())
+                        .path("candidates").path(0).path("content").path("parts").path(0).path("text").asText("");
+                out.put("contentPreview", content.length() > 120 ? content.substring(0, 120) + "..." : content);
+                out.put("ok", !content.isBlank());
+            } else {
+                out.put("ok", false);
+                out.put("errorBodyPreview", resp.body() == null ? null : (resp.body().length() > 200 ? resp.body().substring(0, 200) + "..." : resp.body()));
+            }
+        } catch (Exception e) {
+            out.put("ok", false);
+            out.put("exception", e.getMessage());
+        }
+        return out;
+    }
+
     // --- AI one-shot evaluation across all dimensions ---
     private EvaluationResult aiEvaluateAll(BusinessProfile p) throws Exception {
         String prompt = """

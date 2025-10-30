@@ -26,7 +26,7 @@ public class BackendBookifySaasApplication {
     public CommandLineRunner commandLineRunner(Environment environment) {
 
         return args -> {
-            String port = environment.getProperty("server.port", "8080");
+            String port = environment.getProperty("server.port", "8088");
             String contextPath = environment.getProperty("server.servlet.context-path", "");
 
             System.out.println("\n----------------------------------------------------------");

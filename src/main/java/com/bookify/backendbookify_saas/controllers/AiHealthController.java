@@ -12,7 +12,7 @@ import java.util.Map;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/v1/health")
-public class HealthController {
+public class AiHealthController {
 
     private final BusinessEvaluationService evaluationService;
 

@@ -10,16 +10,15 @@ import java.time.LocalTime;
 import java.util.List;
 
 /**
- * Class representing a staff member who is also a client
+ * Class representing a staff member.
+ * Staff members are users with STAFF role.
  */
 @Entity
 @Table(name = "staff")
 @Getter
 @Setter
 @NoArgsConstructor
-public class Staff extends Client {
-
-    // No need for ID as it's inherited from Client -> User hierarchy
+public class Staff extends User {
 
     @Column(name = "default_start_time")
     private LocalTime defaultStartTime;
@@ -31,7 +30,8 @@ public class Staff extends Client {
     private LocalDate startWorkingAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "business_id", nullable = false)
+    @JoinColumn(name = "business_id", nullable = false,
+            foreignKey = @ForeignKey(name = "fk_staff_business"))
     private Business business;
 
     @ManyToMany(mappedBy = "staff", fetch = FetchType.LAZY)
@@ -42,19 +42,4 @@ public class Staff extends Client {
 
     @OneToMany(mappedBy = "staff", fetch = FetchType.LAZY)
     private List<ServiceBooking> bookings;
-
-    // Custom constructor that takes a Client to convert from Client to Staff
-    public Staff(Client client) {
-        // Copy all basic properties from client
-        super.setId(client.getId());
-        super.setEmail(client.getEmail());
-        super.setPassword(client.getPassword());
-        super.setName(client.getName());
-        super.setPhoneNumber(client.getPhoneNumber());
-        super.setStatus(client.getStatus());
-        super.setAvatarUrl(client.getAvatarUrl());
-        super.setCreatedAt(client.getCreatedAt());
-        super.setUpdatedAt(client.getUpdatedAt());
-        // Any other properties from Client/User that should be copied
-    }
 }

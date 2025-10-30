@@ -42,7 +42,7 @@ public class Category {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by", nullable = false,
             foreignKey = @ForeignKey(name = "fk_category_created_by"))
-    private Admin createdBy;
+    private User createdBy;
 
     @PrePersist
     protected void onCreate() {

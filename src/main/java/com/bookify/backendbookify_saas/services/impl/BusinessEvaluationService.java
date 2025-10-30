@@ -177,6 +177,9 @@ public class BusinessEvaluationService {
         java.util.Map<String, Object> out = new java.util.HashMap<>();
         out.put("enabled", aiEnabled);
         out.put("model", geminiModel);
+        if(geminiApiKey==null){
+            log.info("Gemini API key is not configured");
+        }
         if (!aiEnabled) {
             out.put("ok", false);
             out.put("reason", "Gemini API key is not configured");
@@ -195,7 +198,6 @@ public class BusinessEvaluationService {
                             "maxOutputTokens", 50
                     )
             ));
-
             HttpRequest req = HttpRequest.newBuilder()
                     .uri(URI.create("https://generativelanguage.googleapis.com/v1beta/models/" + geminiModel + ":generateContent?key=" + geminiApiKey))
                     .header("Content-Type", "application/json")

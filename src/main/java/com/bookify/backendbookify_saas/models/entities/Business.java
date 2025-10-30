@@ -53,7 +53,7 @@ public class Business {
     @JoinColumn(name = "owner_id", nullable = false, unique = true,
             foreignKey = @ForeignKey(name = "fk_business_owner"))
     @JsonBackReference
-    private BusinessOwner owner;
+    private User owner;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false,
@@ -65,9 +65,8 @@ public class Business {
     @JsonManagedReference
     private List<com.bookify.backendbookify_saas.models.entities.Service> services = new ArrayList<>();
 
-    @OneToMany(mappedBy = "business", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = false, fetch = FetchType.LAZY)
-    @JsonManagedReference
-    private List<Staff> staff = new ArrayList<>();
+    // Note: Staff relationship is managed via repository queries due to JOINED inheritance
+    // Staff members can be queried using: staffRepository.findByBusiness(business)
 
     @OneToMany(mappedBy = "business", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = false, fetch = FetchType.LAZY)
     @JsonManagedReference
@@ -90,14 +89,10 @@ public class Business {
         services.remove(s);
         s.setBusiness(null);
     }
-    public void addStaff(Staff st) {
-        staff.add(st);
-        st.setBusiness(this);
-    }
-    public void removeStaff(Staff st) {
-        staff.remove(st);
-        st.setBusiness(null);
-    }
+
+    // Staff management is done through repository queries
+    // Use staffRepository.findByBusiness(business) to retrieve staff
+
     public void addResource(Resource r) {
         resources.add(r);
         r.setBusiness(this);

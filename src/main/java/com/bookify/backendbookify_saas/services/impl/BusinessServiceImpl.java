@@ -36,7 +36,7 @@ public class BusinessServiceImpl implements BusinessService {
         // Récupérer l'utilisateur
         User user = userRepository.findByEmail(ownerEmail)
                 .orElseThrow(() -> new IllegalArgumentException("Utilisateur non trouvé"));
-        if (!(user instanceof BusinessOwner owner)) {
+        if (user.getRole() != com.bookify.backendbookify_saas.models.enums.RoleEnum.BUSINESS_OWNER) {
             throw new IllegalArgumentException("Seul un propriétaire d'entreprise peut créer un business");
         }
         if (user.getStatus() != com.bookify.backendbookify_saas.models.enums.UserStatusEnum.VERIFIED) {
@@ -44,7 +44,7 @@ public class BusinessServiceImpl implements BusinessService {
         }
 
         // Vérifier si cet owner a déjà un business
-        if (businessRepository.existsByOwner(owner)) {
+        if (businessRepository.existsByOwner(user)) {
             throw new IllegalArgumentException("Vous avez déjà un business associé à votre compte");
         }
 
@@ -64,7 +64,7 @@ public class BusinessServiceImpl implements BusinessService {
         business.setPhone(phone);
         business.setEmail(email);
         business.setDescription(description);
-        business.setOwner((BusinessOwner) userRepository.findByEmail(ownerEmail).orElseThrow());
+        business.setOwner(userRepository.findByEmail(ownerEmail).orElseThrow());
         business.setCategory(category);
         Business saved = businessRepository.save(business);
 

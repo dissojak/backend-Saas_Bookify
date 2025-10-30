@@ -20,7 +20,7 @@ public class ResourceReservation extends Booking {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "client_id", nullable = false)
-    private Client client;
+    private User client;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "resource_availability_id", nullable = false)

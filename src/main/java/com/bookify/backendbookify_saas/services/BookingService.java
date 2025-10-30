@@ -1,6 +1,6 @@
 package com.bookify.backendbookify_saas.services;
 
-import com.bookify.backendbookify_saas.models.entities.Client;
+import com.bookify.backendbookify_saas.models.entities.User;
 import com.bookify.backendbookify_saas.models.entities.Service;
 import com.bookify.backendbookify_saas.models.entities.ServiceBooking;
 import com.bookify.backendbookify_saas.models.enums.BookingStatusEnum;
@@ -23,7 +23,7 @@ public interface BookingService {
 
     Optional<ServiceBooking> getServiceBookingById(Long id);
 
-    List<ServiceBooking> getBookingsByClient(Client client);
+    List<ServiceBooking> getBookingsByClient(User client);
 
     List<ServiceBooking> getBookingsByService(Service service);
 

@@ -1,7 +1,7 @@
 package com.bookify.backendbookify_saas.repositories;
 
 import com.bookify.backendbookify_saas.models.entities.Business;
-import com.bookify.backendbookify_saas.models.entities.BusinessOwner;
+import com.bookify.backendbookify_saas.models.entities.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -19,7 +19,7 @@ public interface BusinessRepository extends JpaRepository<Business, Long> {
      * @param owner Le propriétaire du business
      * @return Optional contenant le business ou vide si non trouvé
      */
-    Optional<Business> findByOwner(BusinessOwner owner);
+    Optional<Business> findByOwner(User owner);
 
     /**
      * Trouve un business par son nom
@@ -33,7 +33,7 @@ public interface BusinessRepository extends JpaRepository<Business, Long> {
      * @param owner Le propriétaire
      * @return true si le propriétaire a déjà un business, false sinon
      */
-    boolean existsByOwner(BusinessOwner owner);
+    boolean existsByOwner(User owner);
 
     /**
      * Trouve le business associé à un propriétaire

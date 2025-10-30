@@ -1,6 +1,6 @@
 package com.bookify.backendbookify_saas.repositories;
 
-import com.bookify.backendbookify_saas.models.entities.Client;
+import com.bookify.backendbookify_saas.models.entities.User;
 import com.bookify.backendbookify_saas.models.entities.Service;
 import com.bookify.backendbookify_saas.models.entities.ServiceBooking;
 import com.bookify.backendbookify_saas.models.enums.BookingStatusEnum;
@@ -18,7 +18,7 @@ import java.util.List;
 @Repository
 public interface ServiceBookingRepository extends JpaRepository<ServiceBooking, Long> {
 
-    List<ServiceBooking> findByClient(Client client);
+    List<ServiceBooking> findByClient(User client);
 
     List<ServiceBooking> findByService(Service service);
 

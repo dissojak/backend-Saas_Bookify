@@ -23,5 +23,5 @@ public class BusinessRating extends Rating {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "client_id", nullable = false)
-    private Client client;
+    private User client;
 }

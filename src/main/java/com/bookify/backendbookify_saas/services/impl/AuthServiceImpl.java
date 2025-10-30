@@ -55,15 +55,8 @@ public class AuthServiceImpl implements AuthService {
         // 2. Déterminer le rôle à utiliser (par défaut CLIENT)
         RoleEnum role = request.getRole() == null ? RoleEnum.CLIENT : request.getRole();
 
-        // 3. Créer le bon sous-type d'utilisateur selon le rôle
-        User user;
-        switch (role) {
-            case ADMIN -> user = new Admin();
-            case BUSINESS_OWNER -> user = new BusinessOwner();
-            case STAFF -> user = new Staff();
-            case CLIENT -> user = new Client();
-            default -> user = new Client();
-        }
+        // 3. Créer un utilisateur
+        User user = new User();
 
         // 4. Définir les champs communs
         user.setName(request.getName());
@@ -71,11 +64,9 @@ public class AuthServiceImpl implements AuthService {
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setRole(role);
 
-        // 5. Définir avatar/phone uniquement si Client/Staff/BusinessOwner
-        if (user instanceof Client || user instanceof BusinessOwner) {
-            user.setPhoneNumber(request.getPhoneNumber());
-            user.setAvatarUrl(request.getAvatarUrl());
-        }
+        // 5. Définir avatar/phone pour tous les utilisateurs
+        user.setPhoneNumber(request.getPhoneNumber());
+        user.setAvatarUrl(request.getAvatarUrl());
 
         // 6. Définir le statut initial: ADMIN → VERIFIED, autres → PENDING
         if (role == RoleEnum.ADMIN) {
@@ -197,8 +188,7 @@ public class AuthServiceImpl implements AuthService {
                 .role(user.getRole());
 
         // 5. If owner — check business existence and include it in response
-        // only check DB when the user is actually a business owner (defensive: check both role and instance)
-        if (user.getRole() == RoleEnum.BUSINESS_OWNER || user instanceof BusinessOwner) {
+        if (user.getRole() == RoleEnum.BUSINESS_OWNER) {
             boolean hasBusiness = false;
             Long businessId = null;
             String businessName = null;

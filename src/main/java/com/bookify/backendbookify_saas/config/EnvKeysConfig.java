@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
  * and provides constants for accessing specific keys.
  */
 @Component
-public class EnvKeys {
+public class EnvKeysConfig {
 
     // Load environment variables from the .env file
     private static final Dotenv dotenv = Dotenv.load();

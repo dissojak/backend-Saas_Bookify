@@ -35,28 +35,28 @@ public class BusinessServiceImpl implements BusinessService {
     public Business createBusinessForOwner(String ownerEmail, String name, String location, String phone, String email, Long categoryId, String description) {
         // Récupérer l'utilisateur
         User user = userRepository.findByEmail(ownerEmail)
-                .orElseThrow(() -> new IllegalArgumentException("Utilisateur non trouvé"));
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
         if (user.getRole() != com.bookify.backendbookify_saas.models.enums.RoleEnum.BUSINESS_OWNER) {
-            throw new IllegalArgumentException("Seul un propriétaire d'entreprise peut créer un business");
+            throw new IllegalArgumentException("Only a business owner can create a business");
         }
         if (user.getStatus() != com.bookify.backendbookify_saas.models.enums.UserStatusEnum.VERIFIED) {
-            throw new IllegalArgumentException("Votre compte doit être vérifié pour créer un business");
+            throw new IllegalArgumentException("Your account must be verified to create a business");
         }
 
         // Vérifier si cet owner a déjà un business
         if (businessRepository.existsByOwner(user)) {
-            throw new IllegalArgumentException("Vous avez déjà un business associé à votre compte");
+            throw new IllegalArgumentException("You already have a business associated with your account");
         }
 
         // Optionnel: vérifier unicité du nom
         businessRepository.findByName(name).ifPresent(b -> {
-            throw new IllegalArgumentException("Un business avec ce nom existe déjà");
+            throw new IllegalArgumentException("A business with that name already exists");
         });
 
         // Charger la catégorie via EntityManager
         Category category = entityManager.find(Category.class, categoryId);
         if (category == null) {
-            throw new IllegalArgumentException("Catégorie introuvable");
+            throw new IllegalArgumentException("Category not found");
         }
         Business business = new Business();
         business.setName(name);
@@ -78,7 +78,7 @@ public class BusinessServiceImpl implements BusinessService {
     @Transactional
     public Business updateBusiness(Long id, Business businessInput, String tenantId) {
         Business existing = businessRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Business introuvable"));
+                .orElseThrow(() -> new IllegalArgumentException("Business not found"));
 
         // Track which fields were updated
         boolean nameChanged = false;
@@ -112,7 +112,7 @@ public class BusinessServiceImpl implements BusinessService {
         if (businessInput.getCategory() != null && businessInput.getCategory().getId() != null) {
             Category cat = entityManager.find(Category.class, businessInput.getCategory().getId());
             if (cat == null) {
-                throw new IllegalArgumentException("Catégorie introuvable");
+                throw new IllegalArgumentException("Category not found");
             }
             categoryChanged = existing.getCategory() == null ||
                             !existing.getCategory().getId().equals(cat.getId());
@@ -137,26 +137,26 @@ public class BusinessServiceImpl implements BusinessService {
 
     @Override
     public List<Business> getAllBusinessesByOwner(User owner) {
-        throw new UnsupportedOperationException("Non implémenté");
+        throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
     public List<Business> getAllBusinesses(String tenantId) {
-        throw new UnsupportedOperationException("Non implémenté");
+        throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
     public void deleteBusiness(Long id, String tenantId) {
-        throw new UnsupportedOperationException("Non implémenté");
+        throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
     public boolean existsByName(String name, String tenantId) {
-        throw new UnsupportedOperationException("Non implémenté");
+        throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
     public String generateTenantId() {
-        throw new UnsupportedOperationException("Non implémenté");
+        throw new UnsupportedOperationException("Not implemented");
     }
 }

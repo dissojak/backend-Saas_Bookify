@@ -44,23 +44,51 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         // Extraire le token JWT du header
         jwt = authHeader.substring(7);
-        userEmail = jwtService.extractUsername(jwt);
+
+        // Extract subject (must be userId now)
+        final String tokenSubject;
+        try {
+            tokenSubject = jwtService.extractUsername(jwt);
+        } catch (Exception ex) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.getWriter().write("{\"message\":\"Invalid or malformed token\"}");
+            return;
+        }
+
+        // Subject MUST be numeric user id
+        Long userId;
+        try {
+            userId = Long.parseLong(tokenSubject);
+        } catch (NumberFormatException ex) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.getWriter().write("{\"message\":\"Token subject must be user id\"}");
+            return;
+        }
 
         // Vérifier si l'utilisateur n'est pas déjà authentifié
-        if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
+        if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            UserDetails userDetails = this.userDetailsService.loadUserByUsername(String.valueOf(userId));
 
-            // Valider le token JWT
-            if (jwtService.isTokenValid(jwt, userDetails)) {
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        userDetails,
-                        null,
-                        userDetails.getAuthorities()
-                );
+            // Validate token by subject (userId)
+            boolean valid = jwtService.isTokenValidForSubject(jwt, String.valueOf(userId));
 
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+            if (!valid) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType("application/json");
+                response.getWriter().write("{\"message\":\"Invalid or expired token\"}");
+                return;
             }
+
+            UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                    userDetails,
+                    null,
+                    userDetails.getAuthorities()
+            );
+
+            authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+            SecurityContextHolder.getContext().setAuthentication(authToken);
         }
 
         filterChain.doFilter(request, response);

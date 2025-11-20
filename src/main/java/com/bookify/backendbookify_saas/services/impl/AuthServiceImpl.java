@@ -49,7 +49,7 @@ public class AuthServiceImpl implements AuthService {
     public AuthResponse signup(SignupRequest request) {
         // 1. Vérifier l'unicité de l'email
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new UserAlreadyExistsException("Un utilisateur avec cet email existe déjà");
+            throw new UserAlreadyExistsException("A user with that email already exists");
         }
 
         // 2. Déterminer le rôle à utiliser (par défaut CLIENT)
@@ -95,17 +95,25 @@ public class AuthServiceImpl implements AuthService {
             );
         }
 
-        // 9. Construire la réponse (token null si compte non vérifié)
+        // 9. Build response (generate token only if account is VERIFIED)
+        String token = null;
+        String refreshToken = null;
+        if (savedUser.getStatus() == UserStatusEnum.VERIFIED) {
+            String subject = String.valueOf(savedUser.getId());
+            token = jwtService.generateTokenForSubject(subject);
+            refreshToken = jwtService.generateRefreshTokenForSubject(subject);
+        }
+
         return AuthResponse.builder()
-                .token(savedUser.getStatus() == UserStatusEnum.VERIFIED ? null : null)
-                .refreshToken(null)
+                .token(token)
+                .refreshToken(refreshToken)
                 .userId(savedUser.getId())
                 .name(savedUser.getName())
                 .email(savedUser.getEmail())
                 .role(savedUser.getRole())
                 .message(savedUser.getStatus() == UserStatusEnum.VERIFIED
-                        ? "Inscription administrateur réussie. Le compte est déjà vérifié."
-                        : "Inscription réussie. Veuillez vérifier votre email pour activer votre compte.")
+                        ? "Administrator signup successful. The account is already verified."
+                        : "Signup successful. Please check your email to activate your account.")
                 .build();
     }
 
@@ -163,20 +171,20 @@ public class AuthServiceImpl implements AuthService {
 
         // 2. Récupérer l'utilisateur depuis le Repository
         var user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new IllegalArgumentException("Utilisateur non trouvé"));
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         // 3. Vérifier si le compte est activé
         if (user.getStatus() == UserStatusEnum.PENDING) {
-            throw new IllegalArgumentException("Veuillez activer votre compte via l'email d'activation envoyé");
+            throw new IllegalArgumentException("Please activate your account using the activation email we've sent to you");
         }
 
         if (user.getStatus() == UserStatusEnum.SUSPENDED) {
-            throw new IllegalArgumentException("Votre compte a été suspendu. Veuillez contacter le support.");
+            throw new IllegalArgumentException("Your account has been suspended. Please contact support.");
         }
 
         // 4. Générer les tokens JWT
-        String token = jwtService.generateToken(user.getEmail());
-        String refreshToken = jwtService.generateRefreshToken(user.getEmail());
+        String token = jwtService.generateTokenForSubject(String.valueOf(user.getId()));
+        String refreshToken = jwtService.generateRefreshTokenForSubject(String.valueOf(user.getId()));
 
         // Prepare builder with common fields
         AuthResponse.AuthResponseBuilder builder = AuthResponse.builder()
@@ -208,8 +216,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         // message and build
-        builder.message("Connexion réussie");
+        builder.message("Login successful");
         return builder.build();
     }
 }
-

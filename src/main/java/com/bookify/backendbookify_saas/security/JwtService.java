@@ -6,7 +6,6 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
@@ -46,85 +45,43 @@ public class JwtService {
     }
 
     /**
-     * Génère un token JWT pour un utilisateur
+     * Génère un token JWT pour un subject donné (par ex. userId)
      */
-    public String generateToken(UserDetails userDetails) {
-        return generateToken(new HashMap<>(), userDetails);
+    public String generateTokenForSubject(String subject) {
+        return buildToken(new HashMap<>(), subject, jwtExpiration);
     }
 
     /**
-     * Génère un token JWT à partir d'un email
+     * Génère un refresh token pour un subject donné (par ex. userId)
      */
-    public String generateToken(String email) {
-        return buildToken(new HashMap<>(), email, jwtExpiration);
+    public String generateRefreshTokenForSubject(String subject) {
+        return buildToken(new HashMap<>(), subject, refreshExpiration);
     }
 
     /**
-     * Génère un token JWT avec des informations supplémentaires
+     * Vérifie si un token est valide pour le subject donné (par ex. userId) — vérifie la signature et l'expiration
      */
-    public String generateToken(
-            Map<String, Object> extraClaims,
-            UserDetails userDetails
-    ) {
-        return buildToken(extraClaims, userDetails, jwtExpiration);
+    public boolean isTokenValidForSubject(String token, String subject) {
+        final String tokenSubject = extractUsername(token);
+        return tokenSubject != null && tokenSubject.equals(subject) && !isTokenExpired(token);
     }
 
     /**
-     * Génère un token de rafraîchissement
-     */
-    public String generateRefreshToken(UserDetails userDetails) {
-        return buildToken(new HashMap<>(), userDetails, refreshExpiration);
-    }
-
-    /**
-     * Génère un token de rafraîchissement à partir d'un email
-     */
-    public String generateRefreshToken(String email) {
-        return buildToken(new HashMap<>(), email, refreshExpiration);
-    }
-
-    /**
-     * Construit un token JWT
+     * Construit un token JWT à partir d'un subject (string)
      */
     private String buildToken(
             Map<String, Object> extraClaims,
-            UserDetails userDetails,
+            String subject,
             long expiration
     ) {
         return Jwts
                 .builder()
                 .setClaims(extraClaims)
-                .setSubject(userDetails.getUsername())
+                .setSubject(subject)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSignInKey(), SignatureAlgorithm.HS256)
                 .compact();
-    }
-
-    /**
-     * Construit un token JWT à partir d'un email
-     */
-    private String buildToken(
-            Map<String, Object> extraClaims,
-            String email,
-            long expiration
-    ) {
-        return Jwts
-                .builder()
-                .setClaims(extraClaims)
-                .setSubject(email)
-                .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + expiration))
-                .signWith(getSignInKey(), SignatureAlgorithm.HS256)
-                .compact();
-    }
-
-    /**
-     * Vérifie si le token JWT est valide
-     */
-    public boolean isTokenValid(String token, UserDetails userDetails) {
-        final String username = extractUsername(token);
-        return (username.equals(userDetails.getUsername())) && !isTokenExpired(token);
     }
 
     /**

@@ -5,7 +5,9 @@ import com.bookify.backendbookify_saas.exceptions.InvalidTokenException;
 import com.bookify.backendbookify_saas.exceptions.UserAlreadyExistsException;
 import com.bookify.backendbookify_saas.models.dtos.AuthResponse;
 import com.bookify.backendbookify_saas.models.dtos.LoginRequest;
+import com.bookify.backendbookify_saas.models.dtos.RefreshTokenResponse;
 import com.bookify.backendbookify_saas.models.dtos.SignupRequest;
+import com.bookify.backendbookify_saas.models.dtos.UserProfileResponse;
 import com.bookify.backendbookify_saas.models.entities.*;
 import com.bookify.backendbookify_saas.models.enums.RoleEnum;
 import com.bookify.backendbookify_saas.models.enums.UserStatusEnum;
@@ -99,18 +101,16 @@ public class AuthServiceImpl implements AuthService {
             );
         }
 
-        // 9. Build response (generate token only if account is VERIFIED)
+        // 9. Build response (generate access token only if account is VERIFIED)
+        // Refresh token will be set in httpOnly cookie by the controller
         String token = null;
-        String refreshToken = null;
         if (savedUser.getStatus() == UserStatusEnum.VERIFIED) {
             String subject = String.valueOf(savedUser.getId());
             token = jwtService.generateTokenForSubject(subject);
-            refreshToken = jwtService.generateRefreshTokenForSubject(subject);
         }
 
         AuthResponse response = AuthResponse.builder()
                 .token(token)
-                .refreshToken(refreshToken)
                 .userId(savedUser.getId())
                 .name(savedUser.getName())
                 .email(savedUser.getEmail())
@@ -191,14 +191,12 @@ public class AuthServiceImpl implements AuthService {
             throw new IllegalArgumentException("Your account has been suspended. Please contact support.");
         }
 
-        // 4. Générer les tokens JWT
+        // 4. Generate access token only (refresh token will be set in httpOnly cookie by controller)
         String token = jwtService.generateTokenForSubject(String.valueOf(user.getId()));
-        String refreshToken = jwtService.generateRefreshTokenForSubject(String.valueOf(user.getId()));
 
         // Prepare builder with common fields
         AuthResponse.AuthResponseBuilder builder = AuthResponse.builder()
                 .token(token)
-                .refreshToken(refreshToken)
                 .userId(user.getId())
                 .name(user.getName())
                 .email(user.getEmail())
@@ -229,7 +227,94 @@ public class AuthServiceImpl implements AuthService {
         // message and build
         builder.message("Login successful");
         AuthResponse response = builder.build();
-        logger.info("Login response being returned: status={} avatarUrl={} response={}", user.getStatus(), user.getAvatarUrl(), response);
+        logger.info("Login response being returned: status={} avatar={} response={}", user.getStatus(), user.getAvatarUrl(), response);
         return response;
+    }
+
+    /**
+     * Refresh JWT access token using a refresh token
+     */
+    @Override
+    public RefreshTokenResponse refreshToken(String refreshToken) {
+        try {
+            // Extract userId from refresh token
+            String userId = jwtService.extractUsername(refreshToken);
+
+            // Validate the refresh token
+            if (!jwtService.isTokenValidForSubject(refreshToken, userId)) {
+                throw new InvalidTokenException("Invalid or expired refresh token");
+            }
+
+            // Generate new access token only (new refresh token will be set in cookie by controller)
+            String newAccessToken = jwtService.generateTokenForSubject(userId);
+
+            return RefreshTokenResponse.builder()
+                    .token(newAccessToken)
+                    .message("Token refreshed successfully")
+                    .build();
+        } catch (Exception e) {
+            throw new InvalidTokenException("Invalid or expired refresh token");
+        }
+    }
+
+    /**
+     * Logout user (invalidate session)
+     * Note: With JWT, actual invalidation would require a token blacklist/redis
+     * For now, we just return success and client should delete tokens
+     */
+    @Override
+    public String logout(String userId, String refreshToken) {
+        // Validate user exists
+        userRepository.findById(Long.parseLong(userId))
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        // In production, you would:
+        // 1. Add refresh token to blacklist (Redis)
+        // 2. Clear any session data
+        // Example: if (refreshToken != null) { redisTemplate.opsForValue().set("blacklist:" + refreshToken, "true", refreshTokenExpiration, TimeUnit.MILLISECONDS); }
+
+        logger.info("User {} logged out", userId);
+        return "Logged out successfully";
+    }
+
+    /**
+     * Generate a refresh token for a specific user
+     */
+    @Override
+    public String generateRefreshTokenForUser(Long userId) {
+        return jwtService.generateRefreshTokenForSubject(String.valueOf(userId));
+    }
+
+    /**
+     * Get current authenticated user profile
+     */
+    @Override
+    public UserProfileResponse getCurrentUser(String userId) {
+        User user = userRepository.findById(Long.parseLong(userId))
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        UserProfileResponse.UserProfileResponseBuilder builder = UserProfileResponse.builder()
+                .userId(user.getId())
+                .name(user.getName())
+                .email(user.getEmail())
+                .phoneNumber(user.getPhoneNumber())
+                .role(user.getRole())
+                .status(user.getStatus())
+                .avatarUrl(user.getAvatarUrl());
+
+        // If business owner, include business info
+        if (user.getRole() == RoleEnum.BUSINESS_OWNER) {
+            Optional<Business> maybeBusiness = businessRepository.findByOwnerId(user.getId());
+            if (maybeBusiness.isPresent()) {
+                Business b = maybeBusiness.get();
+                builder.hasBusiness(true)
+                        .businessId(b.getId())
+                        .businessName(b.getName());
+            } else {
+                builder.hasBusiness(false);
+            }
+        }
+
+        return builder.build();
     }
 }

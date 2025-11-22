@@ -9,27 +9,25 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * DTO for authentication response
+ * DTO for current user profile response (/me endpoint)
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class AuthResponse {
+public class UserProfileResponse {
 
-    private String token; // Access token only (refresh token sent via httpOnly cookie)
     private Long userId;
     private String name;
     private String email;
+    private String phoneNumber;
     private RoleEnum role;
     private UserStatusEnum status;
-    private String avatar;
-    private String message;
+    private String avatarUrl;
 
-    // New fields to indicate owner business state
-    // ( usage only by owner )
-    private Boolean hasBusiness;  // Use wrapper types so null means "not present" and Jackson will omit fields for non-owners
+    // For business owners
+    private Boolean hasBusiness;
     private Long businessId;
     private String businessName;
 }

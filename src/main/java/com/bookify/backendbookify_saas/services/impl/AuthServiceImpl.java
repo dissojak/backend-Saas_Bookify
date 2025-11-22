@@ -15,6 +15,8 @@ import com.bookify.backendbookify_saas.repositories.UserRepository;
 import com.bookify.backendbookify_saas.security.JwtService;
 import com.bookify.backendbookify_saas.services.AuthService;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -32,6 +34,8 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
+
+    private static final Logger logger = LoggerFactory.getLogger(AuthServiceImpl.class);
 
     private final UserRepository userRepository;
     private final ActivationTokenRepository activationTokenRepository;
@@ -104,17 +108,22 @@ public class AuthServiceImpl implements AuthService {
             refreshToken = jwtService.generateRefreshTokenForSubject(subject);
         }
 
-        return AuthResponse.builder()
+        AuthResponse response = AuthResponse.builder()
                 .token(token)
                 .refreshToken(refreshToken)
                 .userId(savedUser.getId())
                 .name(savedUser.getName())
                 .email(savedUser.getEmail())
                 .role(savedUser.getRole())
+                .status(savedUser.getStatus())
+                .avatar(savedUser.getAvatarUrl())
                 .message(savedUser.getStatus() == UserStatusEnum.VERIFIED
                         ? "Administrator signup successful. The account is already verified."
                         : "Signup successful. Please check your email to activate your account.")
                 .build();
+
+        logger.info("Signup response being returned: status={} avatarUrl={} response={}", savedUser.getStatus(), savedUser.getAvatarUrl(), response);
+        return response;
     }
 
     /**
@@ -193,7 +202,9 @@ public class AuthServiceImpl implements AuthService {
                 .userId(user.getId())
                 .name(user.getName())
                 .email(user.getEmail())
-                .role(user.getRole());
+                .role(user.getRole())
+                .status(user.getStatus())
+                .avatar(user.getAvatarUrl());
 
         // 5. If owner — check business existence and include it in response
         if (user.getRole() == RoleEnum.BUSINESS_OWNER) {
@@ -217,6 +228,8 @@ public class AuthServiceImpl implements AuthService {
 
         // message and build
         builder.message("Login successful");
-        return builder.build();
+        AuthResponse response = builder.build();
+        logger.info("Login response being returned: status={} avatarUrl={} response={}", user.getStatus(), user.getAvatarUrl(), response);
+        return response;
     }
 }

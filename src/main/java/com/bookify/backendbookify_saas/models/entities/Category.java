@@ -1,6 +1,5 @@
 package com.bookify.backendbookify_saas.models.entities;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -8,8 +7,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * Classe représentant une catégorie d'entreprise
@@ -31,6 +28,9 @@ public class Category {
 
     @Column(length = 1000)
     private String description;
+
+    @Column(length = 1000)
+    private String icon;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

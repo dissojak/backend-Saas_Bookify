@@ -23,7 +23,7 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-@Service
+@Service("businessEvaluationService")
 @RequiredArgsConstructor
 @Slf4j
 public class BusinessEvaluationService {
@@ -123,8 +123,8 @@ public class BusinessEvaluationService {
 
     @Transactional
     public BusinessEvaluation updateEvaluation(Business business, boolean nameChanged, boolean emailChanged,
-                                              boolean phoneChanged, boolean locationChanged,
-                                              boolean descriptionChanged, boolean categoryChanged) {
+                                               boolean phoneChanged, boolean locationChanged,
+                                               boolean descriptionChanged, boolean categoryChanged) {
         var evaluations = evaluationRepository.findByBusinessOrderByCreatedAtDesc(business);
         if (evaluations.isEmpty()) {
             return evaluateAndSave(business);
@@ -401,7 +401,7 @@ public class BusinessEvaluationService {
 
         // Compute weighted overall (equal weights for 6 fields)
         double overall = r.nameScore * W_NAME + r.emailScore * W_EMAIL + r.descriptionScore * W_DESC +
-                         r.locationScore * W_LOC + r.categoryScore * W_CAT + r.brandingScore * W_BRAND;
+                r.locationScore * W_LOC + r.categoryScore * W_CAT + r.brandingScore * W_BRAND;
         r.overall = clamp((int)Math.round(overall));
 
         // No phone enrichment: entity has no phone columns
@@ -452,7 +452,7 @@ public class BusinessEvaluationService {
                       }
                     }
                     """, nz(profile.getCategoryName()), nz(profile.getName()),
-                    nz(profile.getDescription()), nz(profile.getCategoryName()));
+                        nz(profile.getDescription()), nz(profile.getCategoryName()));
             } else {
                 prompt = String.format("""
                     You are a business evaluation expert providing professional consulting advice.
@@ -482,9 +482,9 @@ public class BusinessEvaluationService {
                       }
                     }
                     """, fieldName,
-                    nz(profile.getName()), nz(profile.getLocation()), nz(profile.getPhone()),
-                    nz(profile.getEmail()), nz(profile.getCategoryName()), nz(profile.getDescription()),
-                    fieldName, nz(profile.getCategoryName()), fieldName);
+                        nz(profile.getName()), nz(profile.getLocation()), nz(profile.getPhone()),
+                        nz(profile.getEmail()), nz(profile.getCategoryName()), nz(profile.getDescription()),
+                        fieldName, nz(profile.getCategoryName()), fieldName);
             }
 
             // Google Gemini API request format

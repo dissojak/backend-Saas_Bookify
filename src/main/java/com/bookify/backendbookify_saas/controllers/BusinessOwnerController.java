@@ -37,9 +37,16 @@ public class BusinessOwnerController {
             Authentication authentication,
             @Valid @RequestBody BusinessCreateRequest request
     ) {
-        String ownerEmail = authentication.getName();
+        // authentication.getName() contains the user id (as string) from the JWT subject
+        Long ownerId;
+        try {
+            ownerId = Long.parseLong(authentication.getName());
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Invalid authenticated user id");
+        }
+
         Business created = businessService.createBusinessForOwner(
-                ownerEmail,
+                ownerId,
                 request.getName(),
                 request.getLocation(),
                 request.getPhone(),
@@ -78,9 +85,16 @@ public class BusinessOwnerController {
         // Vérifier l’ownership
         var existing = businessService.getBusinessById(businessId, null)
                 .orElseThrow(() -> new IllegalArgumentException("Business introuvable"));
-        String currentEmail = authentication.getName();
-        if (existing.getOwner() == null || existing.getOwner().getEmail() == null ||
-                !existing.getOwner().getEmail().equalsIgnoreCase(currentEmail)) {
+        // authentication.getName() contains the user id (string)
+        Long currentUserId;
+        try {
+            currentUserId = Long.parseLong(authentication.getName());
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Invalid authenticated user id");
+        }
+
+        if (existing.getOwner() == null || existing.getOwner().getId() == null ||
+                !existing.getOwner().getId().equals(currentUserId)) {
             throw new IllegalArgumentException("Vous ne pouvez modifier que votre propre business");
         }
 

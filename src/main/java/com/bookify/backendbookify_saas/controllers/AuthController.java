@@ -16,6 +16,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import org.springframework.security.core.context.SecurityContextHolder;
+
 import java.util.Arrays;
 import java.util.Map;
 
@@ -146,6 +148,14 @@ public class AuthController {
             HttpServletRequest request,
             HttpServletResponse response) {
 
+        // Ensure authentication is available (in case filter didn't set it)
+        if (authentication == null) {
+            authentication = SecurityContextHolder.getContext().getAuthentication();
+        }
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Unauthorized"));
+        }
+
         String userId = authentication.getName(); // Get userId from JWT subject
 
         // Get refresh token from cookie for blacklisting (if implemented)
@@ -166,6 +176,15 @@ public class AuthController {
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "Get current user", description = "Return authenticated user profile")
     public ResponseEntity<UserProfileResponse> getCurrentUser(org.springframework.security.core.Authentication authentication) {
+        // Fallback to SecurityContext if parameter is null
+        if (authentication == null) {
+            authentication = SecurityContextHolder.getContext().getAuthentication();
+        }
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
         String userId = authentication.getName(); // Returns userId from JWT subject
         UserProfileResponse profileResponse = authService.getCurrentUser(userId);
         return ResponseEntity.ok(profileResponse);
@@ -191,4 +210,3 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 }
-

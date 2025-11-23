@@ -32,9 +32,9 @@ public class BusinessServiceImpl implements BusinessService {
 
     @Override
     @Transactional
-    public Business createBusinessForOwner(String ownerEmail, String name, String location, String phone, String email, Long categoryId, String description) {
-        // Récupérer l'utilisateur
-        User user = userRepository.findByEmail(ownerEmail)
+    public Business createBusinessForOwner(Long ownerId, String name, String location, String phone, String email, Long categoryId, String description) {
+        // Récupérer l'utilisateur par ID (le token contient l'ID en subject)
+        User user = userRepository.findById(ownerId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
         if (user.getRole() != com.bookify.backendbookify_saas.models.enums.RoleEnum.BUSINESS_OWNER) {
             throw new IllegalArgumentException("Only a business owner can create a business");
@@ -64,7 +64,7 @@ public class BusinessServiceImpl implements BusinessService {
         business.setPhone(phone);
         business.setEmail(email);
         business.setDescription(description);
-        business.setOwner(userRepository.findByEmail(ownerEmail).orElseThrow());
+        business.setOwner(user);
         business.setCategory(category);
         Business saved = businessRepository.save(business);
 

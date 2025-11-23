@@ -1,5 +1,6 @@
 package com.bookify.backendbookify_saas.models.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -42,6 +43,7 @@ public class Category {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by", nullable = false,
             foreignKey = @ForeignKey(name = "fk_category_created_by"))
+    @JsonIgnore
     private User createdBy;
 
     @PrePersist

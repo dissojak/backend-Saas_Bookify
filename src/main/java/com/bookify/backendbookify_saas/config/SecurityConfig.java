@@ -17,6 +17,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
+import org.springframework.http.HttpMethod;
 
 /**
  * Configuration de sécurité pour l'application
@@ -59,8 +60,12 @@ public class SecurityConfig {
                 ).permitAll()
                 // TEMPORARILY ALLOW ALL CATEGORY ENDPOINTS FOR DEBUGGING
                 .requestMatchers(
+                    HttpMethod.GET,
                     "/v1/categories/**",
-                    "/api/v1/categories/**"
+                    "/api/v1/categories/**",
+                    // Allow public businesses listing (GET only)
+                    "/v1/businesses/**",
+                    "/api/v1/businesses/**"
                 ).permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                 .anyRequest().authenticated()

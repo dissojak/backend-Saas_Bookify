@@ -13,8 +13,8 @@ public interface BusinessService {
 
     Business createBusiness(Business business);
 
-    // Ajout pour création par un propriétaire authentifié
-    Business createBusinessForOwner(String ownerEmail, String name, String location, String phone, String email, Long categoryId, String description);
+    // Ajout pour création par un propriétaire authentifié (ownerId est l'ID numérique extrait du token)
+    Business createBusinessForOwner(Long ownerId, String name, String location, String phone, String email, Long categoryId, String description);
 
     Business updateBusiness(Long id, Business business, String tenantId);
 

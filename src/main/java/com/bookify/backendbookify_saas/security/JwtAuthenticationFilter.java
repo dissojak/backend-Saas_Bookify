@@ -42,6 +42,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             "/api/v1/auth/activate",
             "/api/v1/auth/forgot-password",
             "/api/v1/auth/reset-password",
+            // Swagger/OpenAPI
             "/v3/api-docs/",
             "/swagger-ui/",
             "/swagger-ui.html",
@@ -65,8 +66,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         System.out.println("╚════════════════════════════════════════════════════════════╝");
 
         // Skip JWT authentication for public endpoints
-        if (isPublicUrl(requestPath)) {
-            System.out.println("✓ Public URL - Skipping JWT authentication");
+        String matched = getMatchingPublicPrefix(requestPath);
+        if (matched != null) {
+            System.out.println("✓ Public URL - Skipping JWT authentication (matched: '" + matched + "')");
             filterChain.doFilter(request, response);
             return;
         }
@@ -164,9 +166,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     /**
-     * Check if the request path is a public URL
+     * Return the matching public prefix for debugging, or null if none
      */
-    private boolean isPublicUrl(String requestPath) {
-        return PUBLIC_URLS.stream().anyMatch(requestPath::startsWith);
+    private String getMatchingPublicPrefix(String requestPath) {
+        return PUBLIC_URLS.stream().filter(requestPath::startsWith).findFirst().orElse(null);
     }
 }

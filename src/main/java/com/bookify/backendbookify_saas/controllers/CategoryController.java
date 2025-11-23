@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -67,6 +68,17 @@ public class CategoryController {
         System.out.println("========================================");
         System.out.println("CREATE CATEGORY ENDPOINT REACHED!");
         System.out.println("Authentication object: " + authentication);
+
+        // Fallback to SecurityContext if authentication parameter is null
+        if (authentication == null) {
+            authentication = SecurityContextHolder.getContext().getAuthentication();
+        }
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            System.out.println("⚠️ Unauthorized attempt to create category - authentication missing or not authenticated");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
         System.out.println("Authentication.getName(): " + authentication.getName());
         System.out.println("Authentication.getPrincipal(): " + authentication.getPrincipal());
         System.out.println("Authentication.getAuthorities(): " + authentication.getAuthorities());

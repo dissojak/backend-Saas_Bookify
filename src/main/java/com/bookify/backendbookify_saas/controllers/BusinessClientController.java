@@ -3,8 +3,6 @@ package com.bookify.backendbookify_saas.controllers;
 import com.bookify.backendbookify_saas.models.dtos.BusinessClientCreateRequest;
 import com.bookify.backendbookify_saas.models.dtos.BusinessClientResponse;
 import com.bookify.backendbookify_saas.models.dtos.BusinessClientUpdateRequest;
-import com.bookify.backendbookify_saas.models.entities.User;
-import com.bookify.backendbookify_saas.repositories.UserRepository;
 import com.bookify.backendbookify_saas.services.BusinessClientService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -29,7 +27,6 @@ import java.util.List;
 public class BusinessClientController {
 
     private final BusinessClientService businessClientService;
-    private final UserRepository userRepository;
 
     @PostMapping
     @PreAuthorize("hasAnyRole('BUSINESS_OWNER', 'STAFF')")
@@ -100,10 +97,13 @@ public class BusinessClientController {
      * Extract user ID from authentication
      */
     private Long getUserIdFromAuthentication(Authentication authentication) {
-        String email = authentication.getName();
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        return user.getId();
+        if (authentication == null || authentication.getName() == null) {
+            throw new RuntimeException("Authentication missing");
+        }
+        try {
+            return Long.parseLong(authentication.getName());
+        } catch (NumberFormatException e) {
+            throw new RuntimeException("Invalid authenticated user id");
+        }
     }
 }
-

@@ -9,5 +9,5 @@ public interface CategoryService {
     List<Category> findAll();
     List<Category> findPreview(int limit);
 
-    Category createCategory(CategoryCreateRequest request, String creatorEmail);
+    Category createCategory(CategoryCreateRequest request, String creatorUserId);
 }

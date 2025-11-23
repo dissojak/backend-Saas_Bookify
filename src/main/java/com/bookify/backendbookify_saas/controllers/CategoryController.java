@@ -2,7 +2,6 @@ package com.bookify.backendbookify_saas.controllers;
 
 import com.bookify.backendbookify_saas.models.dtos.CategoryCreateRequest;
 import com.bookify.backendbookify_saas.models.entities.Category;
-import com.bookify.backendbookify_saas.repositories.UserRepository;
 import com.bookify.backendbookify_saas.services.CategoryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -15,6 +14,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/v1/categories")
@@ -23,7 +23,25 @@ import java.util.List;
 public class CategoryController {
 
     private final CategoryService categoryService;
-    private final UserRepository userRepository;
+
+    @GetMapping("/test")
+    @Operation(summary = "Test endpoint - completely public")
+    public ResponseEntity<String> testEndpoint() {
+        System.out.println("========================================");
+        System.out.println("TEST ENDPOINT HIT!");
+        System.out.println("========================================");
+        return ResponseEntity.ok("Test endpoint works!");
+    }
+
+    @PostMapping("/test")
+    @Operation(summary = "Test POST endpoint - completely public")
+    public ResponseEntity<String> testPostEndpoint(@RequestBody(required = false) String body) {
+        System.out.println("========================================");
+        System.out.println("TEST POST ENDPOINT HIT!");
+        System.out.println("Body: " + body);
+        System.out.println("========================================");
+        return ResponseEntity.ok("Test POST endpoint works!");
+    }
 
     @GetMapping
     @Operation(summary = "Get all categories")
@@ -40,14 +58,37 @@ public class CategoryController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    // @PreAuthorize("hasRole('ADMIN')") // Temporarily disabled for debugging
     @Operation(summary = "Create a new category (admin only)")
     public ResponseEntity<Category> createCategory(
             @Valid @RequestBody CategoryCreateRequest request,
             Authentication authentication
     ) {
-        String creatorEmail = authentication.getName();
-        Category created = categoryService.createCategory(request, creatorEmail);
+        System.out.println("========================================");
+        System.out.println("CREATE CATEGORY ENDPOINT REACHED!");
+        System.out.println("Authentication object: " + authentication);
+        System.out.println("Authentication.getName(): " + authentication.getName());
+        System.out.println("Authentication.getPrincipal(): " + authentication.getPrincipal());
+        System.out.println("Authentication.getAuthorities(): " + authentication.getAuthorities());
+        System.out.println("========================================");
+
+        String userId = authentication.getName(); // Returns userId (from JWT subject)
+        System.out.println("USER ID = " + userId);
+        System.out.println("USER AUTHORITIES = " + authentication.getAuthorities());
+        Category created = categoryService.createCategory(request, userId);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
+
+    @PostMapping("/create-no-auth")
+    @Operation(summary = "Create category WITHOUT any authentication - FOR TESTING ONLY")
+    public ResponseEntity<Map<String, String>> createCategoryNoAuth(@RequestBody CategoryCreateRequest request) {
+        System.out.println("╔══════════════════════════════════════════╗");
+        System.out.println("║ NO-AUTH ENDPOINT HIT!!!!                 ║");
+        System.out.println("║ Category name: " + request.getName() + "                  ║");
+        System.out.println("╚══════════════════════════════════════════╝");
+        return ResponseEntity.ok(Map.of(
+            "message", "NO-AUTH endpoint works! Category would be: " + request.getName(),
+            "description", request.getDescription() != null ? request.getDescription() : "none"
+        ));
     }
 }

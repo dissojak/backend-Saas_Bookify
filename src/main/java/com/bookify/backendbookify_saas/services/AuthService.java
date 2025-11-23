@@ -1,10 +1,6 @@
 package com.bookify.backendbookify_saas.services;
 
-import com.bookify.backendbookify_saas.models.dtos.AuthResponse;
-import com.bookify.backendbookify_saas.models.dtos.LoginRequest;
-import com.bookify.backendbookify_saas.models.dtos.RefreshTokenResponse;
-import com.bookify.backendbookify_saas.models.dtos.SignupRequest;
-import com.bookify.backendbookify_saas.models.dtos.UserProfileResponse;
+import com.bookify.backendbookify_saas.models.dtos.*;
 
 public interface AuthService {
     AuthResponse signup(SignupRequest request);
@@ -14,4 +10,6 @@ public interface AuthService {
     String logout(String userId, String refreshToken);
     UserProfileResponse getCurrentUser(String userId);
     String generateRefreshTokenForUser(Long userId);
+    PasswordResetResponse forgotPassword(ForgotPasswordRequest request);
+    PasswordResetResponse resetPassword(ResetPasswordRequest request);
 }

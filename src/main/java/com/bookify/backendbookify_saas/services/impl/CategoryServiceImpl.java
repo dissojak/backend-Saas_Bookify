@@ -35,7 +35,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @Transactional
-    public Category createCategory(CategoryCreateRequest request, String creatorEmail) {
+    public Category createCategory(CategoryCreateRequest request, String creatorUserId) {
         if (request == null || request.getName() == null || request.getName().trim().isEmpty()) {
             throw new IllegalArgumentException("Category name is required");
         }
@@ -45,7 +45,8 @@ public class CategoryServiceImpl implements CategoryService {
             throw new IllegalArgumentException("Category with the same name already exists");
         }
 
-        User creator = userRepository.findByEmail(creatorEmail)
+        Long userId = Long.parseLong(creatorUserId);
+        User creator = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("Creator user not found"));
 
         Category category = new Category();

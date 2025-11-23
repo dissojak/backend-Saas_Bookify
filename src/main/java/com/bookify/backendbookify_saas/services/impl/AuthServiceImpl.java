@@ -3,11 +3,7 @@ package com.bookify.backendbookify_saas.services.impl;
 import com.bookify.backendbookify_saas.email_SMTP.MailService;
 import com.bookify.backendbookify_saas.exceptions.InvalidTokenException;
 import com.bookify.backendbookify_saas.exceptions.UserAlreadyExistsException;
-import com.bookify.backendbookify_saas.models.dtos.AuthResponse;
-import com.bookify.backendbookify_saas.models.dtos.LoginRequest;
-import com.bookify.backendbookify_saas.models.dtos.RefreshTokenResponse;
-import com.bookify.backendbookify_saas.models.dtos.SignupRequest;
-import com.bookify.backendbookify_saas.models.dtos.UserProfileResponse;
+import com.bookify.backendbookify_saas.models.dtos.*;
 import com.bookify.backendbookify_saas.models.entities.*;
 import com.bookify.backendbookify_saas.models.enums.RoleEnum;
 import com.bookify.backendbookify_saas.models.enums.UserStatusEnum;
@@ -27,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.Random;
 import java.util.UUID;
 
 /**
@@ -166,23 +163,27 @@ public class AuthServiceImpl implements AuthService {
     }
 
     /**
-     * Connexion d'un utilisateur
+     * Login user
      */
     @Override
     public AuthResponse login(LoginRequest request) {
-        // 1. Authentifier l'utilisateur
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.getEmail(),
-                        request.getPassword()
-                )
-        );
+        logger.info("Login attempt for email: {}", request.getEmail());
 
-        // 2. Récupérer l'utilisateur depuis le Repository
+        // 1. Find user by email
         var user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Invalid email or password"));
 
-        // 3. Vérifier si le compte est activé
+        logger.info("User found - ID: {}, Role: {}, Status: {}", user.getId(), user.getRole(), user.getStatus());
+
+        // 2. Verify password manually (since UserDetailsService now expects ID, not email)
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            logger.error("Password mismatch for user: {}", user.getEmail());
+            throw new IllegalArgumentException("Invalid email or password");
+        }
+
+        logger.info("Password verified successfully");
+
+        // 3. Check if account is activated
         if (user.getStatus() == UserStatusEnum.PENDING) {
             throw new IllegalArgumentException("Please activate your account using the activation email we've sent to you");
         }
@@ -193,6 +194,7 @@ public class AuthServiceImpl implements AuthService {
 
         // 4. Generate access token only (refresh token will be set in httpOnly cookie by controller)
         String token = jwtService.generateTokenForSubject(String.valueOf(user.getId()));
+        logger.info("JWT token generated for user ID: {}", user.getId());
 
         // Prepare builder with common fields
         AuthResponse.AuthResponseBuilder builder = AuthResponse.builder()
@@ -285,7 +287,7 @@ public class AuthServiceImpl implements AuthService {
         return jwtService.generateRefreshTokenForSubject(String.valueOf(userId));
     }
 
-    /**
+    /**<
      * Get current authenticated user profile
      */
     @Override
@@ -316,5 +318,97 @@ public class AuthServiceImpl implements AuthService {
         }
 
         return builder.build();
+    }
+
+    /**
+     * Forgot password - Generate 6-digit code and send via email
+     */
+    @Override
+    @Transactional
+    public PasswordResetResponse forgotPassword(ForgotPasswordRequest request) {
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new IllegalArgumentException("No user found with this email"));
+
+        // Generate 6-digit random code
+        String resetCode = String.format("%06d", new Random().nextInt(1000000));
+
+        // Set reset token and expiration (15 minutes from now)
+        user.setPasswordResetToken(resetCode);
+        user.setPasswordResetExpiresAt(LocalDateTime.now().plusMinutes(15));
+        userRepository.save(user);
+
+        // Send email with reset code
+        try {
+            String subject = "Password Reset Code - Bookify";
+            String body = String.format(
+                    """
+                    Hello %s,
+                    
+                    You have requested to reset your password. Your password reset code is:
+                    
+                    %s
+                    
+                    This code will expire in 15 minutes.
+                    
+                    If you did not request this password reset, please ignore this email.
+                    
+                    Best regards,
+                    Bookify Team
+                    """,
+                    user.getName(),
+                    resetCode
+            );
+            mailService.sendSimpleMessage(user.getEmail(), subject, body);
+            logger.info("Password reset code sent to email: {}", user.getEmail());
+        } catch (Exception e) {
+            logger.error("Failed to send password reset email to {}: {}", user.getEmail(), e.getMessage());
+            throw new RuntimeException("Failed to send reset code email");
+        }
+
+        return PasswordResetResponse.builder()
+                .message("Password reset code has been sent to your email")
+                .email(user.getEmail())
+                .build();
+    }
+
+    /**
+     * Reset password - Verify 6-digit code and update password
+     */
+    @Override
+    @Transactional
+    public PasswordResetResponse resetPassword(ResetPasswordRequest request) {
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new IllegalArgumentException("No user found with this email"));
+
+        // Verify reset code exists
+        if (user.getPasswordResetToken() == null) {
+            throw new IllegalArgumentException("No password reset request found for this email");
+        }
+
+        // Verify reset code matches
+        if (!user.getPasswordResetToken().equals(request.getResetCode())) {
+            throw new IllegalArgumentException("Invalid reset code");
+        }
+
+        // Verify reset code hasn't expired
+        if (user.getPasswordResetExpiresAt() == null || LocalDateTime.now().isAfter(user.getPasswordResetExpiresAt())) {
+            throw new IllegalArgumentException("Reset code has expired. Please request a new one");
+        }
+
+        // Update password
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+
+        // Clear reset token and expiration
+        user.setPasswordResetToken(null);
+        user.setPasswordResetExpiresAt(null);
+
+        userRepository.save(user);
+
+        logger.info("Password successfully reset for user: {}", user.getEmail());
+
+        return PasswordResetResponse.builder()
+                .message("Password has been reset successfully. You can now login with your new password")
+                .email(user.getEmail())
+                .build();
     }
 }

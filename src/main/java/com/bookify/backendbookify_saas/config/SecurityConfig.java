@@ -37,15 +37,30 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(
-                    // Compatibilité avec anciens endpoints (si présents)
-                    "/v1/auth/**",
-                    "/api/v1/auth/**",
+                    // Public auth endpoints
+                    "/v1/auth/signup",
+                    "/v1/auth/login",
+                    "/v1/auth/refresh",
+                    "/v1/auth/activate",
+                    "/v1/auth/forgot-password",
+                    "/v1/auth/reset-password",
+                    "/api/v1/auth/signup",
+                    "/api/v1/auth/login",
+                    "/api/v1/auth/refresh",
+                    "/api/v1/auth/activate",
+                    "/api/v1/auth/forgot-password",
+                    "/api/v1/auth/reset-password",
                     // Swagger/OpenAPI
                     "/v3/api-docs/**",
                     "/swagger-ui/**",
                     "/swagger-ui.html",
                     "/swagger-resources/**",
                     "/webjars/**"
+                ).permitAll()
+                // TEMPORARILY ALLOW ALL CATEGORY ENDPOINTS FOR DEBUGGING
+                .requestMatchers(
+                    "/v1/categories/**",
+                    "/api/v1/categories/**"
                 ).permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                 .anyRequest().authenticated()

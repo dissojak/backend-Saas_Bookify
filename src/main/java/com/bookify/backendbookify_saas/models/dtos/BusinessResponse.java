@@ -24,4 +24,7 @@ public class BusinessResponse {
 
     // Embed the latest evaluation in the response
     private BusinessEvaluationResponse evaluation;
+
+    // First image URL (can be null)
+    private String firstImageUrl;
 }

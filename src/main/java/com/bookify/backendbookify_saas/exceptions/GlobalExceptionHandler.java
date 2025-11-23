@@ -1,7 +1,10 @@
 package com.bookify.backendbookify_saas.exceptions;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -19,6 +22,7 @@ import java.util.stream.Collectors;
  * Gestionnaire global des exceptions pour l'API
  * Centralise la gestion des erreurs pour toute l'application
  */
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -140,14 +144,66 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Handles unauthorized access exceptions (not owner of resource)
+     */
+    @ExceptionHandler(UnauthorizedAccessException.class)
+    public ResponseEntity<Map<String, String>> handleUnauthorizedAccess(
+            UnauthorizedAccessException ex,
+            WebRequest request) {
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(Map.of("message", ex.getMessage()));
+    }
+
+    /**
      * Gère toutes les autres exceptions non gérées
      */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, String>> handleGlobalException(
             Exception ex,
             WebRequest request) {
+        log.error("Unhandled exception occurred: {}", ex.getMessage(), ex);
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("message", "Une erreur interne est survenue"));
+                .body(Map.of(
+                        "message", "Une erreur interne est survenue",
+                        "error", ex.getClass().getSimpleName(),
+                        "detail", ex.getMessage() != null ? ex.getMessage() : "No details"
+                ));
+    }
+
+    /**
+     * Gère les exceptions HttpMediaTypeNotSupportedException (types de médias HTTP non supportés)
+     */
+    @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+    public ResponseEntity<Map<String, String>> handleMediaTypeNotSupported(
+            HttpMediaTypeNotSupportedException ex,
+            WebRequest request) {
+        String supportedMediaTypes = ex.getSupportedMediaTypes() != null
+                ? ex.getSupportedMediaTypes().stream()
+                    .map(Object::toString)
+                    .collect(Collectors.joining(", "))
+                : "N/A";
+
+        String message = String.format(
+                "Type de média HTTP non supporté pour cette URL. Utilisez plutôt : %s",
+                supportedMediaTypes
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
+                .body(Map.of("message", message));
+    }
+
+    /**
+     * Gère les exceptions HttpMessageNotReadableException (corps de requête HTTP illisible)
+     */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<Map<String, String>> handleMessageNotReadable(
+            HttpMessageNotReadableException ex,
+            WebRequest request) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(Map.of("message", "Corps de requête illisible"));
     }
 }

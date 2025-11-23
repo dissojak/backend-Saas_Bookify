@@ -80,6 +80,10 @@ public class Business {
     @JsonManagedReference
     private List<BusinessEvaluation> evaluations = new ArrayList<>();
 
+    @OneToMany(mappedBy = "business", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonManagedReference
+    private List<BusinessImage> images = new ArrayList<>();
+
     // helper methods
     public void addService(Service s) {
         services.add(s);

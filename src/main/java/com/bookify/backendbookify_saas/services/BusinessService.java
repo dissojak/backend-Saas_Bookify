@@ -20,6 +20,8 @@ public interface BusinessService {
 
     Optional<Business> getBusinessById(Long id, String tenantId);
 
+    Optional<Business> getBusinessByOwnerId(Long ownerId);
+
     List<Business> getAllBusinessesByOwner(User owner);
 
     List<Business> getAllBusinesses(String tenantId);

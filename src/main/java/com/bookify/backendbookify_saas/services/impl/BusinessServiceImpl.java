@@ -136,6 +136,15 @@ public class BusinessServiceImpl implements BusinessService {
     }
 
     @Override
+    public Optional<Business> getBusinessByOwnerId(Long ownerId) {
+        User owner = userRepository.findById(ownerId).orElse(null);
+        if (owner == null) {
+            return Optional.empty();
+        }
+        return businessRepository.findByOwner(owner);
+    }
+
+    @Override
     public List<Business> getAllBusinessesByOwner(User owner) {
         throw new UnsupportedOperationException("Not implemented");
     }

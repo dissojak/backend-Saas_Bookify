@@ -6,8 +6,10 @@ import com.bookify.backendbookify_saas.models.dtos.BusinessResponse;
 import com.bookify.backendbookify_saas.models.dtos.BusinessUpdateRequest;
 import com.bookify.backendbookify_saas.models.entities.Business;
 import com.bookify.backendbookify_saas.models.entities.BusinessEvaluation;
+import com.bookify.backendbookify_saas.models.entities.BusinessImage;
 import com.bookify.backendbookify_saas.models.entities.Category;
 import com.bookify.backendbookify_saas.repositories.BusinessEvaluationRepository;
+import com.bookify.backendbookify_saas.repositories.BusinessImageRepository;
 import com.bookify.backendbookify_saas.services.BusinessService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -29,6 +31,7 @@ public class BusinessOwnerController {
 
     private final BusinessService businessService;
     private final BusinessEvaluationRepository evaluationRepository;
+    private final BusinessImageRepository imageRepository;
 
     @PostMapping
     @PreAuthorize("hasRole('BUSINESS_OWNER')")
@@ -56,6 +59,7 @@ public class BusinessOwnerController {
         );
 
         BusinessEvaluationResponse evalDto = mapLatestEvaluation(created);
+        String firstImage = getFirstImageUrl(created.getId());
 
         BusinessResponse response = BusinessResponse.builder()
                 .id(created.getId())
@@ -69,9 +73,40 @@ public class BusinessOwnerController {
                 .ownerId(created.getOwner() != null ? created.getOwner().getId() : null)
                 .description(created.getDescription())
                 .evaluation(evalDto)
+                .firstImageUrl(firstImage)
                 .build();
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @GetMapping
+    @PreAuthorize("hasRole('BUSINESS_OWNER')")
+    @Operation(summary = "Get business owned by authenticated user", description = "Retrieve business for current owner")
+    public ResponseEntity<BusinessResponse> getMyBusiness(Authentication authentication) {
+        Long ownerId = Long.parseLong(authentication.getName());
+
+        var business = businessService.getBusinessByOwnerId(ownerId)
+                .orElseThrow(() -> new IllegalArgumentException("No business found for this owner"));
+
+        BusinessEvaluationResponse evalDto = mapLatestEvaluation(business);
+        String firstImage = getFirstImageUrl(business.getId());
+
+        BusinessResponse response = BusinessResponse.builder()
+                .id(business.getId())
+                .name(business.getName())
+                .location(business.getLocation())
+                .phone(business.getPhone())
+                .email(business.getEmail())
+                .status(business.getStatus())
+                .categoryId(business.getCategory() != null ? business.getCategory().getId() : null)
+                .categoryName(business.getCategory() != null ? business.getCategory().getName() : null)
+                .ownerId(business.getOwner() != null ? business.getOwner().getId() : null)
+                .description(business.getDescription())
+                .evaluation(evalDto)
+                .firstImageUrl(firstImage)
+                .build();
+
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/{businessId}")
@@ -114,6 +149,7 @@ public class BusinessOwnerController {
         var updated = businessService.updateBusiness(businessId, input, null);
 
         BusinessEvaluationResponse evalDto = mapLatestEvaluation(updated);
+        String firstImage = getFirstImageUrl(updated.getId());
 
         BusinessResponse response = BusinessResponse.builder()
                 .id(updated.getId())
@@ -127,6 +163,7 @@ public class BusinessOwnerController {
                 .ownerId(updated.getOwner() != null ? updated.getOwner().getId() : null)
                 .description(updated.getDescription())
                 .evaluation(evalDto)
+                .firstImageUrl(firstImage)
                 .build();
         return ResponseEntity.ok(response);
     }
@@ -157,5 +194,10 @@ public class BusinessOwnerController {
                 .source(e.getSource())
                 .createdAt(e.getCreatedAt())
                 .build();
+    }
+
+    private String getFirstImageUrl(Long businessId) {
+        List<BusinessImage> images = imageRepository.findByBusinessIdOrderByDisplayOrderAsc(businessId);
+        return images.isEmpty() ? null : images.get(0).getImageUrl();
     }
 }

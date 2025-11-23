@@ -1,10 +1,6 @@
 package com.bookify.backendbookify_saas.controllers;
 
-import com.bookify.backendbookify_saas.models.dtos.AuthResponse;
-import com.bookify.backendbookify_saas.models.dtos.LoginRequest;
-import com.bookify.backendbookify_saas.models.dtos.RefreshTokenResponse;
-import com.bookify.backendbookify_saas.models.dtos.SignupRequest;
-import com.bookify.backendbookify_saas.models.dtos.UserProfileResponse;
+import com.bookify.backendbookify_saas.models.dtos.*;
 import com.bookify.backendbookify_saas.security.JwtService;
 import com.bookify.backendbookify_saas.services.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -146,12 +142,11 @@ public class AuthController {
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "Logout user", description = "Invalidate user session and clear refresh token")
     public ResponseEntity<Map<String, String>> logout(
-            @RequestHeader("Authorization") String authHeader,
+            org.springframework.security.core.Authentication authentication,
             HttpServletRequest request,
             HttpServletResponse response) {
 
-        String token = authHeader.substring(7); // Remove "Bearer " prefix
-        String userId = jwtService.extractUsername(token);
+        String userId = authentication.getName(); // Get userId from JWT subject
 
         // Get refresh token from cookie for blacklisting (if implemented)
         String refreshToken = getRefreshTokenFromCookie(request);
@@ -170,11 +165,30 @@ public class AuthController {
     @GetMapping("/me")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "Get current user", description = "Return authenticated user profile")
-    public ResponseEntity<UserProfileResponse> getCurrentUser(@RequestHeader("Authorization") String authHeader) {
-        String token = authHeader.substring(7); // Remove "Bearer " prefix
-        String userId = jwtService.extractUsername(token);
+    public ResponseEntity<UserProfileResponse> getCurrentUser(org.springframework.security.core.Authentication authentication) {
+        String userId = authentication.getName(); // Returns userId from JWT subject
         UserProfileResponse profileResponse = authService.getCurrentUser(userId);
         return ResponseEntity.ok(profileResponse);
+    }
+
+    /**
+     * Forgot password - Send 6-digit reset code via email
+     */
+    @PostMapping("/forgot-password")
+    @Operation(summary = "Forgot password", description = "Send 6-digit reset code to user's email")
+    public ResponseEntity<PasswordResetResponse> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        PasswordResetResponse response = authService.forgotPassword(request);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Reset password - Verify reset code and update password
+     */
+    @PostMapping("/reset-password")
+    @Operation(summary = "Reset password", description = "Reset password using 6-digit code from email")
+    public ResponseEntity<PasswordResetResponse> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        PasswordResetResponse response = authService.resetPassword(request);
+        return ResponseEntity.ok(response);
     }
 }
 

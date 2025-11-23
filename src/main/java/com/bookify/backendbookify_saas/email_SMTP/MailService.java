@@ -26,4 +26,12 @@ public interface MailService {
      * @param recipientName Nom du destinataire
      */
     void sendAccountDeletionEmail(String recipientEmail, String recipientName);
+
+    /**
+     * Envoie un email simple avec sujet et contenu personnalisés
+     * @param to Email du destinataire
+     * @param subject Sujet de l'email
+     * @param text Contenu de l'email
+     */
+    void sendSimpleMessage(String to, String subject, String text);
 }

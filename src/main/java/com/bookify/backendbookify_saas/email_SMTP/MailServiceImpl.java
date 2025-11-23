@@ -170,4 +170,26 @@ public class MailServiceImpl implements MailService {
                 .replace("<", "&lt;")
                 .replace(">", "&gt;");
     }
+
+    @Override
+    public void sendSimpleMessage(String to, String subject, String text) {
+        try {
+            MimeMessage msg = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(msg, true, "UTF-8");
+
+            helper.setFrom(new InternetAddress(fromEmail, fromDisplayName));
+            helper.setTo(to);
+            helper.setSubject(subject);
+            helper.setText(text, false); // false = plain text only
+
+            mailSender.send(msg);
+            log.info("Simple email sent to {}", to);
+        } catch (MessagingException e) {
+            log.error("Failed to send simple email to {}: {}", to, e.getMessage());
+            throw new RuntimeException("Failed to send email", e);
+        } catch (Exception e) {
+            log.error("Unexpected error sending simple email to {}: {}", to, e.getMessage());
+            throw new RuntimeException("Failed to send email", e);
+        }
+    }
 }

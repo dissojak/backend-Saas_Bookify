@@ -156,6 +156,18 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Gère le cas où un utilisateur est déjà membre du personnel d'une autre entreprise
+     */
+    @ExceptionHandler(UserAlreadyStaffException.class)
+    public ResponseEntity<Map<String, String>> handleUserAlreadyStaff(
+            UserAlreadyStaffException ex,
+            WebRequest request) {
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(Map.of("message", ex.getMessage()));
+    }
+
+    /**
      * Gère toutes les autres exceptions non gérées
      */
     @ExceptionHandler(Exception.class)

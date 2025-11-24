@@ -22,6 +22,9 @@ public interface BusinessService {
 
     Optional<Business> getBusinessByOwnerId(Long ownerId);
 
+    // Change business status with actor info (owner or admin)
+    Business changeBusinessStatus(Long businessId, com.bookify.backendbookify_saas.models.enums.BusinessStatus newStatus, Long actorId, boolean actorIsAdmin);
+
     List<Business> getAllBusinessesByOwner(User owner);
 
     List<Business> getAllBusinesses(String tenantId);

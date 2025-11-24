@@ -22,6 +22,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/v1/owner/businesses")
@@ -168,6 +169,96 @@ public class BusinessOwnerController {
         return ResponseEntity.ok(response);
     }
 
+    @PutMapping("/{businessId}/status")
+    @PreAuthorize("hasAnyRole('BUSINESS_OWNER','ADMIN')")
+    @Operation(summary = "Change business status", description = "Owner or Admin can change status (rules enforced)")
+    public ResponseEntity<?> changeStatus(
+            Authentication authentication,
+            @PathVariable Long businessId,
+            @RequestBody Map<String, String> body
+    ) {
+        Long actorId;
+        try {
+            actorId = Long.parseLong(authentication.getName());
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Invalid authenticated user id");
+        }
+
+        boolean actorIsAdmin = authentication.getAuthorities().stream()
+                .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()) || "ADMIN".equals(a.getAuthority()));
+
+        String statusStr = body.get("status");
+        if (statusStr == null || statusStr.isBlank()) {
+            throw new IllegalArgumentException("status is required");
+        }
+
+        com.bookify.backendbookify_saas.models.enums.BusinessStatus newStatus;
+        try {
+            newStatus = com.bookify.backendbookify_saas.models.enums.BusinessStatus.valueOf(statusStr.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid status value");
+        }
+
+        // Enforce PENDING special logic: if BO requests PENDING, check evaluation overall
+        boolean requestedByOwner = !actorIsAdmin;
+
+        var changed = businessService.changeBusinessStatus(businessId, newStatus, actorId, actorIsAdmin);
+
+        // Decide response based on the actual saved status (service may auto-change PENDING -> ACTIVE)
+        if (requestedByOwner) {
+            var savedStatus = changed.getStatus();
+            // If service auto-activated, inform owner
+            if (savedStatus == com.bookify.backendbookify_saas.models.enums.BusinessStatus.ACTIVE) {
+                var evalList = evaluationRepository.findByBusinessOrderByCreatedAtDesc(changed);
+                int overall = 0;
+                if (!evalList.isEmpty()) overall = evalList.get(0).getOverallScore();
+                return ResponseEntity.ok(Map.of(
+                        "message", "Congratulations! Your business has been activated.",
+                        "overallScore", overall,
+                        "status", "ACTIVE"
+                ));
+            }
+
+            // If owner requested PENDING but it stayed PENDING, give the advice based on overall
+            if (newStatus == com.bookify.backendbookify_saas.models.enums.BusinessStatus.PENDING) {
+                var evalList = evaluationRepository.findByBusinessOrderByCreatedAtDesc(changed);
+                int overall = 0;
+                if (!evalList.isEmpty()) overall = evalList.get(0).getOverallScore();
+
+                if (overall <= 70) {
+                    return ResponseEntity.ok(Map.of(
+                            "message", "Your business was submitted for review, but the evaluation overall score is <= 70.",
+                            "overallScore", overall,
+                            "advice", "Enhance your business information (name, email, description, location) to improve the evaluation or wait for an admin to activate it. Activation is not guaranteed.",
+                            "status", "PENDING"
+                    ));
+                }
+
+                // overall > 70 but service did not auto-activate for some reason
+                return ResponseEntity.ok(Map.of(
+                        "message", "Your business was submitted for review. The evaluation overall score is above 70 but activation still requires admin approval.",
+                        "overallScore", overall,
+                        "advice", "You can wait for an admin to activate it or further improve your information to maximize the chance of activation."
+                ));
+            }
+        }
+
+        return ResponseEntity.ok(Map.of("message", "Business status updated", "status", changed.getStatus()));
+    }
+
+    @DeleteMapping("/{businessId}")
+    @PreAuthorize("hasRole('BUSINESS_OWNER')")
+    @Operation(summary = "Delete (soft) business", description = "Owner can soft-delete their business; status will be set to DELETED")
+    public ResponseEntity<?> deleteBusiness(
+            Authentication authentication,
+            @PathVariable Long businessId
+    ) {
+        Long ownerId = Long.parseLong(authentication.getName());
+        // Use changeBusinessStatus to enforce ownership and set DELETED
+        var changed = businessService.changeBusinessStatus(businessId, com.bookify.backendbookify_saas.models.enums.BusinessStatus.DELETED, ownerId, false);
+        return ResponseEntity.noContent().build();
+    }
+
     private BusinessEvaluationResponse mapLatestEvaluation(Business business) {
         List<BusinessEvaluation> list = evaluationRepository.findByBusinessOrderByCreatedAtDesc(business);
         if (list.isEmpty()) return null;
@@ -201,3 +292,5 @@ public class BusinessOwnerController {
         return images.isEmpty() ? null : images.get(0).getImageUrl();
     }
 }
+
+

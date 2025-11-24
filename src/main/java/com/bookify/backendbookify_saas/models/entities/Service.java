@@ -8,6 +8,7 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -59,13 +60,18 @@ public class Service {
     @OneToMany(mappedBy = "service", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<ServiceBooking> bookings;
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany
     @JoinTable(
         name = "service_staff",
         joinColumns = @JoinColumn(name = "service_id"),
         inverseJoinColumns = @JoinColumn(name = "staff_id")
     )
-    private List<Staff> staff;
+    private List<Staff> staff = new ArrayList<>();
+
+    // Track which User created this Service (who added it)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by", foreignKey = @ForeignKey(name = "fk_service_created_by"))
+    private User createdBy;
 
     @OneToMany(mappedBy = "service", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<ServiceRating> ratings;

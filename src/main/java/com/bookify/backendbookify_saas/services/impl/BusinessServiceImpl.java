@@ -2,11 +2,13 @@ package com.bookify.backendbookify_saas.services.impl;
 
 import com.bookify.backendbookify_saas.models.entities.*;
 import com.bookify.backendbookify_saas.repositories.BusinessRepository;
+import com.bookify.backendbookify_saas.repositories.BusinessEvaluationRepository;
 import com.bookify.backendbookify_saas.repositories.UserRepository;
 import com.bookify.backendbookify_saas.services.BusinessService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,11 +17,13 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class BusinessServiceImpl implements BusinessService {
 
     private final BusinessRepository businessRepository;
     private final UserRepository userRepository;
     private final BusinessEvaluationService evaluationService; // conservé pour usage futur mais non appelé ici
+    private final BusinessEvaluationRepository evaluationRepository;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -142,6 +146,74 @@ public class BusinessServiceImpl implements BusinessService {
             return Optional.empty();
         }
         return businessRepository.findByOwner(owner);
+    }
+
+    @Override
+    public Business changeBusinessStatus(Long businessId, com.bookify.backendbookify_saas.models.enums.BusinessStatus newStatus, Long actorId, boolean actorIsAdmin) {
+        Business business = businessRepository.findById(businessId)
+                .orElseThrow(() -> new IllegalArgumentException("Business not found"));
+
+        // Owner check if needed
+        Long ownerId = business.getOwner() != null ? business.getOwner().getId() : null;
+
+        switch (newStatus) {
+            case PENDING -> {
+                // Only business owner (not admin) can request PENDING
+                if (actorIsAdmin) {
+                    throw new com.bookify.backendbookify_saas.exceptions.UnauthorizedAccessException("Admins cannot set a business to PENDING");
+                }
+                if (ownerId == null || !ownerId.equals(actorId)) {
+                    throw new com.bookify.backendbookify_saas.exceptions.UnauthorizedAccessException("You are not the owner of this business");
+                }
+                // Check latest evaluation: if overall > 70, auto-activate
+                try {
+                    List<BusinessEvaluation> evals = evaluationRepository.findByBusinessOrderByCreatedAtDesc(business);
+                    if (!evals.isEmpty()) {
+                        int overall = evals.get(0).getOverallScore();
+                        if (overall > 70) {
+                            log.info("Auto-activating business {} because overall score {} > 70", businessId, overall);
+                            business.setStatus(com.bookify.backendbookify_saas.models.enums.BusinessStatus.ACTIVE);
+                            break;
+                        }
+                    }
+                } catch (Exception ex) {
+                    log.warn("Failed to read evaluations for business {}: {}", businessId, ex.getMessage());
+                    // Fall back to PENDING
+                }
+                business.setStatus(newStatus);
+            }
+            case ACTIVE -> {
+                // Only admin can activate
+                if (!actorIsAdmin) {
+                    throw new com.bookify.backendbookify_saas.exceptions.UnauthorizedAccessException("Only admin can activate a business");
+                }
+                business.setStatus(newStatus);
+            }
+            case SUSPENDED -> {
+                // Only admin can suspend
+                if (!actorIsAdmin) {
+                    throw new com.bookify.backendbookify_saas.exceptions.UnauthorizedAccessException("Only admin can suspend a business");
+                }
+                business.setStatus(newStatus);
+            }
+            case DELETED -> {
+                // Only business owner can delete (soft-delete)
+                if (ownerId == null || !ownerId.equals(actorId)) {
+                    throw new com.bookify.backendbookify_saas.exceptions.UnauthorizedAccessException("Only the business owner can delete the business");
+                }
+                business.setStatus(newStatus);
+            }
+            case INACTIVE -> {
+                // Only business owner can set inactive
+                if (ownerId == null || !ownerId.equals(actorId)) {
+                    throw new com.bookify.backendbookify_saas.exceptions.UnauthorizedAccessException("Only the business owner can set the business to INACTIVE");
+                }
+                business.setStatus(newStatus);
+            }
+            default -> throw new IllegalArgumentException("Unsupported status change");
+        }
+
+        return businessRepository.save(business);
     }
 
     @Override

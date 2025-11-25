@@ -216,43 +216,33 @@ public class BusinessServiceController {
             @PathVariable Long businessId,
             @PathVariable Long serviceId
     ) {
-        try {
-            Long actorId = Long.parseLong(authentication.getName());
+        Long actorId = Long.parseLong(authentication.getName());
 
-            // Verify the actor is staff for this business
-            boolean isStaff = staffValidationService.isStaffForBusiness(actorId, businessId);
-            if (!isStaff) {
-                throw new UnauthorizedAccessException("Only staff of this business can link themselves to a service");
-            }
-
-            // Load service with staff to check ownership and existing linkage
-            Service s = serviceRepository.findByIdWithStaffAndCreator(serviceId).orElseThrow(() -> new IllegalArgumentException("Service not found"));
-            if (s.getBusiness() == null || !s.getBusiness().getId().equals(businessId)) {
-                throw new IllegalArgumentException("Service does not belong to business");
-            }
-
-            boolean alreadyLinked = s.getStaff() != null && s.getStaff().stream().anyMatch(u -> u.getId().equals(actorId));
-            if (alreadyLinked) {
-                // Already linked — nothing to do
-                return ResponseEntity.noContent().build();
-            }
-
-            // Use the ServiceCreationService which runs the insert in a new transaction
-            serviceCreationService.addStaffToService(serviceId, List.of(actorId));
-
-            // Reload the service with staff and creator for response
-            Service reloaded = serviceRepository.findByIdWithStaffAndCreator(serviceId).orElse(s);
-            return ResponseEntity.ok(toDto(reloaded));
-        } catch (Exception ex) {
-            // Log full exception for debugging and return an internal error message to client
-            log.error("linkSelfToService failed for businessId={}, serviceId={}, actorId={}", businessId, serviceId, (authentication != null ? authentication.getName() : "null"), ex);
-            // Build a simple error response
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ServiceResponse.builder()
-                            .id(null)
-                            .name("Internal error")
-                            .description(ex.getMessage())
-                            .build());
+        // Load service (do not modify scalar fields here)
+        Service s = serviceRepository.findById(serviceId).orElseThrow(() -> new IllegalArgumentException("Service not found"));
+        if (s.getBusiness() == null || !s.getBusiness().getId().equals(businessId)) {
+            throw new IllegalArgumentException("Service does not belong to business");
         }
+
+        // Permission: allow business owner OR any staff of the business
+        boolean isOwner = s.getBusiness().getOwner() != null && s.getBusiness().getOwner().getId().equals(actorId);
+        boolean isStaff = staffValidationService.isStaffForBusiness(actorId, businessId);
+        if (!isOwner && !isStaff) throw new UnauthorizedAccessException("Only owner or staff of this business can modify service staff links");
+
+        // This endpoint does not accept any scalar changes (no request body). We'll add the authenticated user only.
+        // Build the list containing only the authenticated user's id (this endpoint is join-only)
+        List<Long> staffIdsToAdd = List.of(actorId);
+
+        // Validate actor is staff OR owner (if owner isn't staff we still allow linking the owner)
+        if (!isOwner && !staffValidationService.isStaffForBusiness(actorId, businessId)) {
+            throw new IllegalArgumentException("Authenticated user is not a staff of this business");
+        }
+
+        // Insert join row(s) using the existing robust helper
+        serviceCreationService.addStaffToService(serviceId, staffIdsToAdd);
+
+        // Reload and return updated service with staff
+        Service reloaded = serviceRepository.findByIdWithStaffAndCreator(serviceId).orElse(s);
+        return ResponseEntity.ok(toDto(reloaded));
     }
 }

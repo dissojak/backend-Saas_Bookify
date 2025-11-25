@@ -2,6 +2,7 @@ package com.bookify.backendbookify_saas.config;
 
 import com.bookify.backendbookify_saas.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -17,6 +18,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
+
 import org.springframework.http.HttpMethod;
 
 /**
@@ -34,47 +36,68 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(AbstractHttpConfigurer::disable)
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers(
-                    // Public auth endpoints
-                    "/v1/auth/signup",
-                    "/v1/auth/login",
-                    "/v1/auth/refresh",
-                    "/v1/auth/activate",
-                    "/v1/auth/forgot-password",
-                    "/v1/auth/reset-password",
-                    "/api/v1/auth/signup",
-                    "/api/v1/auth/login",
-                    "/api/v1/auth/refresh",
-                    "/api/v1/auth/activate",
-                    "/api/v1/auth/forgot-password",
-                    "/api/v1/auth/reset-password",
-                    // Swagger/OpenAPI
-                    "/v3/api-docs/**",
-                    "/swagger-ui/**",
-                    "/swagger-ui.html",
-                    "/swagger-resources/**",
-                    "/webjars/**"
-                ).permitAll()
-                // TEMPORARILY ALLOW ALL CATEGORY ENDPOINTS FOR DEBUGGING
-                .requestMatchers(
-                    HttpMethod.GET,
-                    "/v1/categories/**",
-                    "/api/v1/categories/**",
-                    // Allow public businesses listing (GET only)
-                    "/v1/businesses/**",
-                    "/api/v1/businesses/**"
-                ).permitAll()
-                .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
-                .anyRequest().authenticated()
-            )
-            .sessionManagement(session -> session
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            )
-            .authenticationProvider(authenticationProvider)
-            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                .csrf(AbstractHttpConfigurer::disable)
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(
+                                // Public auth endpoints
+                                "/v1/auth/signup",
+                                "/v1/auth/login",
+                                "/v1/auth/refresh",
+                                "/v1/auth/activate",
+                                "/v1/auth/forgot-password",
+                                "/v1/auth/reset-password",
+                                "/api/v1/auth/signup",
+                                "/api/v1/auth/login",
+                                "/api/v1/auth/refresh",
+                                "/api/v1/auth/activate",
+                                "/api/v1/auth/forgot-password",
+                                "/api/v1/auth/reset-password",
+                                // Swagger/OpenAPI - include both default and custom paths
+                                "/v3/api-docs/**",
+                                "/api/v3/api-docs/**",
+                                "/api/v3/api-docs/swagger-config",
+                                "/api-docs/**",
+                                "/swagger-ui/**",
+                                "/api/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/api/swagger-ui.html",
+                                "/swagger-resources/**",
+                                "/webjars/**"
+                        ).permitAll()
+                        // Make the admin login page public
+                        .requestMatchers(HttpMethod.GET, "/LoginAdmin.html").permitAll()
+                        // Make common static resources public (CSS/JS/images/etc.)
+                        .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
+                        .requestMatchers(
+                                "/static/**",
+                                "/assets/**",
+                                "/**/*.css",
+                                "/**/*.js",
+                                "/**/*.png",
+                                "/**/*.jpg",
+                                "/**/*.jpeg",
+                                "/**/*.gif",
+                                "/**/*.svg",
+                                "/favicon.ico"
+                        ).permitAll()
+                        // TEMPORARILY ALLOW ALL CATEGORY & BUSINESSES ENDPOINTS FOR DEBUGGING
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/v1/categories/**",
+                                "/api/v1/categories/**",
+                                // Allow public businesses listing (GET only)
+                                "/v1/businesses/**",
+                                "/api/v1/businesses/**"
+                        ).permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
+                        .anyRequest().authenticated()
+                )
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+                .authenticationProvider(authenticationProvider)
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

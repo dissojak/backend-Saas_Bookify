@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Login</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Inter, sans-serif;
+            background: linear-gradient(135deg,#2e2e2e,#000);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .card {
+            width: 350px;
+            background: #111;
+            padding: 32px;
+            border-radius: 16px;
+            box-shadow: 0 0 25px rgba(0,0,0,0.4);
+        }
+        .title {
+            color: white;
+            font-size: 26px;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        .input {
+            width: 100%;
+            padding: 14px;
+            border-radius: 10px;
+            border: 1px solid #333;
+            margin-bottom: 16px;
+            background: #1a1a1a;
+            color: white;
+            font-size: 14px;
+        }
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border-radius: 10px;
+            border: none;
+            background: #4f46e5;
+            color: white;
+            font-size: 15px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn:hover {
+            background: #4338ca;
+        }
+        .err {
+            color: #ff4d4d;
+            font-size: 14px;
+            margin-top: 10px;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+<div class="card">
+    <div class="title">Welcome Back</div>
+
+    <form id="loginForm">
+        <input id="email" type="email" placeholder="Email" class="input" />
+        <input id="password" type="password" placeholder="Password" class="input" />
+        <button class="btn" type="submit">Sign In</button>
+    </form>
+
+    <div id="error" class="err"></div>
+</div>
+
+<script>
+    // Robust basePath: take the first non-empty segment if it's not a filename (no dot)
+    const pathname = window.location.pathname || '/';
+    const segments = pathname.split('/').filter(s => s.length > 0);
+    let basePath = '';
+    if (segments.length > 0) {
+        const first = segments[0];
+        // if the first segment contains a dot (file extension) or looks like an HTML file, treat as no prefix
+        if (!first.includes('.') && !first.toLowerCase().endsWith('.html')) {
+            basePath = '/' + first;
+        }
+    }
+
+    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const url = basePath + "/v1/auth/login"; // becomes "/api/v1/auth/login" when basePath is "/api"
+
+        try {
+            const res = await fetch(url, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({
+                    email: document.getElementById("email").value,
+                    password: document.getElementById("password").value
+                })
+            });
+
+            if (!res.ok) {
+                let msg = 'Wrong email or password';
+                try {
+                    const json = await res.json();
+                    if (json && json.message) msg = json.message;
+                } catch (_) {}
+                document.getElementById("error").innerText = msg;
+                return;
+            }
+
+            const data = await res.json();
+            localStorage.setItem("accessToken", data.token);
+            // redirect to dashboard static page, respect basePath
+            window.location.href = basePath + "/Dashboard.html";
+        } catch (err) {
+            console.error('Login fetch failed', err);
+            document.getElementById("error").innerText = "Network error - check server";
+        }
+    });
+</script>
+
+</body>
+</html>

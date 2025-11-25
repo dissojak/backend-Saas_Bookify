@@ -72,13 +72,7 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/static/**",
                                 "/assets/**",
-                                "/**/*.css",
-                                "/**/*.js",
-                                "/**/*.png",
-                                "/**/*.jpg",
-                                "/**/*.jpeg",
-                                "/**/*.gif",
-                                "/**/*.svg",
+                                // Note: removed patterns like '/**/*.css' because PathPattern (used by Spring 6) rejects '**' followed by more data
                                 "/favicon.ico"
                         ).permitAll()
                         // TEMPORARILY ALLOW ALL CATEGORY & BUSINESSES ENDPOINTS FOR DEBUGGING

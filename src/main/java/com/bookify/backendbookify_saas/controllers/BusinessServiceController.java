@@ -6,11 +6,9 @@ import com.bookify.backendbookify_saas.models.dtos.ServiceResponse;
 import com.bookify.backendbookify_saas.models.dtos.ServiceUpdateRequest;
 import com.bookify.backendbookify_saas.models.entities.Business;
 import com.bookify.backendbookify_saas.models.entities.Service;
-import com.bookify.backendbookify_saas.models.entities.Staff;
 import com.bookify.backendbookify_saas.models.entities.User;
 import com.bookify.backendbookify_saas.repositories.BusinessRepository;
 import com.bookify.backendbookify_saas.repositories.ServiceRepository;
-import com.bookify.backendbookify_saas.repositories.StaffRepository;
 import com.bookify.backendbookify_saas.services.StaffValidationService;
 import com.bookify.backendbookify_saas.services.impl.ServiceCreationService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -34,13 +32,12 @@ public class BusinessServiceController {
 
     private final ServiceRepository serviceRepository;
     private final BusinessRepository businessRepository;
-    private final StaffRepository staffRepository;
     private final StaffValidationService staffValidationService;
     private final ServiceCreationService serviceCreationService;
 
     // Helper: map entity -> DTO
     private ServiceResponse toDto(Service s) {
-        List<Long> staffIds = s.getStaff() == null ? List.of() : s.getStaff().stream().map(User::getId).collect(Collectors.toList());
+        List<Long> staffIds = s.getStaff() == null ? List.of() : s.getStaff().stream().map(User::getId).toList();
         return ServiceResponse.builder()
                 .id(s.getId())
                 .name(s.getName())
@@ -144,17 +141,27 @@ public class BusinessServiceController {
         if (req.getImageUrl() != null) s.setImageUrl(req.getImageUrl());
         if (req.getActive() != null) s.setActive(req.getActive());
         if (req.getStaffIds() != null) {
-            List<Staff> staffList = req.getStaffIds().stream().map(id -> {
-                Staff st = staffRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Staff user not found: " + id));
-                if (st.getBusiness() == null || !st.getBusiness().getId().equals(businessId))
-                    throw new IllegalArgumentException("Staff does not belong to this business: " + id);
-                return st;
-            }).collect(Collectors.toList());
-            s.setStaff(staffList);
+            // Validate all supplied staff IDs belong to the business using a single boolean check per id
+            for (Long id : req.getStaffIds()) {
+                boolean belongs = staffValidationService.isStaffForBusiness(id, businessId);
+                if (!belongs) throw new IllegalArgumentException("Staff does not belong to this business: " + id);
+            }
+
+            // Do NOT attach the Staff entities directly to the managed Service (avoids cascading flush issues).
+            // Persist other simple Service changes first, then insert join rows in a separate transaction using ServiceCreationService.
         }
 
-        Service saved = serviceRepository.save(s);
-        return ResponseEntity.ok(toDto(saved));
+        // Apply scalar updates via JPQL partial update to avoid touching collections
+        serviceRepository.updatePartial(s.getId(), req.getName(), req.getDescription(), req.getDurationMinutes(), req.getPrice(), req.getImageUrl(), req.getActive());
+
+        // If staff IDs were supplied, ensure join rows exist using the REQUIRES_NEW addStaffToService (inserts into service_staff)
+        if (req.getStaffIds() != null && !req.getStaffIds().isEmpty()) {
+            serviceCreationService.addStaffToService(s.getId(), req.getStaffIds());
+        }
+
+        // Reload the service with staff and creator for the response
+        Service reloaded = serviceRepository.findByIdWithStaffAndCreator(s.getId()).orElse(s);
+        return ResponseEntity.ok(toDto(reloaded));
     }
 
     // Delete service (owner OR creator)

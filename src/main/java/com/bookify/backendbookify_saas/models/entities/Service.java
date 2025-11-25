@@ -57,7 +57,7 @@ public class Service {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "service", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "service", /*cascade = CascadeType.ALL,*/ fetch = FetchType.LAZY)
     private List<ServiceBooking> bookings;
 
     @ManyToMany
@@ -73,7 +73,7 @@ public class Service {
     @JoinColumn(name = "created_by", foreignKey = @ForeignKey(name = "fk_service_created_by"))
     private User createdBy;
 
-    @OneToMany(mappedBy = "service", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "service", /*cascade = CascadeType.ALL,*/ fetch = FetchType.LAZY)
     private List<ServiceRating> ratings;
 
     @PrePersist

@@ -1,0 +1,117 @@
+package com.bookify.backendbookify_saas.controllers;
+
+import com.bookify.backendbookify_saas.exceptions.UnauthorizedAccessException;
+import com.bookify.backendbookify_saas.models.dtos.StaffHoursResponse;
+import com.bookify.backendbookify_saas.models.dtos.StaffHoursUpdateRequest;
+import com.bookify.backendbookify_saas.repositories.StaffRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalTime;
+import java.time.format.DateTimeParseException;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+
+@RestController
+@RequestMapping("/v1/staff")
+@RequiredArgsConstructor
+@Tag(name = "Staff - Self", description = "Endpoints for staff to manage their own settings")
+@Slf4j
+public class StaffController {
+
+    private final StaffRepository staffRepository;
+
+    @PersistenceContext
+    private EntityManager entityManager;
+
+    @PatchMapping(path = "/{staffId}/workTime", consumes = "application/json", produces = "application/json")
+    @Operation(summary = "Update staff default hours , work time ", description = "Staff can update their own default start and end times")
+    public ResponseEntity<StaffHoursResponse> updateMyHours(
+            Authentication authentication,
+            @PathVariable Long staffId,
+            @RequestBody(required = false) StaffHoursUpdateRequest req
+    ) {
+        if (authentication == null) throw new UnauthorizedAccessException("Authentication required");
+        Long actorId;
+        try {
+            actorId = Long.parseLong(authentication.getName());
+        } catch (NumberFormatException ex) {
+            throw new UnauthorizedAccessException("Invalid authenticated user id");
+        }
+
+        if (!actorId.equals(staffId)) {
+            throw new UnauthorizedAccessException("Staff can only update their own hours");
+        }
+
+        // Ensure staff exists
+        if (!staffRepository.existsById(staffId)) {
+            throw new IllegalArgumentException("Staff not found");
+        }
+
+        if (req == null) {
+            // nothing to change; return current times from DB via repository
+            var maybe = staffRepository.findById(staffId);
+            var s = maybe.orElseThrow(() -> new IllegalArgumentException("Staff not found"));
+            return ResponseEntity.ok(StaffHoursResponse.builder()
+                    .staffId(s.getId())
+                    .defaultStartTime(s.getDefaultStartTime())
+                    .defaultEndTime(s.getDefaultEndTime())
+                    .build());
+        }
+
+        java.time.format.DateTimeFormatter fmt = java.time.format.DateTimeFormatter.ISO_LOCAL_TIME;
+        LocalTime start = null;
+        LocalTime end = null;
+        try {
+            if (req.getDefaultStartTime() != null && !req.getDefaultStartTime().isBlank()) {
+                start = LocalTime.parse(req.getDefaultStartTime(), fmt);
+            }
+            if (req.getDefaultEndTime() != null && !req.getDefaultEndTime().isBlank()) {
+                end = LocalTime.parse(req.getDefaultEndTime(), fmt);
+            }
+        } catch (DateTimeParseException ex) {
+            throw new IllegalArgumentException("Time must be in HH:mm or HH:mm:ss format: " + ex.getParsedString());
+        } catch (ClassCastException cce) {
+            // Defensive: some bad binding might have produced unexpected types (e.g. LocalDate). Convert to clearer message.
+            throw new IllegalArgumentException("Invalid JSON field types in request body (expected strings for times): " + cce.getMessage());
+        }
+
+        // Optional validation: if both provided ensure start < end
+        if (start != null && end != null && !start.isBefore(end)) {
+            throw new IllegalArgumentException("defaultStartTime must be before defaultEndTime");
+        }
+
+        // If both start and end are null -> nothing to update at DB level, return current values
+        if (start == null && end == null) {
+            return ResponseEntity.ok(StaffHoursResponse.builder()
+                    .staffId(staffId)
+                    .defaultStartTime(start)
+                    .defaultEndTime(end)
+                    .build());
+        }
+
+        // Detach any managed entities to avoid Hibernate flush/cascade during the repository update
+        if (entityManager != null) {
+            entityManager.clear();
+        }
+
+        // Use repository JPQL update to change only the time columns
+        int updated = staffRepository.updateWorkTime(staffId, start, end);
+        if (updated <= 0) {
+            throw new IllegalArgumentException("Failed to update staff work time");
+        }
+
+        // Read back and return the updated times via repository (safe now)
+        var saved = staffRepository.findById(staffId).orElseThrow(() -> new IllegalArgumentException("Staff not found after update"));
+        return ResponseEntity.ok(StaffHoursResponse.builder()
+                .staffId(saved.getId())
+                .defaultStartTime(saved.getDefaultStartTime())
+                .defaultEndTime(saved.getDefaultEndTime())
+                .build());
+    }
+}

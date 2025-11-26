@@ -73,4 +73,10 @@ public interface StaffRepository extends JpaRepository<Staff, Long> {
     // New: check if service_staff row exists to avoid duplicate insert
     @Query(value = "SELECT COUNT(1) FROM service_staff WHERE service_id = :serviceId AND staff_id = :staffId", nativeQuery = true)
     int countServiceStaffRow(@Param("serviceId") Long serviceId, @Param("staffId") Long staffId);
+
+    // Update staff default working times using JPQL to avoid touching collections
+    @org.springframework.transaction.annotation.Transactional
+    @org.springframework.data.jpa.repository.Modifying(clearAutomatically = true)
+    @org.springframework.data.jpa.repository.Query("UPDATE Staff s SET s.defaultStartTime = :start, s.defaultEndTime = :end WHERE s.id = :id")
+    int updateWorkTime(@org.springframework.data.repository.query.Param("id") Long id, @org.springframework.data.repository.query.Param("start") java.time.LocalTime start, @org.springframework.data.repository.query.Param("end") java.time.LocalTime end);
 }

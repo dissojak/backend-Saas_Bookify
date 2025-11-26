@@ -33,6 +33,28 @@ public interface StaffRepository extends JpaRepository<Staff, Long> {
     // Fetch all staff members that belong to a business (used by public listing endpoint)
     List<Staff> findByBusiness_Id(Long businessId);
 
+    // Explicit JPQL version to avoid ambiguity with inherited User.business property
+    @Query("SELECT s FROM Staff s JOIN FETCH s.business b WHERE b.id = :businessId")
+    List<Staff> findStaffByBusinessId(@Param("businessId") Long businessId);
+
+    // Simple JPQL that selects Staff by business id (no fetch) - use this as the primary query
+    @Query("SELECT s FROM Staff s WHERE s.business.id = :businessId")
+    List<Staff> findStaffByBusinessIdSimple(@Param("businessId") Long businessId);
+
+    // Return DTOs directly using JPQL constructor expression to avoid manual mapping in controllers
+    @Query("SELECT new com.bookify.backendbookify_saas.models.dtos.UserProfileResponse(s.id, s.name, s.email, s.phoneNumber, s.role, s.status, s.avatarUrl, null, null, null) " +
+           "FROM Staff s WHERE s.business.id = :businessId")
+    List<com.bookify.backendbookify_saas.models.dtos.UserProfileResponse> findUserProfileResponsesByBusinessId(@Param("businessId") Long businessId);
+
+    // Native query fallback: select staff table rows by business_id to avoid JPA property-name collisions
+    @Query(value = "SELECT s.* FROM staff s WHERE s.business_id = :businessId", nativeQuery = true)
+    List<Staff> findStaffByBusinessIdNative(@Param("businessId") Long businessId);
+
+    // Native query returning user fields joined with staff; returns Object[] rows as fallback for DTO mapping
+    @Query(value = "SELECT u.id, u.name, u.email, u.phone_number, u.role, u.status, u.avatar_url " +
+            "FROM users u JOIN staff s ON u.id = s.id WHERE s.business_id = :businessId", nativeQuery = true)
+    List<Object[]> findUserRowsByBusinessIdNative(@Param("businessId") Long businessId);
+
     // Met à jour le rôle de l'utilisateur dans la table users (native SQL pour éviter flush / persister issues)
     @Modifying(clearAutomatically = true)
     @Query(value = "UPDATE users SET role = :role WHERE id = :id", nativeQuery = true)

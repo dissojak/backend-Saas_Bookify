@@ -75,6 +75,7 @@ public class BusinessOwnerController {
                 .description(created.getDescription())
                 .evaluation(evalDto)
                 .firstImageUrl(firstImage)
+                .weekendDay(created.getWeekendDay())
                 .build();
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -105,6 +106,7 @@ public class BusinessOwnerController {
                 .description(business.getDescription())
                 .evaluation(evalDto)
                 .firstImageUrl(firstImage)
+                .weekendDay(business.getWeekendDay())
                 .build();
 
         return ResponseEntity.ok(response);
@@ -146,6 +148,20 @@ public class BusinessOwnerController {
             stub.setId(request.getCategoryId());
             input.setCategory(stub);
         }
+        if (request.getWeekendDay() != null) {
+            String wd = request.getWeekendDay().trim();
+            if (wd.isEmpty()) {
+                // clear
+                input.setWeekendDay(null);
+            } else {
+                try {
+                    java.time.DayOfWeek dow = java.time.DayOfWeek.valueOf(wd.toUpperCase());
+                    input.setWeekendDay(dow);
+                } catch (IllegalArgumentException e) {
+                    throw new IllegalArgumentException("Invalid weekendDay value: " + request.getWeekendDay());
+                }
+            }
+        }
 
         var updated = businessService.updateBusiness(businessId, input, null);
 
@@ -165,6 +181,7 @@ public class BusinessOwnerController {
                 .description(updated.getDescription())
                 .evaluation(evalDto)
                 .firstImageUrl(firstImage)
+                .weekendDay(updated.getWeekendDay())
                 .build();
         return ResponseEntity.ok(response);
     }
@@ -292,5 +309,3 @@ public class BusinessOwnerController {
         return images.isEmpty() ? null : images.get(0).getImageUrl();
     }
 }
-
-

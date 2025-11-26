@@ -25,7 +25,7 @@ public class BusinessPublicController {
 
     @GetMapping
     public ResponseEntity<List<BusinessResponse>> listAll() {
-        List<Business> list = businessRepository.findAll();
+        List<Business> list = businessRepository.findByStatus(com.bookify.backendbookify_saas.models.enums.BusinessStatus.ACTIVE);
         List<BusinessResponse> dto = list.stream().map(this::map).collect(Collectors.toList());
         return ResponseEntity.ok(dto);
     }
@@ -54,6 +54,8 @@ public class BusinessPublicController {
         if (b.getOwner() != null) {
             builder.ownerId(b.getOwner().getId());
         }
+        // include weekendDay if present
+        builder.weekendDay(b.getWeekendDay());
 
         return builder.build();
     }

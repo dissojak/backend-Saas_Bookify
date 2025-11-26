@@ -9,6 +9,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -83,6 +84,13 @@ public class Business {
     @OneToMany(mappedBy = "business", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonManagedReference
     private List<BusinessImage> images = new ArrayList<>();
+
+    /**
+     * Single nullable weekend day stored in the business table. Null means no weekend configured.
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "weekend_day", length = 20)
+    private DayOfWeek weekendDay;
 
     // helper methods
     public void addService(Service s) {

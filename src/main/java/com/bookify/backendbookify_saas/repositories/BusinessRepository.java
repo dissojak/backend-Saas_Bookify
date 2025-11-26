@@ -2,9 +2,11 @@ package com.bookify.backendbookify_saas.repositories;
 
 import com.bookify.backendbookify_saas.models.entities.Business;
 import com.bookify.backendbookify_saas.models.entities.User;
+import com.bookify.backendbookify_saas.models.enums.BusinessStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -41,4 +43,9 @@ public interface BusinessRepository extends JpaRepository<Business, Long> {
      * @return Optional contenant le business ou vide si non trouvé
      */
     Optional<Business> findByOwnerId(Long ownerId);
+
+    /**
+     * Find all businesses with the given status
+     */
+    List<Business> findByStatus(BusinessStatus status);
 }

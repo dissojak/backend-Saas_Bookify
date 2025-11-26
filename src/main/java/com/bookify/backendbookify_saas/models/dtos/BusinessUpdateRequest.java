@@ -29,5 +29,10 @@ public class BusinessUpdateRequest {
 
     @Size(max = 2000, message = "La description ne doit pas dépasser 2000 caractères")
     private String description;  // optionnel
-}
 
+    /**
+     * Optional name of the weekend day for the business, e.g. "MONDAY".
+     * If absent or null, no change is applied. If present and blank, will clear the weekend day.
+     */
+    private String weekendDay;
+}

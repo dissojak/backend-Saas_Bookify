@@ -91,6 +91,7 @@ public class BusinessServiceImpl implements BusinessService {
         boolean locationChanged = false;
         boolean descriptionChanged = false;
         boolean categoryChanged = false;
+        boolean weekendChanged = false;
 
         if (businessInput.getName() != null) {
             nameChanged = !businessInput.getName().equals(existing.getName());
@@ -121,6 +122,12 @@ public class BusinessServiceImpl implements BusinessService {
             categoryChanged = existing.getCategory() == null ||
                             !existing.getCategory().getId().equals(cat.getId());
             existing.setCategory(cat);
+        }
+
+        // Weekend day: single nullable DayOfWeek stored on Business
+        if (businessInput.getWeekendDay() != null) {
+            weekendChanged = existing.getWeekendDay() == null || !existing.getWeekendDay().equals(businessInput.getWeekendDay());
+            existing.setWeekendDay(businessInput.getWeekendDay());
         }
         Business updated = businessRepository.save(existing);
 

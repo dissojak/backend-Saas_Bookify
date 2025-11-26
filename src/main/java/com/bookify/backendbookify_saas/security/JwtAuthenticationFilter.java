@@ -42,7 +42,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             "/api/v1/auth/activate",
             "/api/v1/auth/forgot-password",
             "/api/v1/auth/reset-password",
-            "/api/v1/businesses/{businessId}/staff",
+            "/api/v1/businesses/{businessId}/staffMembers",
             // Public endpoint to list services for a business (context path /api is prefixed at runtime)
             "/api/v1/businesses/{businessId}/services",
             "/api/v1/staff/{staffId}/services",
@@ -183,8 +183,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String businessServicesRegex = "^/((api/)?)v1/businesses/\\d+/services/?$";
         if (requestPath.matches(businessServicesRegex)) return "REGEX:/v1/businesses/{id}/services";
 
-        String staffRegex = "^/((api/)?)v1/businesses/\\d+/staff/?$";
-        if (requestPath.matches(staffRegex)) return "REGEX:/v1/businesses/{id}/staff";
+        String staffRegex = "^/((api/)?)v1/businesses/\\d+/staffMembers/?$";
+        if (requestPath.matches(staffRegex)) return "REGEX:/v1/businesses/{id}/staffMembers";
 
         return null;
     }

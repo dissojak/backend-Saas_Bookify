@@ -53,7 +53,7 @@ public class SecurityConfig {
                                 "/api/v1/auth/activate",
                                 "/api/v1/auth/forgot-password",
                                 "/api/v1/auth/reset-password",
-                                "/api/v1/businesses/{businessId}/staff",
+                                "/api/v1/businesses/{businessId}/staffMembers",
                                 "/api/v1/staff/{staffId}/services",
                                 // Swagger/OpenAPI - include both default and custom paths
                                 "/v3/api-docs/**",

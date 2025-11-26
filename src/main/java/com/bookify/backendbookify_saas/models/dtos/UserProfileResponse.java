@@ -30,5 +30,8 @@ public class UserProfileResponse {
     private Boolean hasBusiness;
     private Long businessId;
     private String businessName;
-}
 
+    // For staff: default working times
+    private java.time.LocalTime defaultStartTime;
+    private java.time.LocalTime defaultEndTime;
+}

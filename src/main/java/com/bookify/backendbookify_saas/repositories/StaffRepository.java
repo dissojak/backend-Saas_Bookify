@@ -42,7 +42,8 @@ public interface StaffRepository extends JpaRepository<Staff, Long> {
     List<Staff> findStaffByBusinessIdSimple(@Param("businessId") Long businessId);
 
     // Return DTOs directly using JPQL constructor expression to avoid manual mapping in controllers
-    @Query("SELECT new com.bookify.backendbookify_saas.models.dtos.UserProfileResponse(s.id, s.name, s.email, s.phoneNumber, s.role, s.status, s.avatarUrl, null, null, null) " +
+    @Query("SELECT new com.bookify.backendbookify_saas.models.dtos.UserProfileResponse(" +
+           "s.id, s.name, s.email, s.phoneNumber, s.role, s.status, s.avatarUrl, null, null, null, s.defaultStartTime, s.defaultEndTime) " +
            "FROM Staff s WHERE s.business.id = :businessId")
     List<com.bookify.backendbookify_saas.models.dtos.UserProfileResponse> findUserProfileResponsesByBusinessId(@Param("businessId") Long businessId);
 
@@ -51,7 +52,7 @@ public interface StaffRepository extends JpaRepository<Staff, Long> {
     List<Staff> findStaffByBusinessIdNative(@Param("businessId") Long businessId);
 
     // Native query returning user fields joined with staff; returns Object[] rows as fallback for DTO mapping
-    @Query(value = "SELECT u.id, u.name, u.email, u.phone_number, u.role, u.status, u.avatar_url " +
+    @Query(value = "SELECT u.id, u.name, u.email, u.phone_number, u.role, u.status, u.avatar_url, s.default_start_time, s.default_end_time " +
             "FROM users u JOIN staff s ON u.id = s.id WHERE s.business_id = :businessId", nativeQuery = true)
     List<Object[]> findUserRowsByBusinessIdNative(@Param("businessId") Long businessId);
 

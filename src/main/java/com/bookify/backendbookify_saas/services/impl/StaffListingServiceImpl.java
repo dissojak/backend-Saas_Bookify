@@ -34,9 +34,9 @@ public class StaffListingServiceImpl implements StaffListingService {
         List<Object[]> rows = staffRepository.findUserRowsByBusinessIdNative(businessId);
         if (rows == null || rows.isEmpty()) return List.of();
 
-        // Map Object[] rows to DTOs
+        // Map Object[] rows to DTOs (native query now includes default_start_time and default_end_time at positions 7/8)
         List<UserProfileResponse> mapped = rows.stream().map(r -> {
-            // r[0]=id, r[1]=name, r[2]=email, r[3]=phone_number, r[4]=role, r[5]=status, r[6]=avatar_url
+            // r[0]=id, r[1]=name, r[2]=email, r[3]=phone_number, r[4]=role, r[5]=status, r[6]=avatar_url, r[7]=default_start_time, r[8]=default_end_time
             Long id = r[0] == null ? null : ((Number) r[0]).longValue();
             String name = r[1] == null ? null : r[1].toString();
             String email = r[2] == null ? null : r[2].toString();
@@ -44,6 +44,22 @@ public class StaffListingServiceImpl implements StaffListingService {
             String roleStr = r[4] == null ? null : r[4].toString();
             String statusStr = r[5] == null ? null : r[5].toString();
             String avatar = r[6] == null ? null : r[6].toString();
+
+            java.time.LocalTime start = null;
+            java.time.LocalTime end = null;
+            try {
+                if (r.length > 7 && r[7] != null) {
+                    // may be java.sql.Time or String depending on JDBC driver
+                    if (r[7] instanceof java.sql.Time) start = ((java.sql.Time) r[7]).toLocalTime();
+                    else start = java.time.LocalTime.parse(r[7].toString());
+                }
+                if (r.length > 8 && r[8] != null) {
+                    if (r[8] instanceof java.sql.Time) end = ((java.sql.Time) r[8]).toLocalTime();
+                    else end = java.time.LocalTime.parse(r[8].toString());
+                }
+            } catch (Exception ignored) {
+                // ignore parse errors and leave times null
+            }
 
             com.bookify.backendbookify_saas.models.enums.RoleEnum role = null;
             com.bookify.backendbookify_saas.models.enums.UserStatusEnum status = null;
@@ -58,6 +74,8 @@ public class StaffListingServiceImpl implements StaffListingService {
                     .role(role)
                     .status(status)
                     .avatarUrl(avatar)
+                    .defaultStartTime(start)
+                    .defaultEndTime(end)
                     .build();
         }).toList();
 

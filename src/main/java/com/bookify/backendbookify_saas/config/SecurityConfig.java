@@ -69,6 +69,8 @@ public class SecurityConfig {
                         ).permitAll()
                         // Explicit GET permit for staff services listing (guarantee it is public)
                         .requestMatchers(HttpMethod.GET, "/api/v1/staff/*/services", "/v1/staff/*/services").permitAll()
+                        // Explicit GET permit for business services listing (public endpoint)
+                        .requestMatchers(HttpMethod.GET, "/api/v1/businesses/*/services", "/v1/businesses/*/services").permitAll()
                         // Make the admin login page public
                         .requestMatchers(HttpMethod.GET, "/LoginAdmin.html").permitAll()
                         // Make common static resources public (CSS/JS/images/etc.)

@@ -42,7 +42,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             "/api/v1/auth/activate",
             "/api/v1/auth/forgot-password",
             "/api/v1/auth/reset-password",
-            // Swagger/OpenAPI
+            "/api/v1/businesses/{businessId}/staff",
+            "/api/v1/staff/{staffId}/services",
             "/v3/api-docs/",
             "/swagger-ui/",
             "/swagger-ui.html",
@@ -168,6 +169,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
      * Return the matching public prefix for debugging, or null if none
      */
     private String getMatchingPublicPrefix(String requestPath) {
-        return PUBLIC_URLS.stream().filter(requestPath::startsWith).findFirst().orElse(null);
+        for (String prefix : PUBLIC_URLS) {
+            if (requestPath.startsWith(prefix)) return prefix;
+        }
+
+        String staffServicesRegex = "^/((api/)?)v1/staff/\\d+/services/?$";
+        if (requestPath.matches(staffServicesRegex)) return "REGEX:/v1/staff/{id}/services";
+
+
+        String staffRegex = "^/((api/)?)v1/businesses/\\d+/staff/?$";
+        if (requestPath.matches(staffRegex)) return "REGEX:/v1/businesses/{id}/staff";
+
+        return null;
     }
 }

@@ -174,13 +174,22 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, String>> handleGlobalException(
             Exception ex,
             WebRequest request) {
+        // Log full stacktrace
         log.error("Unhandled exception occurred: {}", ex.getMessage(), ex);
+
+        // Build full stack trace string for debugging
+        java.io.StringWriter sw = new java.io.StringWriter();
+        java.io.PrintWriter pw = new java.io.PrintWriter(sw);
+        ex.printStackTrace(pw);
+        String full = sw.toString();
+
+        // Return full stack trace in detail (temporary for debugging). Remove or truncate in production.
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Map.of(
                         "message", "Une erreur interne est survenue",
                         "error", ex.getClass().getSimpleName(),
-                        "detail", ex.getMessage() != null ? ex.getMessage() : "No details"
+                        "detail", full
                 ));
     }
 

@@ -141,9 +141,13 @@ public class BusinessStaffController {
         // Remove staff from all services of this business
         List<Service> services = serviceRepository.findByBusinessIdAndActiveTrue(businessId);
         for (Service svc : services) {
-            if (svc.getStaff() != null) {
-                boolean changed = svc.getStaff().removeIf(s -> s.getId().equals(staffId));
-                if (changed) serviceRepository.save(svc);
+            try {
+                em.createNativeQuery("DELETE FROM service_staff WHERE service_id = :serviceId AND staff_id = :staffId")
+                        .setParameter("serviceId", svc.getId())
+                        .setParameter("staffId", staffId)
+                        .executeUpdate();
+            } catch (Exception ex) {
+                log.warn("Failed to delete join row for serviceId={} staffId={} via native query -> {}", svc.getId(), staffId, ex.toString());
             }
         }
 

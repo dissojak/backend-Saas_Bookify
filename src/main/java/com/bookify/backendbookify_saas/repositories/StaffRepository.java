@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface StaffRepository extends JpaRepository<Staff, Long> {
@@ -28,6 +29,9 @@ public interface StaffRepository extends JpaRepository<Staff, Long> {
 
     // Spring Data derived query returning boolean — simplest and safest to check membership
     boolean existsByIdAndBusiness_Id(Long id, Long businessId);
+
+    // Fetch all staff members that belong to a business (used by public listing endpoint)
+    List<Staff> findByBusiness_Id(Long businessId);
 
     // Met à jour le rôle de l'utilisateur dans la table users (native SQL pour éviter flush / persister issues)
     @Modifying(clearAutomatically = true)

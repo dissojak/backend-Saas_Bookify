@@ -26,6 +26,9 @@ public interface ServiceRepository extends JpaRepository<Service, Long> {
 
     List<Service> findByBusinessIdAndActiveTrue(Long businessId);
 
+    // Fetch services that a given staff member is linked to (active only)
+    List<Service> findByStaff_IdAndActiveTrue(Long staffId);
+
     // Fetch a service together with its staff list and the creator to avoid LazyInitializationException
     @Query("SELECT DISTINCT s FROM Service s LEFT JOIN FETCH s.staff LEFT JOIN FETCH s.createdBy WHERE s.id = :id")
     Optional<Service> findByIdWithStaffAndCreator(@Param("id") Long id);

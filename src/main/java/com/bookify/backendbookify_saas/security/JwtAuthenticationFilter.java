@@ -49,7 +49,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             "/swagger-resources/",
             "/webjars/"
     );
-
     @Override
     protected void doFilterInternal(
             @NonNull HttpServletRequest request,

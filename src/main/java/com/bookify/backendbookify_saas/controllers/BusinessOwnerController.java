@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -27,12 +28,14 @@ import java.util.Map;
 @RestController
 @RequestMapping("/v1/owner/businesses")
 @RequiredArgsConstructor
+@Slf4j
 @Tag(name = "Owner - Business", description = "Gestion des entreprises par le propriétaire")
 public class BusinessOwnerController {
 
     private final BusinessService businessService;
     private final BusinessEvaluationRepository evaluationRepository;
     private final BusinessImageRepository imageRepository;
+    private final com.bookify.backendbookify_saas.services.WeekendDaySyncService weekendDaySyncService;
 
     @PostMapping
     @PreAuthorize("hasRole('BUSINESS_OWNER')")
@@ -164,6 +167,17 @@ public class BusinessOwnerController {
         }
 
         var updated = businessService.updateBusiness(businessId, input, null);
+
+        // If weekendDay was changed, trigger sync of staff availabilities
+        if (request.getWeekendDay() != null) {
+            try {
+                int syncCount = weekendDaySyncService.syncBusinessWeekendDays(businessId);
+                log.info("Weekend day updated for business id={}. Synced {} staff availabilities", businessId, syncCount);
+            } catch (Exception ex) {
+                log.error("Failed to sync weekend days after business update for id={}: {}", businessId, ex.getMessage(), ex);
+                // Don't fail the whole update, just log the error
+            }
+        }
 
         BusinessEvaluationResponse evalDto = mapLatestEvaluation(updated);
         String firstImage = getFirstImageUrl(updated.getId());

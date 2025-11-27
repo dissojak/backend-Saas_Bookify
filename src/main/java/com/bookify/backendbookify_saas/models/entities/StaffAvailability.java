@@ -1,5 +1,6 @@
 package com.bookify.backendbookify_saas.models.entities;
 
+import com.bookify.backendbookify_saas.models.enums.AvailabilityStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -34,7 +35,12 @@ public class StaffAvailability {
     @Column(name = "end_time", nullable = false)
     private LocalTime endTime;
 
-    private String status;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private AvailabilityStatus status;
+
+    @Column(name = "user_edited", nullable = false)
+    private Boolean userEdited = false;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

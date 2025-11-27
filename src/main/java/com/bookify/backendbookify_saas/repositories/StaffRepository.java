@@ -47,8 +47,9 @@ public interface StaffRepository extends JpaRepository<Staff, Long> {
            "FROM Staff s WHERE s.business.id = :businessId")
     List<com.bookify.backendbookify_saas.models.dtos.UserProfileResponse> findUserProfileResponsesByBusinessId(@Param("businessId") Long businessId);
 
-    // Native query fallback: select staff table rows by business_id to avoid JPA property-name collisions
-    @Query(value = "SELECT s.* FROM staff s WHERE s.business_id = :businessId", nativeQuery = true)
+    // Native query fallback: join users and staff tables to get complete Staff entity data
+    @Query(value = "SELECT u.*, s.default_start_time, s.default_end_time, s.start_working_at, s.business_id " +
+                   "FROM users u INNER JOIN staff s ON u.id = s.id WHERE s.business_id = :businessId", nativeQuery = true)
     List<Staff> findStaffByBusinessIdNative(@Param("businessId") Long businessId);
 
     // Native query returning user fields joined with staff; returns Object[] rows as fallback for DTO mapping
@@ -80,4 +81,10 @@ public interface StaffRepository extends JpaRepository<Staff, Long> {
     @org.springframework.data.jpa.repository.Modifying(clearAutomatically = true)
     @org.springframework.data.jpa.repository.Query("UPDATE Staff s SET s.defaultStartTime = :start, s.defaultEndTime = :end WHERE s.id = :id")
     int updateWorkTime(@org.springframework.data.repository.query.Param("id") Long id, @org.springframework.data.repository.query.Param("start") java.time.LocalTime start, @org.springframework.data.repository.query.Param("end") java.time.LocalTime end);
+
+    // Lightweight query to get only staff IDs and their default times for availability generation
+    // Returns Object[] with: [id, defaultStartTime, defaultEndTime, name]
+    @Query(value = "SELECT s.id, s.default_start_time, s.default_end_time, u.name " +
+                   "FROM staff s INNER JOIN users u ON s.id = u.id WHERE s.business_id = :businessId", nativeQuery = true)
+    List<Object[]> findStaffBasicInfoByBusinessId(@Param("businessId") Long businessId);
 }

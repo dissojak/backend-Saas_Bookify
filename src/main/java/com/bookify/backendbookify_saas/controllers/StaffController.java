@@ -1,9 +1,11 @@
 package com.bookify.backendbookify_saas.controllers;
 
 import com.bookify.backendbookify_saas.exceptions.UnauthorizedAccessException;
+import com.bookify.backendbookify_saas.models.dtos.StaffAvailabilityResponse;
 import com.bookify.backendbookify_saas.models.dtos.StaffHoursResponse;
 import com.bookify.backendbookify_saas.models.dtos.StaffHoursUpdateRequest;
 import com.bookify.backendbookify_saas.repositories.StaffRepository;
+import com.bookify.backendbookify_saas.services.StaffAvailabilityService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +27,7 @@ import jakarta.persistence.PersistenceContext;
 public class StaffController {
 
     private final StaffRepository staffRepository;
+    private final StaffAvailabilityService staffAvailabilityService;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -113,5 +116,41 @@ public class StaffController {
                 .defaultStartTime(saved.getDefaultStartTime())
                 .defaultEndTime(saved.getDefaultEndTime())
                 .build());
+    }
+
+    // New endpoint: patch a single availability (staff updates their own availability)
+    @PatchMapping(path = "/{staffId}/availabilities/{availabilityId}", consumes = "application/json", produces = "application/json")
+    @Operation(summary = "Update a single staff availability", description = "Staff can edit their generated availability: change start/end/time/status")
+    public ResponseEntity<?> patchAvailability(
+            Authentication authentication,
+            @PathVariable Long staffId,
+            @PathVariable Long availabilityId,
+            @RequestBody(required = true) com.bookify.backendbookify_saas.models.dtos.StaffAvailabilityUpdateRequest req
+    ) {
+        if (authentication == null) throw new UnauthorizedAccessException("Authentication required");
+        Long actorId;
+        try {
+            actorId = Long.parseLong(authentication.getName());
+        } catch (NumberFormatException ex) {
+            throw new UnauthorizedAccessException("Invalid authenticated user id");
+        }
+
+        // Delegate to service to perform permission checks and update
+        com.bookify.backendbookify_saas.models.entities.StaffAvailability updated = staffAvailabilityService.updateAvailabilityByStaff(actorId, staffId, availabilityId, req);
+
+        // Map to DTO to avoid returning lazy Hibernate proxies
+        StaffAvailabilityResponse resp = StaffAvailabilityResponse.builder()
+                .id(updated.getId())
+                .date(updated.getDate())
+                .startTime(updated.getStartTime())
+                .endTime(updated.getEndTime())
+                .status(updated.getStatus())
+                .userEdited(updated.getUserEdited())
+                .createdAt(updated.getCreatedAt())
+                .updatedAt(updated.getUpdatedAt())
+                .staffId(updated.getStaff().getId())
+                .build();
+
+        return ResponseEntity.ok(resp);
     }
 }

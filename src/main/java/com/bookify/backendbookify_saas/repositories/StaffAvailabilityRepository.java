@@ -55,6 +55,17 @@ public interface StaffAvailabilityRepository extends JpaRepository<StaffAvailabi
     List<StaffAvailability> findByBusinessIdAndDateRange(@Param("businessId") Long businessId, @Param("start") LocalDate start, @Param("end") LocalDate end);
 
     /**
+     * New explicit JPQL query: fetch availabilities for a staff between two dates (inclusive).
+     */
+    @Query("SELECT sa FROM StaffAvailability sa WHERE sa.staff.id = :staffId AND sa.date BETWEEN :start AND :end")
+    List<StaffAvailability> findByStaffIdAndDateRange(@Param("staffId") Long staffId, @Param("start") LocalDate start, @Param("end") LocalDate end);
+
+    /**
+     * New derived query: find by staff id between dates
+     */
+    List<StaffAvailability> findByStaff_IdAndDateBetween(Long staffId, LocalDate start, LocalDate end);
+
+    /**
      * Bulk update: set status to CLOSED for rows matching business and date condition (Sunday OR specified day)
      */
     @Modifying

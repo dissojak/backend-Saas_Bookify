@@ -70,9 +70,24 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // Skip JWT authentication for public endpoints
         String matched = getMatchingPublicPrefix(requestPath);
         if (matched != null) {
-            System.out.println("✓ Public URL - Skipping JWT authentication (matched: '" + matched + "')");
-            filterChain.doFilter(request, response);
-            return;
+            // Special-case: the staff availabilities pattern should be public ONLY for GET requests
+            // and only when both 'from' and 'to' query parameters are present.
+            if ("REGEX:/v1/staff/{id}/availabilities".equals(matched)) {
+                boolean isGet = "GET".equalsIgnoreCase(requestMethod);
+                String fromParam = request.getParameter("from");
+                String toParam = request.getParameter("to");
+                boolean hasRangeParams = fromParam != null && !fromParam.isBlank() && toParam != null && !toParam.isBlank();
+                if (isGet && hasRangeParams) {
+                    System.out.println("✓ Public URL - Skipping JWT authentication (matched: '" + matched + "') [GET with from/to]");
+                    filterChain.doFilter(request, response);
+                    return;
+                }
+                // If it's the availabilities pattern but not a GET with both params, do NOT skip authentication
+            } else {
+                System.out.println("✓ Public URL - Skipping JWT authentication (matched: '" + matched + "')");
+                filterChain.doFilter(request, response);
+                return;
+            }
         }
 
         final String authHeader = request.getHeader("Authorization");
@@ -116,7 +131,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         // Check if user is not already authenticated
-        if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+        if (SecurityContextHolder.getContext().getAuthentication() == null) {
             System.out.println("→ Loading user details for ID: " + userId);
 
             UserDetails userDetails;
@@ -185,6 +200,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String staffRegex = "^/((api/)?)v1/businesses/\\d+/staffMembers/?$";
         if (requestPath.matches(staffRegex)) return "REGEX:/v1/businesses/{id}/staffMembers";
+
+        // Regex for staff availabilities listing: matches /api/v1/staff/{id}/availabilities
+        String staffAvailabilitiesRegex = "^/((api/)?)v1/staff/\\d+/availabilities/?$";
+        if (requestPath.matches(staffAvailabilitiesRegex)) return "REGEX:/v1/staff/{id}/availabilities";
 
         return null;
     }

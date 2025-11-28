@@ -10,12 +10,16 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
+import java.util.List;
+
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 
@@ -152,5 +156,59 @@ public class StaffController {
                 .build();
 
         return ResponseEntity.ok(resp);
+    }
+
+    @GetMapping(path = "/{staffId}/availabilities")
+    @Operation(summary = "List staff availabilities in a date range", description = "Returns both generated and user-edited slots for a staff member")
+    public ResponseEntity<List<StaffAvailabilityResponse>> listForStaff(
+            @PathVariable Long staffId,
+            @RequestParam(name = "from", required = false) String fromStr,
+            @RequestParam(name = "to", required = false) String toStr
+    ) {
+        final String PLACEHOLDER = "YYYY-MM-DD";
+        java.time.LocalDate today = java.time.LocalDate.now();
+        java.time.LocalDate from;
+        java.time.LocalDate to;
+
+        // Log raw incoming params
+        log.info("listForStaff called: staffId={}, fromStr='{}', toStr='{}'", staffId, fromStr, toStr);
+
+        // Default: if missing or placeholder, set sensible defaults
+        if (fromStr == null || fromStr.isBlank() || PLACEHOLDER.equalsIgnoreCase(fromStr.trim())) {
+            from = today;
+            log.info("No valid 'from' provided, defaulting to {}", from);
+        } else {
+            try {
+                from = java.time.LocalDate.parse(fromStr, java.time.format.DateTimeFormatter.ISO_DATE);
+            } catch (java.time.format.DateTimeParseException ex) {
+                throw new IllegalArgumentException("Invalid 'from' date format. Expected YYYY-MM-DD");
+            }
+        }
+
+        if (toStr == null || toStr.isBlank() || PLACEHOLDER.equalsIgnoreCase(toStr.trim())) {
+            to = from.plusDays(30);
+            log.info("No valid 'to' provided, defaulting to {}", to);
+        } else {
+            try {
+                to = java.time.LocalDate.parse(toStr, java.time.format.DateTimeFormatter.ISO_DATE);
+            } catch (java.time.format.DateTimeParseException ex) {
+                throw new IllegalArgumentException("Invalid 'to' date format. Expected YYYY-MM-DD");
+            }
+        }
+
+        log.info("Parsed date range: from={} to={}", from, to);
+
+        if (to.isBefore(from)) throw new IllegalArgumentException("'to' date must be on or after 'from' date");
+
+        // Enforce a reasonable maximum range to avoid heavy queries
+        long days = java.time.temporal.ChronoUnit.DAYS.between(from, to) + 1; // inclusive
+        final int MAX_DAYS = 31;
+        if (days > MAX_DAYS) {
+            throw new IllegalArgumentException("Date range too large. Maximum allowed is " + MAX_DAYS + " days");
+        }
+
+        List<StaffAvailabilityResponse> results = staffAvailabilityService.listAvailabilitiesForStaff(staffId, from, to);
+        if (results == null) results = List.of();
+        return ResponseEntity.ok(results);
     }
 }

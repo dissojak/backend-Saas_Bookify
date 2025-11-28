@@ -10,12 +10,10 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
 import java.util.List;
@@ -129,10 +127,10 @@ public class StaffController {
             Authentication authentication,
             @PathVariable Long staffId,
             @PathVariable Long availabilityId,
-            @RequestBody(required = true) com.bookify.backendbookify_saas.models.dtos.StaffAvailabilityUpdateRequest req
+            @RequestBody com.bookify.backendbookify_saas.models.dtos.StaffAvailabilityUpdateRequest req
     ) {
         if (authentication == null) throw new UnauthorizedAccessException("Authentication required");
-        Long actorId;
+        long actorId;
         try {
             actorId = Long.parseLong(authentication.getName());
         } catch (NumberFormatException ex) {
@@ -210,5 +208,24 @@ public class StaffController {
         List<StaffAvailabilityResponse> results = staffAvailabilityService.listAvailabilitiesForStaff(staffId, from, to);
         if (results == null) results = List.of();
         return ResponseEntity.ok(results);
+    }
+
+    @GetMapping(path = "/{staffId}/calendar", produces = "application/json")
+    @Operation(summary = "Get staff merged calendar starting today")
+    public ResponseEntity<List<StaffAvailabilityResponse>> getCalendar(
+            Authentication authentication,
+            @PathVariable Long staffId
+    ) {
+        if (authentication == null) throw new UnauthorizedAccessException("Authentication required");
+        long actorId;
+        try {
+            actorId = Long.parseLong(authentication.getName());
+        } catch (NumberFormatException ex) {
+            throw new UnauthorizedAccessException("Invalid authenticated user id");
+        }
+
+        List<StaffAvailabilityResponse> calendar = staffAvailabilityService.getCalendarForStaff(actorId, staffId);
+        if (calendar == null) calendar = List.of();
+        return ResponseEntity.ok(calendar);
     }
 }

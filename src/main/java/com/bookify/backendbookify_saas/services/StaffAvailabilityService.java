@@ -14,4 +14,10 @@ public interface StaffAvailabilityService {
      * List all availabilities for a staff within a date range (inclusive)
      */
     List<StaffAvailabilityResponse> listAvailabilitiesForStaff(Long staffId, LocalDate from, LocalDate to);
+
+    /**
+     * Return merged availability calendar for a staff starting from today until the maximum availability date recorded.
+     * Performs permission checks to ensure the actor belongs to the same business (owner or staff) or is the staff themself.
+     */
+    List<StaffAvailabilityResponse> getCalendarForStaff(Long actorId, Long staffId);
 }

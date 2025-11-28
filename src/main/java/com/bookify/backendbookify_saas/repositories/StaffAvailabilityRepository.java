@@ -67,21 +67,28 @@ public interface StaffAvailabilityRepository extends JpaRepository<StaffAvailabi
 
     /**
      * Bulk update: set status to CLOSED for rows matching business and date condition (Sunday OR specified day)
+     * Implemented in JPQL using FUNCTION to call the DB DAYOFWEEK.
      */
-    @Modifying
-    @Query(value = "UPDATE staff_availabilities sa JOIN staff s ON sa.staff_id = s.id SET sa.status = :status, sa.updated_at = NOW() " +
-                   "WHERE s.business_id = :businessId AND sa.date BETWEEN :start AND :end " +
-                   "AND (DAYOFWEEK(sa.date) = :dow OR DAYOFWEEK(sa.date) = 1) " +
-                   "AND sa.user_edited = 0 AND sa.status <> :status", nativeQuery = true)
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE StaffAvailability sa SET sa.status = :status, sa.updatedAt = CURRENT_TIMESTAMP " +
+           "WHERE sa.staff.business.id = :businessId AND sa.date BETWEEN :start AND :end " +
+           "AND (FUNCTION('DAYOFWEEK', sa.date) = :dow OR FUNCTION('DAYOFWEEK', sa.date) = 1) " +
+           "AND sa.userEdited = false AND sa.status <> :status")
     int bulkUpdateStatusToClosedForBusinessInRange(@Param("businessId") Long businessId, @Param("start") LocalDate start, @Param("end") LocalDate end, @Param("dow") int mysqlDayOfWeek, @Param("status") String status);
 
     /**
      * Bulk update: set status to AVAILABLE for rows matching business and date condition (not Sunday AND not the weekend day)
      */
-    @Modifying
-    @Query(value = "UPDATE staff_availabilities sa JOIN staff s ON sa.staff_id = s.id SET sa.status = :status, sa.updated_at = NOW() " +
-                   "WHERE s.business_id = :businessId AND sa.date BETWEEN :start AND :end " +
-                   "AND (DAYOFWEEK(sa.date) <> :dow AND DAYOFWEEK(sa.date) <> 1) " +
-                   "AND sa.user_edited = 0 AND sa.status <> :status", nativeQuery = true)
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE StaffAvailability sa SET sa.status = :status, sa.updatedAt = CURRENT_TIMESTAMP " +
+           "WHERE sa.staff.business.id = :businessId AND sa.date BETWEEN :start AND :end " +
+           "AND (FUNCTION('DAYOFWEEK', sa.date) <> :dow AND FUNCTION('DAYOFWEEK', sa.date) <> 1) " +
+           "AND sa.userEdited = false AND sa.status <> :status")
     int bulkUpdateStatusToAvailableForBusinessInRange(@Param("businessId") Long businessId, @Param("start") LocalDate start, @Param("end") LocalDate end, @Param("dow") int mysqlDayOfWeek, @Param("status") String status);
+
+    /**
+     * NEW: Return the maximum date available for a specific staff (used to build the calendar end date).
+     */
+    @Query("SELECT MAX(sa.date) FROM StaffAvailability sa WHERE sa.staff.id = :staffId")
+    LocalDate findMaxDateByStaffId(@Param("staffId") Long staffId);
 }

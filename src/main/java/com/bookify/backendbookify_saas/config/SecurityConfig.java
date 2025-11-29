@@ -71,6 +71,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/staff/*/services", "/v1/staff/*/services").permitAll()
                         // TEMP: Broad permit for staff GET endpoints (helps diagnose 403). Narrow this after verification.
                         .requestMatchers(HttpMethod.GET, "/api/v1/staff/**", "/v1/staff/**").permitAll()
+                        // Explicit GET permit for staff calendar (public)
+                        .requestMatchers(HttpMethod.GET, "/api/v1/staff/*/calendar", "/v1/staff/*/calendar").permitAll()
+                        // Explicit GET permit for business search (public)
+                        .requestMatchers(HttpMethod.GET, "/api/v1/businesses/search", "/v1/businesses/search").permitAll()
                         // Explicit GET permit for staff availabilities listing (public endpoint with from/to)
                         .requestMatchers(HttpMethod.GET, "/api/v1/staff/*/availabilities", "/v1/staff/*/availabilities", "/api/v1/staff/{staffId}/availabilities", "/v1/staff/{staffId}/availabilities").permitAll()
                         // Explicit GET permit for business services listing (public endpoint)

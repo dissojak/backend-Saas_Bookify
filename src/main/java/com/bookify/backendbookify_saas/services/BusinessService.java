@@ -34,4 +34,7 @@ public interface BusinessService {
     boolean existsByName(String name, String tenantId);
 
     String generateTenantId();
+
+    // New: search businesses by partial name (case-insensitive) returning lightweight DTOs
+    java.util.List<com.bookify.backendbookify_saas.models.dtos.BusinessSearchDto> searchByName(String query);
 }

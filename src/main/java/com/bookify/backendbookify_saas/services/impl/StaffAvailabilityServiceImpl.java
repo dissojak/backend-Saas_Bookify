@@ -106,17 +106,19 @@ public class StaffAvailabilityServiceImpl implements StaffAvailabilityService {
         }
         Long staffBusinessId = maybeBusinessId.get();
 
-        // Authorization: allow if actor is the staff themself OR actor is staff of the same business OR actor is the business owner
-        if (!actorId.equals(staffId)) {
-            boolean actorIsStaff = false;
-            try {
-                actorIsStaff = staffValidationService.isStaffForBusiness(actorId, staffBusinessId);
-            } catch (Exception ignored) {}
+        // If actorId is provided, perform authorization checks; if null, allow public read-only access
+        if (actorId != null) {
+            if (!actorId.equals(staffId)) {
+                boolean actorIsStaff = false;
+                try {
+                    actorIsStaff = staffValidationService.isStaffForBusiness(actorId, staffBusinessId);
+                } catch (Exception ignored) {}
 
-            boolean actorIsOwner = businessRepository.findByOwnerId(actorId).map(b -> b.getId().equals(staffBusinessId)).orElse(false);
+                boolean actorIsOwner = businessRepository.findByOwnerId(actorId).map(b -> b.getId().equals(staffBusinessId)).orElse(false);
 
-            if (!actorIsStaff && !actorIsOwner) {
-                throw new UnauthorizedAccessException("Authenticated user is not authorized to view this staff's calendar");
+                if (!actorIsStaff && !actorIsOwner) {
+                    throw new UnauthorizedAccessException("Authenticated user is not authorized to view this staff's calendar");
+                }
             }
         }
 

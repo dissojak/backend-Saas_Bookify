@@ -90,3 +90,9 @@ AI / OAuth:
 /v1/ai/reports/{reportId} (GET) : get AI evaluation result/report
 /v1/oauth/{provider}/callback : OAuth provider callback (google/facebook)
 /v1/oauth/{provider}/link : link external account to user
+
+
+/v1/business/{businessId}/clients/search : search clients by name/email ( a normal client or a buissness client )
+
+/v1/business/{businessId}/clients/{clientId}/history : client booking/history 
+

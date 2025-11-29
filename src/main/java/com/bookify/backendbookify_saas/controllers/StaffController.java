@@ -216,16 +216,29 @@ public class StaffController {
             Authentication authentication,
             @PathVariable Long staffId
     ) {
-        if (authentication == null) throw new UnauthorizedAccessException("Authentication required");
-        long actorId;
-        try {
-            actorId = Long.parseLong(authentication.getName());
-        } catch (NumberFormatException ex) {
-            throw new UnauthorizedAccessException("Invalid authenticated user id");
+        log.info("GET /v1/staff/{}/calendar called - authentication object: {}", staffId, authentication != null ? authentication.getName() : null);
+
+        Long actorId = null;
+        if (authentication != null) {
+            try {
+                actorId = Long.parseLong(authentication.getName());
+            } catch (NumberFormatException ex) {
+                log.warn("Invalid authenticated user id format: {}", authentication.getName());
+                throw new UnauthorizedAccessException("Invalid authenticated user id");
+            }
         }
 
-        List<StaffAvailabilityResponse> calendar = staffAvailabilityService.getCalendarForStaff(actorId, staffId);
-        if (calendar == null) calendar = List.of();
-        return ResponseEntity.ok(calendar);
+        try {
+            List<StaffAvailabilityResponse> calendar = staffAvailabilityService.getCalendarForStaff(actorId, staffId);
+            if (calendar == null) calendar = List.of();
+            log.info("Returning calendar for staffId={} (rows={}) actorId={}", staffId, calendar.size(), actorId);
+            return ResponseEntity.ok(calendar);
+        } catch (UnauthorizedAccessException uae) {
+            log.warn("Access denied to calendar for staffId={} actorId={}: {}", staffId, actorId, uae.getMessage());
+            throw uae; // rethrow so global handler returns proper error
+        } catch (Exception ex) {
+            log.error("Unexpected error while fetching calendar for staffId={} actorId={}", staffId, actorId, ex);
+            throw ex;
+        }
     }
 }

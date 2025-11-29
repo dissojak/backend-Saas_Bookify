@@ -1,13 +1,16 @@
 package com.bookify.backendbookify_saas.controllers;
 
 import com.bookify.backendbookify_saas.models.dtos.BusinessResponse;
+import com.bookify.backendbookify_saas.models.dtos.BusinessSearchDto;
 import com.bookify.backendbookify_saas.models.entities.Business;
 import com.bookify.backendbookify_saas.repositories.BusinessRepository;
+import com.bookify.backendbookify_saas.services.BusinessService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -22,12 +25,23 @@ import java.util.stream.Collectors;
 public class BusinessPublicController {
 
     private final BusinessRepository businessRepository;
+    private final BusinessService businessService;
 
     @GetMapping
     public ResponseEntity<List<BusinessResponse>> listAll() {
         List<Business> list = businessRepository.findByStatus(com.bookify.backendbookify_saas.models.enums.BusinessStatus.ACTIVE);
         List<BusinessResponse> dto = list.stream().map(this::map).collect(Collectors.toList());
         return ResponseEntity.ok(dto);
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<BusinessSearchDto>> searchByName(@RequestParam(name = "name") String name) {
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("Query parameter 'name' is required");
+        }
+        List<BusinessSearchDto> results = businessService.searchByName(name.trim());
+        if (results == null) results = List.of();
+        return ResponseEntity.ok(results);
     }
 
     @GetMapping("/{id}")

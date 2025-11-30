@@ -22,6 +22,12 @@ public class DotenvConfig {
      * <ul>
      *   <li><b>SPRING_MAIL_PASSWORD</b>: Password for Spring Mail configuration.</li>
      *   <li><b>GEMINI_API_KEY</b>: API key for Gemini integration.</li>
+     *   <li><b>FLOUCI_APP_TOKEN</b>: App token for Flouci integration.</li>
+     *   <li><b>FLOUCI_APP_SECRET</b>: App secret for Flouci integration.</li>
+     *   <li><b>FLOUCI_APP_PUBLIC</b>: App public key for Flouci integration.</li>
+     *   <li><b>FLOUCI_BASE_URL</b>: Base URL for Flouci API.</li>
+     *   <li><b>FLOUCI_WEBHOOK_SECRET</b>: Webhook secret for Flouci integration.</li>
+     *   <li><b>DEVELOPER_TRACKING_ID</b>: Developer tracking ID for Flouci requests.</li>
      * </ul>
      *
      * @throws NullPointerException if any required environment variable is missing.
@@ -34,6 +40,39 @@ public class DotenvConfig {
         // Set system properties for Spring Mail and Gemini API
         System.setProperty("spring.mail.password", Objects.requireNonNull(dotenv.get("SPRING_MAIL_PASSWORD")));
         System.setProperty("GEMINI_API_KEY", Objects.requireNonNull(dotenv.get("GEMINI_API_KEY")));
+
+        // --- Added: Load Flouci related env vars (non-breaking; only set if present) ---
+        String flouciToken = dotenv.get("FLOUCI_APP_TOKEN");
+        if (flouciToken != null && !flouciToken.isEmpty()) {
+            System.setProperty("flouci.app-token", flouciToken);
+        }
+
+        String flouciSecret = dotenv.get("FLOUCI_APP_SECRET");
+        if (flouciSecret != null && !flouciSecret.isEmpty()) {
+            System.setProperty("flouci.app-secret", flouciSecret);
+        }
+
+        String flouciPublic = dotenv.get("FLOUCI_APP_PUBLIC");
+        if (flouciPublic != null && !flouciPublic.isEmpty()) {
+            System.setProperty("flouci.app-public", flouciPublic);
+        }
+
+        String flouciBase = dotenv.get("FLOUCI_BASE_URL");
+        if (flouciBase != null && !flouciBase.isEmpty()) {
+            System.setProperty("flouci.base-url", flouciBase);
+        }
+
+        String flouciWebhookSecret = dotenv.get("FLOUCI_WEBHOOK_SECRET");
+        if (flouciWebhookSecret != null && !flouciWebhookSecret.isEmpty()) {
+            System.setProperty("flouci.webhook-secret", flouciWebhookSecret);
+        }
+
+        // NEW: developer tracking id used by Flouci requests
+        String devTrack = dotenv.get("DEVELOPER_TRACKING_ID");
+        if (devTrack != null && !devTrack.isEmpty()) {
+            System.setProperty("flouci.developer-tracking-id", devTrack);
+        }
+        // --- end Flouci vars ---
 
         // Log a message to indicate successful loading of environment variables
         System.out.println("         =========================================================");

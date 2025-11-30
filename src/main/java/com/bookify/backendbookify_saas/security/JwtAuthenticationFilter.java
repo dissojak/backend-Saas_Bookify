@@ -52,12 +52,25 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // Make business search public
             "/v1/businesses/search",
             "/api/v1/businesses/search",
+            // Swagger/OpenAPI
             "/v3/api-docs/",
             "/swagger-ui/",
             "/swagger-ui.html",
             "/swagger-resources/",
-            "/webjars/"
+            "/webjars/",
+            // --- Added: payments & subscriptions prefixes (simple prefixes so startsWith matches) ---
+            "/v1/payments",
+            "/api/v1/payments",
+            "/v1/payments/flouci",
+            "/api/v1/payments/flouci",
+            "/v1/payments/flouci/webhook",
+            "/api/v1/payments/flouci/webhook",
+            "/v1/subscriptions",
+            "/api/v1/subscriptions",
+            "/v1/subscription",
+            "/api/v1/subscription"
     );
+
     @Override
     protected void doFilterInternal(
             @NonNull HttpServletRequest request,
@@ -73,7 +86,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         System.out.println("║ Path: " + requestPath);
         System.out.println("╚════════════════════════════════════════════════════════════╝");
 
-        // Skip JWT authentication for public endpoints
+        // Broad contains-based check to ensure payments & subscriptions endpoints are public
+        if (requestPath.contains("/v1/payments") || requestPath.contains("/v1/subscriptions") || requestPath.contains("/v1/subscription")) {
+            System.out.println("✓ Public payments/subscriptions URL - Skipping JWT authentication (contains check)");
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        // Quick robust regex: skip authentication for any payments or subscriptions endpoints (with or without /api/)
+        String paymentsSubscriptionsRegex = "^/((api/)?)v1/(payments|payments/flouci|payments/flouci/webhook|subscriptions|subscription)(/.*)?$";
+        if (requestPath.matches(paymentsSubscriptionsRegex)) {
+            System.out.println("✓ Public payments/subscriptions URL - Skipping JWT authentication (regex match)");
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        // Skip JWT authentication for other public endpoints
         String matched = getMatchingPublicPrefix(requestPath);
         if (matched != null) {
             // Special-case: the staff availabilities pattern should be public ONLY for GET requests

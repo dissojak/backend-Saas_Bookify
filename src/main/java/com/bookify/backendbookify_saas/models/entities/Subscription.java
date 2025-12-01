@@ -28,7 +28,7 @@ public class Subscription {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "plan_name", nullable = false)
+    @Column(name = "plan_name")
     private SubscriptionPlan plan;
 
     @Column(nullable = false)
@@ -37,10 +37,11 @@ public class Subscription {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal price;
 
-    @Column(name = "start_date", nullable = false)
+    @Column(name = "start_date",nullable = false)
     private LocalDate startDate;
 
-    @Column(name = "end_date")
+
+    @Column(name = "end_date", nullable = false)
     private LocalDate endDate;
 
     @Column(name = "cancelled_at")

@@ -53,7 +53,6 @@ public class FlouciPaymentServiceImpl implements FlouciPaymentService {
             payload.put("app_token", config.getAppToken());
             payload.put("app_secret", config.getAppSecret());
             payload.put("amount", request.getAmount());
-            if (request.getCurrency() != null) payload.put("currency", request.getCurrency());
             payload.put("accept_card", request.getAcceptCard());
             payload.put("session_timeout_secs", request.getSessionTimeoutSecs());
 
@@ -83,6 +82,10 @@ public class FlouciPaymentServiceImpl implements FlouciPaymentService {
             String checkout = result.path("checkout_url").asText(null);
             String status = result.path("status").asText("PENDING");
             String raw = mapper.writeValueAsString(node);
+
+            JsonNode paymentInfo = node.path("data");
+            log.info("Flouci payment generated: paymentInfo={}" , paymentInfo);
+
             return new FlouciGeneratePaymentResponse(paymentId, checkout, status, raw);
         } catch (Exception e) {
             log.error("generatePayment error", e);

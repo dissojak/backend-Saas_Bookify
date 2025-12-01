@@ -1,5 +1,7 @@
 package com.bookify.backendbookify_saas.config;
 
+import com.bookify.backendbookify_saas.service.PaymentGateway;
+import com.bookify.backendbookify_saas.service.impl.FlouciPaymentGateway;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,6 +28,11 @@ public class FlouciConfig {
     @Bean
     public RestTemplate flouciRestTemplate() {
         return new RestTemplate();
+    }
+
+    @Bean("flouciPaymentGateway")
+    public PaymentGateway flouciPaymentGateway(RestTemplate flouciRestTemplate) {
+        return new FlouciPaymentGateway(flouciRestTemplate, this);
     }
 
     public String getAppToken() {

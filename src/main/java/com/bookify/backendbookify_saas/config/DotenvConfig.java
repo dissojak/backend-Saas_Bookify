@@ -68,7 +68,7 @@ public class DotenvConfig {
         }
 
         // NEW: developer tracking id used by Flouci requests
-        String devTrack = dotenv.get("DEVELOPER_TRACKING_ID");
+        String devTrack = dotenv.get("FLOUCI_DEVELOPER_TRACKING_ID");
         if (devTrack != null && !devTrack.isEmpty()) {
             System.setProperty("flouci.developer-tracking-id", devTrack);
         }
@@ -80,5 +80,13 @@ public class DotenvConfig {
         System.out.println("        |         ✅ Dotenv loaded and system properties.         |");
         System.out.println("        |                                                         |");
         System.out.println("         =========================================================");
+
+        // Log Flouci config for debugging
+        System.out.println("🔑 Flouci Configuration:");
+        System.out.println("   - App Token: " + (flouciToken != null ? flouciToken.substring(0, Math.min(10, flouciToken.length())) + "..." : "NOT SET"));
+        System.out.println("   - App Secret: " + (flouciSecret != null ? flouciSecret.substring(0, Math.min(10, flouciSecret.length())) + "..." : "NOT SET"));
+        System.out.println("   - App Public: " + (flouciPublic != null ? flouciPublic.substring(0, Math.min(10, flouciPublic.length())) + "..." : "NOT SET"));
+        System.out.println("   - Base URL: " + (flouciBase != null ? flouciBase : "NOT SET"));
+        System.out.println("   - Developer Tracking ID: " + (devTrack != null ? devTrack.substring(0, Math.min(10, devTrack.length())) + "..." : "NOT SET"));
     }
 }

@@ -1,163 +1,199 @@
 package com.bookify.backendbookify_saas.service.impl;
 
-import com.bookify.backendbookify_saas.models.dtos.FlouciGeneratePaymentRequest;
-import com.bookify.backendbookify_saas.models.dtos.FlouciGeneratePaymentResponse;
-import com.bookify.backendbookify_saas.models.dtos.FlouciVerifyPaymentResponse;
-import com.bookify.backendbookify_saas.models.dtos.PaymentCreateRequest;
-import com.bookify.backendbookify_saas.models.entities.Booking;
+import com.bookify.backendbookify_saas.models.dtos.PaymentInitiationResponse;
+import com.bookify.backendbookify_saas.models.dtos.PaymentVerificationResponse;
+import com.bookify.backendbookify_saas.models.dtos.SubscriptionPaymentRequest;
+import com.bookify.backendbookify_saas.models.entities.Business;
 import com.bookify.backendbookify_saas.models.entities.Payment;
 import com.bookify.backendbookify_saas.models.entities.Subscription;
-import com.bookify.backendbookify_saas.models.enums.BookingStatusEnum;
-import com.bookify.backendbookify_saas.models.enums.SubscriptionPlan;
 import com.bookify.backendbookify_saas.models.enums.SubscriptionStatus;
-import com.bookify.backendbookify_saas.repositories.BookingRepository;
+import com.bookify.backendbookify_saas.repositories.BusinessRepository;
 import com.bookify.backendbookify_saas.repositories.PaymentRepository;
 import com.bookify.backendbookify_saas.repositories.SubscriptionRepository;
-import com.bookify.backendbookify_saas.service.FlouciPaymentService;
+import com.bookify.backendbookify_saas.service.PaymentGateway;
+import com.bookify.backendbookify_saas.service.PaymentGatewayResponse;
 import com.bookify.backendbookify_saas.service.PaymentService;
+import com.bookify.backendbookify_saas.service.PaymentVerificationResult;
+import com.bookify.backendbookify_saas.service.SubscriptionPricingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.Optional;
 
+/**
+ * Implémentation du service de paiement suivant les principes SOLID
+ * - Single Responsibility: gère uniquement la logique métier des paiements
+ * - Open/Closed: ouvert à l'extension (nouveaux gateways) sans modification
+ * - Dependency Inversion: dépend de l'abstraction PaymentGateway, pas de Flouci directement
+ */
 @Service
 public class PaymentServiceImpl implements PaymentService {
 
     private final Logger log = LoggerFactory.getLogger(PaymentServiceImpl.class);
-    private final FlouciPaymentService flouciPaymentService;
+    private final PaymentGateway paymentGateway;
+    private final SubscriptionPricingService pricingService;
     private final PaymentRepository paymentRepository;
     private final SubscriptionRepository subscriptionRepository;
-    private final BookingRepository bookingRepository;
+    private final BusinessRepository businessRepository;
 
-    public PaymentServiceImpl(FlouciPaymentService flouciPaymentService,
-                              PaymentRepository paymentRepository,
-                              SubscriptionRepository subscriptionRepository,
-                              BookingRepository bookingRepository) {
-        this.flouciPaymentService = flouciPaymentService;
+    public PaymentServiceImpl(
+            @Qualifier("flouciPaymentGateway") PaymentGateway paymentGateway,
+            SubscriptionPricingService pricingService,
+            PaymentRepository paymentRepository,
+            SubscriptionRepository subscriptionRepository,
+            BusinessRepository businessRepository) {
+        this.paymentGateway = paymentGateway;
+        this.pricingService = pricingService;
         this.paymentRepository = paymentRepository;
         this.subscriptionRepository = subscriptionRepository;
-        this.bookingRepository = bookingRepository;
+        this.businessRepository = businessRepository;
     }
 
     @Override
     @Transactional
-    public FlouciGeneratePaymentResponse createPaymentAndLog(PaymentCreateRequest request) {
-        // build Flouci request
-        FlouciGeneratePaymentRequest fr = new FlouciGeneratePaymentRequest(
-                request.getAmount() != null ? request.getAmount().longValue() : null,
-                request.getCurrency(),
-                "true",
-                1200,
-                request.getSuccessLink(),
-                request.getFailLink(),
-                request.getDeveloperTrackingId()
-        );
-
-        FlouciGeneratePaymentResponse response = flouciPaymentService.generatePayment(fr);
-
-        // persist payment log
+    public PaymentInitiationResponse initiateSubscriptionPayment(SubscriptionPaymentRequest request) {
         try {
-            Payment p = new Payment();
-            p.setAmount(request.getAmount() != null ? request.getAmount() : BigDecimal.ZERO);
-            p.setMethod("FLOUCI");
-            p.setStatus(response.getStatus() != null ? response.getStatus() : "PENDING");
-            p.setTransactionRef(response.getPaymentId());
-
-            if (request.getSubscriptionId() != null) {
-                Optional<Subscription> sub = subscriptionRepository.findById(request.getSubscriptionId());
-                sub.ifPresent(p::setSubscription);
+            // 1. Valider que le business existe
+            Optional<Business> businessOpt = businessRepository.findById(request.getBusinessId());
+            if (!businessOpt.isPresent()) {
+                return new PaymentInitiationResponse(null, null, false, "Business not found");
             }
 
-            paymentRepository.save(p);
-        } catch (Exception e) {
-            log.error("Failed to save payment log", e);
-        }
+            // 2. Calculer le prix selon le plan (pas depuis le frontend!)
+            long amountInMillimes = pricingService.getPriceInMillimes(request.getPlan());
+            BigDecimal amount = pricingService.getPrice(request.getPlan());
+            int durationDays = pricingService.getDurationInDays(request.getPlan());
 
-        return response;
+            // 3. Créer la subscription en statut PENDING avec les dates définies
+            LocalDate startDate = LocalDate.now();
+            LocalDate endDate = durationDays > 0 ? startDate.plusDays(durationDays) : null;
+
+            Subscription subscription = new Subscription();
+            subscription.setBusiness(businessOpt.get());
+            subscription.setPlan(request.getPlan());
+            subscription.setStatus(SubscriptionStatus.PENDING);
+            subscription.setPrice(amount);
+            subscription.setStartDate(startDate);
+            subscription.setEndDate(endDate);
+            subscription = subscriptionRepository.save(subscription);
+
+            log.info("Created PENDING subscription id={} for business={} plan={}",
+                    subscription.getId(), request.getBusinessId(), request.getPlan());
+
+            // 4. Générer le lien de paiement via le gateway
+            String successLink = request.getSuccessLink() != null && !request.getSuccessLink().isEmpty()
+                    ? request.getSuccessLink()
+                    : "http://localhost:3000/subscription/success";
+            String failLink = request.getFailLink() != null && !request.getFailLink().isEmpty()
+                    ? request.getFailLink()
+                    : "http://localhost:3000/subscription/fail";
+
+            // Utiliser l'ID de subscription comme tracking ID
+            String trackingId = "SUB-" + subscription.getId();
+
+            PaymentGatewayResponse gatewayResponse = paymentGateway.generatePayment(
+                    amountInMillimes,
+                    successLink + "?subscriptionId=" + subscription.getId(),
+                    failLink + "?subscriptionId=" + subscription.getId(),
+                    trackingId
+            );
+
+            if (!gatewayResponse.isSuccess()) {
+                // Supprimer la subscription si le paiement n'a pas pu être créé
+                subscriptionRepository.delete(subscription);
+                return new PaymentInitiationResponse(null, null, false, gatewayResponse.getErrorMessage());
+            }
+
+            log.info("Payment link generated: paymentId={} for subscription={}",
+                    gatewayResponse.getPaymentId(), subscription.getId());
+
+            return new PaymentInitiationResponse(
+                    gatewayResponse.getPaymentId(),
+                    gatewayResponse.getCheckoutUrl(),
+                    true,
+                    null
+            );
+
+        } catch (Exception e) {
+            log.error("Error initiating subscription payment", e);
+            return new PaymentInitiationResponse(null, null, false, e.getMessage());
+        }
     }
 
     @Override
     @Transactional
-    public FlouciVerifyPaymentResponse verifyPaymentAndProcess(String paymentId, Long subscriptionId, Long bookingId) {
-        FlouciVerifyPaymentResponse response = flouciPaymentService.verifyPayment(paymentId);
+    public PaymentVerificationResponse verifyAndCompleteSubscriptionPayment(String paymentId, Long subscriptionId) {
+        try {
+            // 1. Vérifier le paiement via le gateway
+            PaymentVerificationResult verificationResult = paymentGateway.verifyPayment(paymentId);
 
-        // find existing payment by transaction ref or create new
-        Payment payment = paymentRepository.findByTransactionRef(paymentId).orElseGet(() -> {
-            Payment p = new Payment();
-            p.setTransactionRef(paymentId);
-            p.setMethod("FLOUCI");
-            p.setAmount(response.getAmount() != null ? new BigDecimal(response.getAmount()) : BigDecimal.ZERO);
-            return p;
-        });
-
-        payment.setStatus(response.getStatus());
-        paymentRepository.save(payment);
-
-        // If related to subscription and successful, activate subscription
-        if (subscriptionId != null && "SUCCESS".equalsIgnoreCase(response.getStatus())) {
-            Optional<Subscription> optSub = subscriptionRepository.findById(subscriptionId);
-            if (optSub.isPresent()) {
-                Subscription sub = optSub.get();
-                sub.setStatus(SubscriptionStatus.ACTIVE);
-                LocalDate start = LocalDate.now();
-                sub.setStartDate(start);
-                int days = planToDays(sub.getPlan());
-                if (days > 0) {
-                    sub.setEndDate(start.plusDays(days));
-                }
-                subscriptionRepository.save(sub);
-
-                // link payment to subscription
-                payment.setSubscription(sub);
-                paymentRepository.save(payment);
-            } else {
-                log.warn("Subscription id {} not found while processing payment {}", subscriptionId, paymentId);
+            // 2. Récupérer la subscription
+            Optional<Subscription> subscriptionOpt = subscriptionRepository.findById(subscriptionId);
+            if (!subscriptionOpt.isPresent()) {
+                log.warn("Subscription {} not found for payment {}", subscriptionId, paymentId);
+                return new PaymentVerificationResponse(false, "FAILED", "Subscription not found", null);
             }
-        }
 
-        // If related to booking and successful, update booking status and link payment
-        if (bookingId != null && "SUCCESS".equalsIgnoreCase(response.getStatus())) {
-            Optional<Booking> optBooking = bookingRepository.findById(bookingId);
-            if (optBooking.isPresent()) {
-                Booking booking = optBooking.get();
-                booking.setStatus(BookingStatusEnum.COMPLETED);
-                bookingRepository.save(booking);
+            Subscription subscription = subscriptionOpt.get();
 
-                payment.setBooking(booking);
-                paymentRepository.save(payment);
+            // 3. Créer le log de paiement (TOUJOURS, même si échec)
+            Payment paymentLog = new Payment();
+            paymentLog.setTransactionRef(paymentId);
+            paymentLog.setMethod(paymentGateway.getGatewayName());
+            paymentLog.setStatus(verificationResult.getStatus());
+            paymentLog.setAmount(verificationResult.getAmount() != null
+                    ? new BigDecimal(verificationResult.getAmount()).divide(new BigDecimal(1000), RoundingMode.HALF_UP)
+                    : subscription.getPrice());
+            paymentLog.setSubscription(subscription);
+            paymentRepository.save(paymentLog);
+
+            log.info("Payment log created: paymentId={} status={} for subscription={}",
+                    paymentId, verificationResult.getStatus(), subscriptionId);
+
+            // 4. Si paiement réussi, activer la subscription (les dates sont déjà définies)
+            if (verificationResult.isVerified() && "SUCCESS".equalsIgnoreCase(verificationResult.getStatus())) {
+                subscription.setStatus(SubscriptionStatus.ACTIVE);
+                subscriptionRepository.save(subscription);
+
+                log.info("Subscription {} activated: startDate={} endDate={}",
+                        subscriptionId, subscription.getStartDate(), subscription.getEndDate());
+
+                return new PaymentVerificationResponse(
+                        true,
+                        "SUCCESS",
+                        "Subscription activated successfully",
+                        subscriptionId
+                );
             } else {
-                log.warn("Booking id {} not found while processing payment {}", bookingId, paymentId);
-            }
-        }
+                // Paiement échoué
+                subscription.setStatus(SubscriptionStatus.FAILED);
+                subscriptionRepository.save(subscription);
 
-        return response;
+                log.warn("Payment failed for subscription {}: status={}", subscriptionId, verificationResult.getStatus());
+
+                return new PaymentVerificationResponse(
+                        false,
+                        verificationResult.getStatus(),
+                        "Payment verification failed",
+                        subscriptionId
+                );
+            }
+
+        } catch (Exception e) {
+            log.error("Error verifying payment", e);
+            return new PaymentVerificationResponse(false, "ERROR", e.getMessage(), null);
+        }
     }
 
     @Override
     public Payment findByTransactionRef(String transactionRef) {
         return paymentRepository.findByTransactionRef(transactionRef).orElse(null);
     }
-
-    // Map plan to days - assumption, adapt as needed
-    private int planToDays(SubscriptionPlan plan) {
-        if (plan == null) return 0;
-        switch (plan) {
-            case FREE:
-                return 0;
-            case BASIC:
-                return 30;
-            case PRO:
-                return 90;
-            case PREMIUM:
-                return 365;
-            case ENTERPRISE:
-                return 3650;
-            default:
-                return 0;
-        }
-    }
 }
+

@@ -1,0 +1,917 @@
+{
+  "info": {
+    "name": "Bookify Payment API",
+    "description": "Collection pour tester les endpoints de paiement Flouci",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8088/api",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Subscription Payments (Recommandé)",
+      "item": [
+        {
+          "name": "1. Initiate Subscription Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"businessId\": 1,\n  \"plan\": \"PRO\",\n  \"successLink\": \"http://localhost:3000/subscription/success\",\n  \"failLink\": \"http://localhost:3000/subscription/fail\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/subscriptions/payments/initiate",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "subscriptions", "payments", "initiate"]
+            },
+            "description": "Crée une subscription en statut PENDING et génère le lien de paiement Flouci"
+          }
+        },
+        {
+          "name": "2. Verify Subscription Payment",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/subscriptions/payments/verify?payment_id=PAYMENT_ID_HERE&subscriptionId=1",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "subscriptions", "payments", "verify"],
+              "query": [
+                {
+                  "key": "payment_id",
+                  "value": "PAYMENT_ID_HERE",
+                  "description": "L'ID de paiement retourné par Flouci"
+                },
+                {
+                  "key": "subscriptionId",
+                  "value": "1",
+                  "description": "L'ID de la subscription créée"
+                }
+              ]
+            },
+            "description": "Vérifie le paiement avec Flouci et active la subscription si succès"
+          }
+        },
+        {
+          "name": "3. Flouci Webhook",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Flouci-Signature",
+                "value": "signature_here"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"payment_id\": \"abc123\",\n  \"status\": \"SUCCESS\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/subscriptions/payments/webhook",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "subscriptions", "payments", "webhook"]
+            },
+            "description": "Endpoint webhook pour les notifications Flouci"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Flouci Payments (Legacy)",
+      "item": [
+        {
+          "name": "1. Generate Payment (Legacy)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"businessId\": 1,\n  \"plan\": \"BASIC\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/payments/flouci/generate",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "payments", "flouci", "generate"]
+            },
+            "description": "Génère un lien de paiement (endpoint legacy, préférer /subscriptions/payments/initiate)"
+          }
+        },
+        {
+          "name": "2. Verify Payment (Legacy)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/payments/flouci/verify?paymentId=PAYMENT_ID_HERE&subscriptionId=1",
+              "host": ["{{base_url}}"],
+              "path": ["payments", "flouci", "verify"],
+              "query": [
+                {
+                  "key": "paymentId",
+                  "value": "PAYMENT_ID_HERE"
+                },
+                {
+                  "key": "subscriptionId",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "Vérifie un paiement (endpoint legacy)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Test avec tous les plans",
+      "item": [
+        {
+          "name": "FREE Plan",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"businessId\": 1,\n  \"plan\": \"FREE\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/subscriptions/payments/initiate",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "subscriptions", "payments", "initiate"]
+            }
+          }
+        },
+        {
+          "name": "BASIC Plan (10 TND)",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"businessId\": 1,\n  \"plan\": \"BASIC\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/subscriptions/payments/initiate",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "subscriptions", "payments", "initiate"]
+            }
+          }
+        },
+        {
+          "name": "PRO Plan (25 TND)",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"businessId\": 1,\n  \"plan\": \"PRO\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/subscriptions/payments/initiate",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "subscriptions", "payments", "initiate"]
+            }
+          }
+        },
+        {
+          "name": "PREMIUM Plan (50 TND)",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"businessId\": 1,\n  \"plan\": \"PREMIUM\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/subscriptions/payments/initiate",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "subscriptions", "payments", "initiate"]
+            }
+          }
+        },
+        {
+          "name": "ENTERPRISE Plan (100 TND)",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"businessId\": 1,\n  \"plan\": \"ENTERPRISE\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/subscriptions/payments/initiate",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "subscriptions", "payments", "initiate"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
+{
+  "info": {
+    "name": "Bookify Payment API",
+    "description": "Collection pour tester les endpoints de paiement Flouci",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8088/api",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Subscription Payments (Recommandé)",
+      "item": [
+        {
+          "name": "1. Initiate Subscription Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"businessId\": 1,\n  \"plan\": \"PRO\",\n  \"successLink\": \"http://localhost:3000/subscription/success\",\n  \"failLink\": \"http://localhost:3000/subscription/fail\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/subscriptions/payments/initiate",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "subscriptions", "payments", "initiate"]
+            },
+            "description": "Crée une subscription en statut PENDING et génère le lien de paiement Flouci"
+          }
+        },
+        {
+          "name": "2. Verify Subscription Payment",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/subscriptions/payments/verify?payment_id=PAYMENT_ID_HERE&subscriptionId=1",
+              "host": ["{{base_url}}"],
+              "path": ["subscriptions", "payments", "verify"],
+              "query": [
+                {
+                  "key": "payment_id",
+                  "value": "PAYMENT_ID_HERE",
+                  "description": "L'ID de paiement retourné par Flouci"
+                },
+                {
+                  "key": "subscriptionId",
+                  "value": "1",
+                  "description": "L'ID de la subscription créée"
+                }
+              ]
+            },
+            "description": "Vérifie le paiement avec Flouci et active la subscription si succès"
+          }
+        },
+        {
+          "name": "3. Flouci Webhook",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Flouci-Signature",
+                "value": "signature_here"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"payment_id\": \"abc123\",\n  \"status\": \"SUCCESS\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/subscriptions/payments/webhook",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "subscriptions", "payments", "webhook"]
+            },
+            "description": "Endpoint webhook pour les notifications Flouci"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Flouci Payments (Legacy)",
+      "item": [
+        {
+          "name": "1. Generate Payment (Legacy)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"businessId\": 1,\n  \"plan\": \"BASIC\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/payments/flouci/generate",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "payments", "flouci", "generate"]
+            },
+            "description": "Génère un lien de paiement (endpoint legacy, préférer /subscriptions/payments/initiate)"
+          }
+        },
+        {
+          "name": "2. Verify Payment (Legacy)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/payments/flouci/verify?paymentId=PAYMENT_ID_HERE&subscriptionId=1",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "payments", "flouci", "verify"],
+              "query": [
+                {
+                  "key": "paymentId",
+                  "value": "PAYMENT_ID_HERE"
+                },
+                {
+                  "key": "subscriptionId",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "Vérifie un paiement (endpoint legacy)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Test avec tous les plans",
+      "item": [
+        {
+          "name": "FREE Plan",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"businessId\": 1,\n  \"plan\": \"FREE\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/subscriptions/payments/initiate",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "subscriptions", "payments", "initiate"]
+            }
+          }
+        },
+        {
+          "name": "BASIC Plan (10 TND)",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"businessId\": 1,\n  \"plan\": \"BASIC\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/subscriptions/payments/initiate",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "subscriptions", "payments", "initiate"]
+            }
+          }
+        },
+        {
+          "name": "PRO Plan (25 TND)",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"businessId\": 1,\n  \"plan\": \"PRO\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/subscriptions/payments/initiate",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "subscriptions", "payments", "initiate"]
+            }
+          }
+        },
+        {
+          "name": "PREMIUM Plan (50 TND)",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"businessId\": 1,\n  \"plan\": \"PREMIUM\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/subscriptions/payments/initiate",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "subscriptions", "payments", "initiate"]
+            }
+          }
+        },
+        {
+          "name": "ENTERPRISE Plan (100 TND)",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"businessId\": 1,\n  \"plan\": \"ENTERPRISE\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/subscriptions/payments/initiate",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "subscriptions", "payments", "initiate"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
+{
+  "info": {
+    "name": "Bookify Payment API",
+    "description": "Collection pour tester les endpoints de paiement Flouci",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8088/api",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Subscription Payments (Recommandé)",
+      "item": [
+        {
+          "name": "1. Initiate Subscription Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"businessId\": 1,\n  \"plan\": \"PRO\",\n  \"successLink\": \"http://localhost:3000/subscription/success\",\n  \"failLink\": \"http://localhost:3000/subscription/fail\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/subscriptions/payments/initiate",
+              "host": ["{{base_url}}"],
+              "path": ["subscriptions", "payments", "initiate"]
+            },
+            "description": "Crée une subscription en statut PENDING et génère le lien de paiement Flouci"
+          }
+        },
+        {
+          "name": "2. Verify Subscription Payment",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/subscriptions/payments/verify?payment_id=PAYMENT_ID_HERE&subscriptionId=1",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "subscriptions", "payments", "verify"],
+              "query": [
+                {
+                  "key": "payment_id",
+                  "value": "PAYMENT_ID_HERE",
+                  "description": "L'ID de paiement retourné par Flouci"
+                },
+                {
+                  "key": "subscriptionId",
+                  "value": "1",
+                  "description": "L'ID de la subscription créée"
+                }
+              ]
+            },
+            "description": "Vérifie le paiement avec Flouci et active la subscription si succès"
+          }
+        },
+        {
+          "name": "3. Flouci Webhook",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Flouci-Signature",
+                "value": "signature_here"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"payment_id\": \"abc123\",\n  \"status\": \"SUCCESS\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/subscriptions/payments/webhook",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "subscriptions", "payments", "webhook"]
+            },
+            "description": "Endpoint webhook pour les notifications Flouci"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Flouci Payments (Legacy)",
+      "item": [
+        {
+          "name": "1. Generate Payment (Legacy)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"businessId\": 1,\n  \"plan\": \"BASIC\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/payments/flouci/generate",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "payments", "flouci", "generate"]
+            },
+            "description": "Génère un lien de paiement (endpoint legacy, préférer /subscriptions/payments/initiate)"
+          }
+        },
+        {
+          "name": "2. Verify Payment (Legacy)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/payments/flouci/verify?paymentId=PAYMENT_ID_HERE&subscriptionId=1",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "payments", "flouci", "verify"],
+              "query": [
+                {
+                  "key": "paymentId",
+                  "value": "PAYMENT_ID_HERE"
+                },
+                {
+                  "key": "subscriptionId",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "Vérifie un paiement (endpoint legacy)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Test avec tous les plans",
+      "item": [
+        {
+          "name": "FREE Plan",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"businessId\": 1,\n  \"plan\": \"FREE\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/subscriptions/payments/initiate",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "subscriptions", "payments", "initiate"]
+            }
+          }
+        },
+        {
+          "name": "BASIC Plan (10 TND)",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"businessId\": 1,\n  \"plan\": \"BASIC\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/subscriptions/payments/initiate",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "subscriptions", "payments", "initiate"]
+            }
+          }
+        },
+        {
+          "name": "PRO Plan (25 TND)",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"businessId\": 1,\n  \"plan\": \"PRO\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/subscriptions/payments/initiate",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "subscriptions", "payments", "initiate"]
+            }
+          }
+        },
+        {
+          "name": "PREMIUM Plan (50 TND)",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"businessId\": 1,\n  \"plan\": \"PREMIUM\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/subscriptions/payments/initiate",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "subscriptions", "payments", "initiate"]
+            }
+          }
+        },
+        {
+          "name": "ENTERPRISE Plan (100 TND)",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"businessId\": 1,\n  \"plan\": \"ENTERPRISE\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/subscriptions/payments/initiate",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "subscriptions", "payments", "initiate"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
+{
+  "info": {
+    "name": "Bookify Payment API",
+    "description": "Collection pour tester les endpoints de paiement Flouci",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8088/api/v1",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Subscription Payments (Recommandé)",
+      "item": [
+        {
+          "name": "1. Initiate Subscription Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"businessId\": 1,\n  \"plan\": \"PRO\",\n  \"successLink\": \"http://localhost:3000/subscription/success\",\n  \"failLink\": \"http://localhost:3000/subscription/fail\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/subscriptions/payments/initiate",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "subscriptions", "payments", "initiate"]
+            },
+            "description": "Crée une subscription en statut PENDING et génère le lien de paiement Flouci"
+          }
+        },
+        {
+          "name": "2. Verify Subscription Payment",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/subscriptions/payments/verify?payment_id=PAYMENT_ID_HERE&subscriptionId=1",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "subscriptions", "payments", "verify"],
+              "query": [
+                {
+                  "key": "payment_id",
+                  "value": "PAYMENT_ID_HERE",
+                  "description": "L'ID de paiement retourné par Flouci"
+                },
+                {
+                  "key": "subscriptionId",
+                  "value": "1",
+                  "description": "L'ID de la subscription créée"
+                }
+              ]
+            },
+            "description": "Vérifie le paiement avec Flouci et active la subscription si succès"
+          }
+        },
+        {
+          "name": "3. Flouci Webhook",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Flouci-Signature",
+                "value": "signature_here"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"payment_id\": \"abc123\",\n  \"status\": \"SUCCESS\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/subscriptions/payments/webhook",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "subscriptions", "payments", "webhook"]
+            },
+            "description": "Endpoint webhook pour les notifications Flouci"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Flouci Payments (Legacy)",
+      "item": [
+        {
+          "name": "1. Generate Payment (Legacy)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"businessId\": 1,\n  \"plan\": \"BASIC\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/payments/flouci/generate",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "payments", "flouci", "generate"]
+            },
+            "description": "Génère un lien de paiement (endpoint legacy, préférer /subscriptions/payments/initiate)"
+          }
+        },
+        {
+          "name": "2. Verify Payment (Legacy)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/payments/flouci/verify?paymentId=PAYMENT_ID_HERE&subscriptionId=1",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "payments", "flouci", "verify"],
+              "query": [
+                {
+                  "key": "paymentId",
+                  "value": "PAYMENT_ID_HERE"
+                },
+                {
+                  "key": "subscriptionId",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "Vérifie un paiement (endpoint legacy)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Test avec tous les plans",
+      "item": [
+        {
+          "name": "FREE Plan",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"businessId\": 1,\n  \"plan\": \"FREE\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/subscriptions/payments/initiate",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "subscriptions", "payments", "initiate"]
+            }
+          }
+        },
+        {
+          "name": "BASIC Plan (10 TND)",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"businessId\": 1,\n  \"plan\": \"BASIC\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/subscriptions/payments/initiate",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "subscriptions", "payments", "initiate"]
+            }
+          }
+        },
+        {
+          "name": "PRO Plan (25 TND)",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"businessId\": 1,\n  \"plan\": \"PRO\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/subscriptions/payments/initiate",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "subscriptions", "payments", "initiate"]
+            }
+          }
+        },
+        {
+          "name": "PREMIUM Plan (50 TND)",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"businessId\": 1,\n  \"plan\": \"PREMIUM\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/subscriptions/payments/initiate",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "subscriptions", "payments", "initiate"]
+            }
+          }
+        },
+        {
+          "name": "ENTERPRISE Plan (100 TND)",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"businessId\": 1,\n  \"plan\": \"ENTERPRISE\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/subscriptions/payments/initiate",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "subscriptions", "payments", "initiate"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
+

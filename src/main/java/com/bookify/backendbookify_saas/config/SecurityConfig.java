@@ -55,23 +55,12 @@ public class SecurityConfig {
                                 "/api/v1/auth/reset-password",
                                 "/api/v1/businesses/{businessId}/staffMembers",
                                 "/api/v1/staff/{staffId}/services",
-                                // Explicitly permit payments & subscriptions public endpoints (both /v1 and /api/v1)
+                                // Payments & subscriptions endpoints (PUBLIC)
                                 "/v1/payments/**",
                                 "/api/v1/payments/**",
-                                "/**/payments/**",
-                                "/v1/payments/flouci/**",
-                                "/api/v1/payments/flouci/**",
-                                "/**/payments/flouci/**",
-                                "/v1/payments/flouci/webhook",
-                                "/api/v1/payments/flouci/webhook",
-                                "/**/payments/flouci/webhook",
                                 "/v1/subscriptions/**",
                                 "/api/v1/subscriptions/**",
-                                "/**/subscriptions/**",
-                                "/v1/subscription/**",
-                                "/api/v1/subscription/**",
-                                "/**/subscription/**",
-                                // Swagger/OpenAPI - include both default and custom paths
+                                // Swagger/OpenAPI
                                 "/v3/api-docs/**",
                                 "/api/v3/api-docs/**",
                                 "/api/v3/api-docs/swagger-config",

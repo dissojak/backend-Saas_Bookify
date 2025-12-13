@@ -48,4 +48,9 @@ public interface BusinessRepository extends JpaRepository<Business, Long> {
      * Find all businesses with the given status
      */
     List<Business> findByStatus(BusinessStatus status);
+
+    /**
+     * New: case-insensitive partial search by name, filtering by status
+     */
+    List<Business> findByNameContainingIgnoreCaseAndStatus(String name, BusinessStatus status);
 }

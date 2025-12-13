@@ -1,5 +1,6 @@
 package com.bookify.backendbookify_saas.models.entities;
 
+import com.bookify.backendbookify_saas.models.enums.SubscriptionPlan;
 import com.bookify.backendbookify_saas.models.enums.SubscriptionStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -28,7 +29,7 @@ public class Subscription {
     private Long id;
 
     @Column(name = "plan_name", nullable = false)
-    private String planName;
+    private SubscriptionPlan plan;
 
     @Column(nullable = false)
     private SubscriptionStatus status;

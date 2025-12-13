@@ -46,6 +46,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // Public endpoint to list services for a business (context path /api is prefixed at runtime)
             "/api/v1/businesses/{businessId}/services",
             "/api/v1/staff/{staffId}/services",
+            // Make staff calendar public (both /v1 and /api/v1 variants will be detected by regex)
+            "/v1/staff/{staffId}/calendar",
+            "/api/v1/staff/{staffId}/calendar",
+            // Make business search public
+            "/v1/businesses/search",
+            "/api/v1/businesses/search",
             "/v3/api-docs/",
             "/swagger-ui/",
             "/swagger-ui.html",
@@ -83,11 +89,33 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     return;
                 }
                 // If it's the availabilities pattern but not a GET with both params, do NOT skip authentication
-            } else {
-                System.out.println("✓ Public URL - Skipping JWT authentication (matched: '" + matched + "')");
-                filterChain.doFilter(request, response);
-                return;
             }
+
+            // Special-case: staff calendar should be public for GET requests (no params required)
+            if ("REGEX:/v1/staff/{id}/calendar".equals(matched)) {
+                boolean isGet = "GET".equalsIgnoreCase(requestMethod);
+                if (isGet) {
+                    System.out.println("✓ Public URL - Skipping JWT authentication (matched: '" + matched + "') [GET]");
+                    filterChain.doFilter(request, response);
+                    return;
+                }
+                // non-GET requests require authentication
+            }
+
+            // Special-case: business search should be public for GET requests (query param name provided by client)
+            if ("REGEX:/v1/businesses/search".equals(matched)) {
+                boolean isGet = "GET".equalsIgnoreCase(requestMethod);
+                if (isGet) {
+                    System.out.println("✓ Public URL - Skipping JWT authentication (matched: '" + matched + "') [GET]");
+                    filterChain.doFilter(request, response);
+                    return;
+                }
+            }
+
+            // Fallback: existing literal public prefixes or other regex that should be fully public
+            System.out.println("✓ Public URL - Skipping JWT authentication (matched: '" + matched + "')");
+            filterChain.doFilter(request, response);
+            return;
         }
 
         final String authHeader = request.getHeader("Authorization");
@@ -186,24 +214,34 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
      * Return the matching public prefix for debugging, or null if none
      */
     private String getMatchingPublicPrefix(String requestPath) {
-        for (String prefix : PUBLIC_URLS) {
-            if (requestPath.startsWith(prefix)) return prefix;
-        }
-
+        // First check parameterized endpoints using regexes - these must be matched before literal prefix checks
         String staffServicesRegex = "^/((api/)?)v1/staff/\\d+/services/?$";
         if (requestPath.matches(staffServicesRegex)) return "REGEX:/v1/staff/{id}/services";
 
-
-        // Regex for business services listing: matches /api/v1/businesses/{id}/services
+        // business services listing
         String businessServicesRegex = "^/((api/)?)v1/businesses/\\d+/services/?$";
         if (requestPath.matches(businessServicesRegex)) return "REGEX:/v1/businesses/{id}/services";
 
+        // business staff members
         String staffRegex = "^/((api/)?)v1/businesses/\\d+/staffMembers/?$";
         if (requestPath.matches(staffRegex)) return "REGEX:/v1/businesses/{id}/staffMembers";
 
-        // Regex for staff availabilities listing: matches /api/v1/staff/{id}/availabilities
+        // staff availabilities listing
         String staffAvailabilitiesRegex = "^/((api/)?)v1/staff/\\d+/availabilities/?$";
         if (requestPath.matches(staffAvailabilitiesRegex)) return "REGEX:/v1/staff/{id}/availabilities";
+
+        // staff calendar
+        String staffCalendarRegex = "^/((api/)?)v1/staff/\\d+/calendar/?$";
+        if (requestPath.matches(staffCalendarRegex)) return "REGEX:/v1/staff/{id}/calendar";
+
+        // business search
+        String businessSearchRegex = "^/((api/)?)v1/businesses/search/?$";
+        if (requestPath.matches(businessSearchRegex)) return "REGEX:/v1/businesses/search";
+
+        // Fallback: check literal public prefixes (static endpoints)
+        for (String prefix : PUBLIC_URLS) {
+            if (requestPath.startsWith(prefix)) return prefix;
+        }
 
         return null;
     }

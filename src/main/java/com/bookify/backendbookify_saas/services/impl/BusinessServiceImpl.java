@@ -1,6 +1,8 @@
 package com.bookify.backendbookify_saas.services.impl;
 
 import com.bookify.backendbookify_saas.models.entities.*;
+import com.bookify.backendbookify_saas.models.dtos.BusinessSearchDto;
+import com.bookify.backendbookify_saas.models.enums.BusinessStatus;
 import com.bookify.backendbookify_saas.repositories.BusinessRepository;
 import com.bookify.backendbookify_saas.repositories.BusinessEvaluationRepository;
 import com.bookify.backendbookify_saas.repositories.UserRepository;
@@ -14,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -246,5 +249,47 @@ public class BusinessServiceImpl implements BusinessService {
     @Override
     public String generateTenantId() {
         throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    public java.util.List<BusinessSearchDto> searchByName(String query) {
+        if (query == null || query.isBlank()) return java.util.List.of();
+        // Search only active businesses
+        java.util.List<Business> found = businessRepository.findByNameContainingIgnoreCaseAndStatus(query.trim(), BusinessStatus.ACTIVE);
+        if (found == null || found.isEmpty()) return java.util.List.of();
+
+        return found.stream().map(b -> {
+            Double avg = null;
+            try {
+                if (b.getRatings() != null && !b.getRatings().isEmpty()) {
+                    avg = b.getRatings().stream().mapToInt(r -> r.getScore()).average().orElse(Double.NaN);
+                    if (Double.isNaN(avg)) avg = null;
+                }
+            } catch (Exception ignored) {}
+
+            String img = null;
+            try {
+                if (b.getImages() != null && !b.getImages().isEmpty()) {
+                    img = b.getImages().get(0).getImageUrl();
+                }
+            } catch (Exception ignored) {}
+
+            Long catId = null; String catName = null;
+            if (b.getCategory() != null) {
+                catId = b.getCategory().getId();
+                catName = b.getCategory().getName();
+            }
+
+            return BusinessSearchDto.builder()
+                    .id(b.getId())
+                    .name(b.getName())
+                    .categoryId(catId)
+                    .categoryName(catName)
+                    .rating(avg)
+                    .imageUrl(img)
+                    .description(b.getDescription())
+                    .build();
+        }).collect(Collectors.toList());
     }
 }

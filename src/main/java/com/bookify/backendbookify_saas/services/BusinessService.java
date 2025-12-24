@@ -37,4 +37,10 @@ public interface BusinessService {
 
     // New: search businesses by partial name (case-insensitive) returning lightweight DTOs
     java.util.List<com.bookify.backendbookify_saas.models.dtos.BusinessSearchDto> searchByName(String query);
+
+    /**
+     * Advanced search: query searches name/description, location filters by location, categoryId filters by category
+     * All parameters are optional - null values are ignored
+     */
+    java.util.List<com.bookify.backendbookify_saas.models.dtos.BusinessSearchDto> advancedSearch(String query, String location, Long categoryId);
 }

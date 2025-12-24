@@ -292,4 +292,59 @@ public class BusinessServiceImpl implements BusinessService {
                     .build();
         }).collect(Collectors.toList());
     }
+
+    @Override
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    public java.util.List<BusinessSearchDto> advancedSearch(String query, String location, Long categoryId) {
+        // Clean up inputs - treat empty strings as null
+        String cleanQuery = (query != null && !query.isBlank()) ? query.trim() : null;
+        String cleanLocation = (location != null && !location.isBlank()) ? location.trim() : null;
+
+        // If all parameters are null/empty, return empty list
+        if (cleanQuery == null && cleanLocation == null && categoryId == null) {
+            return java.util.List.of();
+        }
+
+        java.util.List<Business> found = businessRepository.fullSearch(cleanQuery, cleanLocation, categoryId, BusinessStatus.ACTIVE);
+        if (found == null || found.isEmpty()) return java.util.List.of();
+
+        return found.stream().map(this::mapToSearchDto).collect(Collectors.toList());
+    }
+
+    /**
+     * Helper method to map Business entity to BusinessSearchDto
+     */
+    private BusinessSearchDto mapToSearchDto(Business b) {
+        Double avg = null;
+        try {
+            if (b.getRatings() != null && !b.getRatings().isEmpty()) {
+                avg = b.getRatings().stream().mapToInt(r -> r.getScore()).average().orElse(Double.NaN);
+                if (Double.isNaN(avg)) avg = null;
+            }
+        } catch (Exception ignored) {}
+
+        String img = null;
+        try {
+            if (b.getImages() != null && !b.getImages().isEmpty()) {
+                img = b.getImages().get(0).getImageUrl();
+            }
+        } catch (Exception ignored) {}
+
+        Long catId = null; String catName = null;
+        if (b.getCategory() != null) {
+            catId = b.getCategory().getId();
+            catName = b.getCategory().getName();
+        }
+
+        return BusinessSearchDto.builder()
+                .id(b.getId())
+                .name(b.getName())
+                .location(b.getLocation())
+                .categoryId(catId)
+                .categoryName(catName)
+                .rating(avg)
+                .imageUrl(img)
+                .description(b.getDescription())
+                .build();
+    }
 }

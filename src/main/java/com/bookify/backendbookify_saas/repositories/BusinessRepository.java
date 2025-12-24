@@ -53,4 +53,32 @@ public interface BusinessRepository extends JpaRepository<Business, Long> {
      * New: case-insensitive partial search by name, filtering by status
      */
     List<Business> findByNameContainingIgnoreCaseAndStatus(String name, BusinessStatus status);
+
+    /**
+     * Search by location (case-insensitive partial match) and status
+     */
+    List<Business> findByLocationContainingIgnoreCaseAndStatus(String location, BusinessStatus status);
+
+    /**
+     * Search by category and status
+     */
+    List<Business> findByCategoryIdAndStatus(Long categoryId, BusinessStatus status);
+
+    /**
+     * Search by name OR description (case-insensitive partial match) and status
+     */
+    @org.springframework.data.jpa.repository.Query("SELECT b FROM Business b WHERE b.status = :status AND (LOWER(b.name) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(b.description) LIKE LOWER(CONCAT('%', :query, '%')))")
+    List<Business> searchByQueryAndStatus(@org.springframework.data.repository.query.Param("query") String query, @org.springframework.data.repository.query.Param("status") BusinessStatus status);
+
+    /**
+     * Advanced search: query (name/description) + optional location + status
+     */
+    @org.springframework.data.jpa.repository.Query("SELECT b FROM Business b WHERE b.status = :status AND (LOWER(b.name) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(b.description) LIKE LOWER(CONCAT('%', :query, '%'))) AND (:location IS NULL OR LOWER(b.location) LIKE LOWER(CONCAT('%', :location, '%')))")
+    List<Business> advancedSearch(@org.springframework.data.repository.query.Param("query") String query, @org.springframework.data.repository.query.Param("location") String location, @org.springframework.data.repository.query.Param("status") BusinessStatus status);
+
+    /**
+     * Advanced search with category filter
+     */
+    @org.springframework.data.jpa.repository.Query("SELECT b FROM Business b WHERE b.status = :status AND (:query IS NULL OR LOWER(b.name) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(b.description) LIKE LOWER(CONCAT('%', :query, '%'))) AND (:location IS NULL OR LOWER(b.location) LIKE LOWER(CONCAT('%', :location, '%'))) AND (:categoryId IS NULL OR b.category.id = :categoryId)")
+    List<Business> fullSearch(@org.springframework.data.repository.query.Param("query") String query, @org.springframework.data.repository.query.Param("location") String location, @org.springframework.data.repository.query.Param("categoryId") Long categoryId, @org.springframework.data.repository.query.Param("status") BusinessStatus status);
 }

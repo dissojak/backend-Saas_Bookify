@@ -23,6 +23,12 @@ public class BusinessResponse {
     private Long ownerId;
     private String description;
 
+    // Average rating from customer reviews (1-5 scale)
+    private Double rating;
+    
+    // Total number of reviews
+    private Long reviewCount;
+
     // Embed the latest evaluation in the response
     private BusinessEvaluationResponse evaluation;
     

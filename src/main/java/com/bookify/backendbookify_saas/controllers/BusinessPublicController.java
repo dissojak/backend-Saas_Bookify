@@ -1,9 +1,14 @@
 package com.bookify.backendbookify_saas.controllers;
 
+import com.bookify.backendbookify_saas.models.dtos.BusinessImageResponse;
 import com.bookify.backendbookify_saas.models.dtos.BusinessResponse;
 import com.bookify.backendbookify_saas.models.dtos.BusinessSearchDto;
 import com.bookify.backendbookify_saas.models.entities.Business;
+import com.bookify.backendbookify_saas.models.entities.BusinessImage;
+import com.bookify.backendbookify_saas.repositories.BusinessImageRepository;
 import com.bookify.backendbookify_saas.repositories.BusinessRepository;
+import com.bookify.backendbookify_saas.repositories.ReviewRepository;
+import com.bookify.backendbookify_saas.services.BusinessImageService;
 import com.bookify.backendbookify_saas.services.BusinessService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -26,6 +31,9 @@ public class BusinessPublicController {
 
     private final BusinessRepository businessRepository;
     private final BusinessService businessService;
+    private final BusinessImageService businessImageService;
+    private final BusinessImageRepository businessImageRepository;
+    private final ReviewRepository reviewRepository;
 
     @GetMapping
     public ResponseEntity<List<BusinessResponse>> listAll() {
@@ -71,7 +79,38 @@ public class BusinessPublicController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    /**
+     * Public endpoint to get business images
+     * GET /v1/businesses/{businessId}/images
+     */
+    @GetMapping("/{businessId}/images")
+    public ResponseEntity<List<BusinessImageResponse>> getBusinessImages(@PathVariable Long businessId) {
+        // Verify business exists
+        if (!businessRepository.existsById(businessId)) {
+            return ResponseEntity.notFound().build();
+        }
+        List<BusinessImageResponse> images = businessImageService.getBusinessImages(businessId);
+        return ResponseEntity.ok(images);
+    }
+
     private BusinessResponse map(Business b) {
+        // Get average rating from BusinessRating (same as search results)
+        Double avgRating = null;
+        Long ratingCount = 0L;
+        try {
+            if (b.getRatings() != null && !b.getRatings().isEmpty()) {
+                avgRating = b.getRatings().stream()
+                        .mapToInt(r -> r.getScore())
+                        .average()
+                        .orElse(Double.NaN);
+                if (Double.isNaN(avgRating)) avgRating = null;
+                ratingCount = (long) b.getRatings().size();
+            }
+        } catch (Exception ignored) {}
+
+        // Get first image URL
+        String firstImageUrl = getFirstImageUrl(b.getId());
+
         BusinessResponse.BusinessResponseBuilder builder = BusinessResponse.builder()
                 .id(b.getId())
                 .name(b.getName())
@@ -79,7 +118,10 @@ public class BusinessPublicController {
                 .phone(b.getPhone())
                 .email(b.getEmail())
                 .status(b.getStatus())
-                .description(b.getDescription());
+                .description(b.getDescription())
+                .rating(avgRating)
+                .reviewCount(ratingCount)
+                .firstImageUrl(firstImageUrl);
 
         if (b.getCategory() != null) {
             builder.categoryId(b.getCategory().getId())
@@ -92,5 +134,10 @@ public class BusinessPublicController {
         builder.weekendDay(b.getWeekendDay());
 
         return builder.build();
+    }
+
+    private String getFirstImageUrl(Long businessId) {
+        List<BusinessImage> images = businessImageRepository.findByBusinessIdOrderByDisplayOrderAsc(businessId);
+        return images.isEmpty() ? null : images.get(0).getImageUrl();
     }
 }

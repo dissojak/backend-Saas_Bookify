@@ -45,6 +45,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             "/api/v1/businesses/{businessId}/staffMembers",
             // Public endpoint to list services for a business (context path /api is prefixed at runtime)
             "/api/v1/businesses/{businessId}/services",
+            // Public endpoint to list images for a business
+            "/api/v1/businesses/{businessId}/images",
+            "/v1/businesses/{businessId}/images",
             "/api/v1/staff/{staffId}/services",
             // Make staff calendar public (both /v1 and /api/v1 variants will be detected by regex)
             "/v1/staff/{staffId}/calendar",
@@ -225,6 +228,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // business staff members
         String staffRegex = "^/((api/)?)v1/businesses/\\d+/staffMembers/?$";
         if (requestPath.matches(staffRegex)) return "REGEX:/v1/businesses/{id}/staffMembers";
+
+        // business images listing (public)
+        String businessImagesRegex = "^/((api/)?)v1/businesses/\\d+/images/?$";
+        if (requestPath.matches(businessImagesRegex)) return "REGEX:/v1/businesses/{id}/images";
 
         // staff availabilities listing
         String staffAvailabilitiesRegex = "^/((api/)?)v1/staff/\\d+/availabilities/?$";

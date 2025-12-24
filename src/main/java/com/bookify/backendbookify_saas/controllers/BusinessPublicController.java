@@ -44,6 +44,26 @@ public class BusinessPublicController {
         return ResponseEntity.ok(results);
     }
 
+    /**
+     * Advanced search endpoint with optional query, location, and category filters
+     * GET /v1/businesses/search/advanced?q=service&location=city&categoryId=1
+     */
+    @GetMapping("/search/advanced")
+    public ResponseEntity<List<BusinessSearchDto>> advancedSearch(
+            @RequestParam(name = "q", required = false) String query,
+            @RequestParam(name = "location", required = false) String location,
+            @RequestParam(name = "categoryId", required = false) Long categoryId) {
+        
+        // At least one parameter must be provided
+        if ((query == null || query.isBlank()) && (location == null || location.isBlank()) && categoryId == null) {
+            return ResponseEntity.ok(List.of());
+        }
+        
+        List<BusinessSearchDto> results = businessService.advancedSearch(query, location, categoryId);
+        if (results == null) results = List.of();
+        return ResponseEntity.ok(results);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<BusinessResponse> getById(@PathVariable Long id) {
         return businessRepository.findById(id)

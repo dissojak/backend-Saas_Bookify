@@ -5,6 +5,7 @@ package com.bookify.backendbookify_saas.models.enums;
  */
 public enum AvailabilityStatus {
     AVAILABLE,    // Staff is available for work
+    FULL,         // Staff is working but all slots are booked (no free time >= min service duration)
     CLOSED,       // Business is closed (Sundays, weekend_day)
     SICK,         // Staff is sick
     VACATION,     // Staff is on vacation

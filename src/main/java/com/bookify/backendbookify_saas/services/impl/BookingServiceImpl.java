@@ -3,10 +3,12 @@ package com.bookify.backendbookify_saas.services.impl;
 import com.bookify.backendbookify_saas.models.dtos.ServiceBookingCreateRequest;
 import com.bookify.backendbookify_saas.models.dtos.ServiceBookingResponse;
 import com.bookify.backendbookify_saas.models.entities.*;
+import com.bookify.backendbookify_saas.models.enums.AvailabilityStatus;
 import com.bookify.backendbookify_saas.models.enums.BookingStatusEnum;
 import com.bookify.backendbookify_saas.repositories.*;
 import com.bookify.backendbookify_saas.services.BookingService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,10 +19,12 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
- * Implementation of BookingService with support for both User and BusinessClient
+ * Implementation of BookingService with support for both User and BusinessClient.
+ * Conflict detection is staff-based, not service-based.
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class BookingServiceImpl implements BookingService {
 
     private final ServiceBookingRepository serviceBookingRepository;
@@ -28,6 +32,8 @@ public class BookingServiceImpl implements BookingService {
     private final UserRepository userRepository;
     private final BusinessClientRepository businessClientRepository;
     private final BookingRepository bookingRepository;
+    private final StaffRepository staffRepository;
+    private final StaffAvailabilityRepository staffAvailabilityRepository;
 
     @Override
     @Transactional
@@ -36,7 +42,10 @@ public class BookingServiceImpl implements BookingService {
     }
 
     /**
-     * Create a service booking with validation for BusinessClient
+     * Create a service booking with full validation:
+     * - Staff availability check
+     * - Staff conflict detection (not service-based)
+     * - Business client validation
      */
     @Transactional
     public ServiceBookingResponse createServiceBookingFromRequest(ServiceBookingCreateRequest request) {
@@ -48,12 +57,60 @@ public class BookingServiceImpl implements BookingService {
             throw new RuntimeException("Only one of clientId or businessClientId can be provided");
         }
 
+        // Staff is required for booking
+        if (request.getStaffId() == null) {
+            throw new RuntimeException("Staff ID is required for booking");
+        }
+
         // Fetch service
         com.bookify.backendbookify_saas.models.entities.Service service = serviceRepository.findById(request.getServiceId())
                 .orElseThrow(() -> new RuntimeException("Service not found"));
 
+        // Fetch staff
+        Staff staff = staffRepository.findById(request.getStaffId())
+                .orElseThrow(() -> new RuntimeException("Staff not found"));
+
+        // Validate staff belongs to the same business as the service
+        if (!staff.getBusiness().getId().equals(service.getBusiness().getId())) {
+            throw new RuntimeException("Staff does not belong to the same business as the service");
+        }
+
+        // 1. Check staff availability for the date
+        Optional<StaffAvailability> availabilityOpt = staffAvailabilityRepository.findByStaff_IdAndDate(
+                request.getStaffId(), request.getDate());
+        
+        if (availabilityOpt.isEmpty()) {
+            throw new RuntimeException("Staff has no availability data for this date");
+        }
+        
+        StaffAvailability availability = availabilityOpt.get();
+        if (availability.getStatus() != AvailabilityStatus.AVAILABLE) {
+            throw new RuntimeException("Staff is not available on this date (status: " + availability.getStatus() + ")");
+        }
+
+        // 2. Check booking time is within staff working hours
+        if (request.getStartTime().isBefore(availability.getStartTime()) ||
+            request.getEndTime().isAfter(availability.getEndTime())) {
+            throw new RuntimeException("Booking time is outside staff working hours (" + 
+                    availability.getStartTime() + " - " + availability.getEndTime() + ")");
+        }
+
+        // 3. Check for conflicting bookings (STAFF-BASED, not service-based)
+        boolean hasConflict = serviceBookingRepository.existsOverlappingForStaff(
+                request.getStaffId(),
+                request.getDate(),
+                request.getStartTime(),
+                request.getEndTime()
+        );
+        
+        if (hasConflict) {
+            throw new RuntimeException("Time slot is already booked for this staff member");
+        }
+
+        // Build the booking
         ServiceBooking booking = new ServiceBooking();
         booking.setService(service);
+        booking.setStaff(staff);
         booking.setDate(request.getDate());
         booking.setStartTime(request.getStartTime());
         booking.setEndTime(request.getEndTime());
@@ -81,17 +138,8 @@ public class BookingServiceImpl implements BookingService {
             booking.setBusinessClient(businessClient);
         }
 
-        // Handle staff if provided
-        if (request.getStaffId() != null) {
-            Staff staff = (Staff) userRepository.findById(request.getStaffId())
-                    .orElseThrow(() -> new RuntimeException("Staff not found"));
-            booking.setStaff(staff);
-        }
-
-        // Check time slot availability
-        if (!isTimeSlotAvailable(service, request.getDate(), request.getStartTime(), request.getEndTime())) {
-            throw new RuntimeException("Time slot is not available");
-        }
+        log.info("Creating booking: staffId={}, date={}, time={}-{}", 
+                staff.getId(), request.getDate(), request.getStartTime(), request.getEndTime());
 
         ServiceBooking savedBooking = serviceBookingRepository.save(booking);
         return mapToResponse(savedBooking);
@@ -257,5 +305,46 @@ public class BookingServiceImpl implements BookingService {
         }
 
         return builder.build();
+    }
+
+    /**
+     * Public method to map booking to response (used by controller).
+     */
+    public ServiceBookingResponse mapToPublicResponse(ServiceBooking booking) {
+        return mapToResponse(booking);
+    }
+
+    /**
+     * Get all bookings for a staff member on a specific date.
+     * Returns non-cancelled bookings only.
+     */
+    @Transactional(readOnly = true)
+    public List<ServiceBookingResponse> getBookingsForStaffOnDate(Long staffId, LocalDate date) {
+        List<ServiceBooking> bookings = serviceBookingRepository.findByStaffIdAndDateExcludingCancelled(staffId, date);
+        return bookings.stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Get bookings for a business between dates as DTOs.
+     */
+    @Transactional(readOnly = true)
+    public List<ServiceBookingResponse> getBookingsForBusinessBetweenDatesDto(Long businessId, LocalDate startDate, LocalDate endDate) {
+        List<ServiceBooking> bookings = serviceBookingRepository.findByServiceBusinessIdAndDateBetween(businessId, startDate, endDate);
+        return bookings.stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Get bookings for a client (User) as DTOs.
+     */
+    @Transactional(readOnly = true)
+    public List<ServiceBookingResponse> getBookingsForClientDto(Long clientId) {
+        List<ServiceBooking> bookings = serviceBookingRepository.findByClientId(clientId);
+        return bookings.stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
     }
 }

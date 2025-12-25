@@ -22,6 +22,7 @@ public class AuthResponse {
     private Long userId;
     private String name;
     private String email;
+    private String phone; // Optional phone number for user convenience
     private RoleEnum role;
     private UserStatusEnum status;
     private String avatar;

@@ -98,6 +98,12 @@ public class SecurityConfig {
                                 "/v1/businesses/**",
                                 "/api/v1/businesses/**"
                         ).permitAll()
+                        // Allow public access to staff bookings for slot filtering (read-only)
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/v1/bookings/staff/*/date/*",
+                                "/api/v1/bookings/staff/*/date/*"
+                        ).permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                         .anyRequest().authenticated()
                 )

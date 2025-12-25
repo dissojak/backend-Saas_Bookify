@@ -111,6 +111,7 @@ public class AuthServiceImpl implements AuthService {
                 .userId(savedUser.getId())
                 .name(savedUser.getName())
                 .email(savedUser.getEmail())
+            .phone(savedUser.getPhoneNumber())
                 .role(savedUser.getRole())
                 .status(savedUser.getStatus())
                 .avatar(savedUser.getAvatarUrl())
@@ -202,6 +203,7 @@ public class AuthServiceImpl implements AuthService {
                 .userId(user.getId())
                 .name(user.getName())
                 .email(user.getEmail())
+            .phone(user.getPhoneNumber())
                 .role(user.getRole())
                 .status(user.getStatus())
                 .avatar(user.getAvatarUrl());

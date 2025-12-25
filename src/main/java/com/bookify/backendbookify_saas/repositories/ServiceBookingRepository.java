@@ -12,6 +12,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 /**
@@ -53,4 +54,31 @@ public interface ServiceBookingRepository extends JpaRepository<ServiceBooking, 
     boolean existsOverlapping(@Param("service") Service service,
                               @Param("start") LocalDateTime start,
                               @Param("end") LocalDateTime end);
+
+    /**
+     * Find all bookings for a specific staff member on a specific date.
+     * Excludes cancelled bookings.
+     */
+    @Query("SELECT sb FROM ServiceBooking sb WHERE sb.staff.id = :staffId AND sb.date = :date AND sb.status <> com.bookify.backendbookify_saas.models.enums.BookingStatusEnum.CANCELLED")
+    List<ServiceBooking> findByStaffIdAndDateExcludingCancelled(@Param("staffId") Long staffId, @Param("date") LocalDate date);
+
+    /**
+     * Find all bookings for a specific staff member within a date range.
+     * Excludes cancelled bookings.
+     */
+    @Query("SELECT sb FROM ServiceBooking sb WHERE sb.staff.id = :staffId AND sb.date BETWEEN :startDate AND :endDate AND sb.status <> com.bookify.backendbookify_saas.models.enums.BookingStatusEnum.CANCELLED")
+    List<ServiceBooking> findByStaffIdAndDateBetweenExcludingCancelled(@Param("staffId") Long staffId, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+
+    /**
+     * Check for overlapping bookings for a staff member (correct conflict detection).
+     * Uses LocalTime for start/end since Booking entity uses LocalTime.
+     */
+    @Query("SELECT COUNT(sb) > 0 FROM ServiceBooking sb WHERE sb.staff.id = :staffId AND sb.date = :date AND sb.startTime < :endTime AND sb.endTime > :startTime AND sb.status <> com.bookify.backendbookify_saas.models.enums.BookingStatusEnum.CANCELLED")
+    boolean existsOverlappingForStaff(@Param("staffId") Long staffId, @Param("date") LocalDate date, @Param("startTime") LocalTime startTime, @Param("endTime") LocalTime endTime);
+
+    /**
+     * Find bookings by client (User) ID
+     */
+    @Query("SELECT sb FROM ServiceBooking sb WHERE sb.client.id = :clientId")
+    List<ServiceBooking> findByClientId(@Param("clientId") Long clientId);
 }

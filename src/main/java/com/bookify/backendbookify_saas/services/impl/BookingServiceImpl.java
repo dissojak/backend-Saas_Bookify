@@ -66,11 +66,20 @@ public class BookingServiceImpl implements BookingService {
         com.bookify.backendbookify_saas.models.entities.Service service = serviceRepository.findById(request.getServiceId())
                 .orElseThrow(() -> new RuntimeException("Service not found"));
 
-        // Fetch staff
-        Staff staff = staffRepository.findById(request.getStaffId())
+        // Fetch staff with business eagerly loaded
+        log.info("Attempting to fetch staff with ID: {}", request.getStaffId());
+        Staff staff = staffRepository.findByIdWithBusiness(request.getStaffId())
                 .orElseThrow(() -> new RuntimeException("Staff not found"));
+        
+        log.info("Found staff: ID={}, Name={}, Business={}", 
+                staff.getId(), 
+                staff.getName(), 
+                staff.getBusiness() != null ? staff.getBusiness().getId() : "NULL");
 
         // Validate staff belongs to the same business as the service
+        if (staff.getBusiness() == null) {
+            throw new RuntimeException("Staff does not have a business associated. Staff ID: " + staff.getId());
+        }
         if (!staff.getBusiness().getId().equals(service.getBusiness().getId())) {
             throw new RuntimeException("Staff does not belong to the same business as the service");
         }

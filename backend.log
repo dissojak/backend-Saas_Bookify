@@ -1,0 +1,772 @@
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.5.6)
+
+2025-12-26T02:51:32.164+01:00  INFO 98379 --- [           main] c.b.b.BackendBookifySaasApplication      : Starting BackendBookifySaasApplication v0.0.1-SNAPSHOT using Java 23.0.2 with PID 98379 (/Users/stoon/Desktop/Projects/Bookify/backend-Saas_Bookify/target/backend-Bookify_Saas-0.0.1-SNAPSHOT.jar started by stoon in /Users/stoon/Desktop/Projects/Bookify/backend-Saas_Bookify)
+2025-12-26T02:51:32.164+01:00  INFO 98379 --- [           main] c.b.b.BackendBookifySaasApplication      : No active profile set, falling back to 1 default profile: "default"
+2025-12-26T02:51:32.705+01:00  INFO 98379 --- [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-12-26T02:51:32.738+01:00  INFO 98379 --- [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 29 ms. Found 13 JPA repository interfaces.
+2025-12-26T02:51:33.008+01:00  INFO 98379 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8088 (http)
+2025-12-26T02:51:33.016+01:00  INFO 98379 --- [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2025-12-26T02:51:33.016+01:00  INFO 98379 --- [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.46]
+2025-12-26T02:51:33.027+01:00  INFO 98379 --- [           main] o.a.c.c.C.[Tomcat].[localhost].[/api]    : Initializing Spring embedded WebApplicationContext
+2025-12-26T02:51:33.028+01:00  INFO 98379 --- [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 842 ms
+2025-12-26T02:51:33.144+01:00  INFO 98379 --- [           main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-12-26T02:51:33.174+01:00  INFO 98379 --- [           main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.6.29.Final
+2025-12-26T02:51:33.190+01:00  INFO 98379 --- [           main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2025-12-26T02:51:33.306+01:00  INFO 98379 --- [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-12-26T02:51:33.318+01:00  INFO 98379 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2025-12-26T02:51:33.407+01:00  INFO 98379 --- [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@7c871ce4
+2025-12-26T02:51:33.408+01:00  INFO 98379 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2025-12-26T02:51:33.417+01:00  WARN 98379 --- [           main] org.hibernate.orm.deprecation            : HHH90000025: MySQL8Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2025-12-26T02:51:33.418+01:00  WARN 98379 --- [           main] org.hibernate.orm.deprecation            : HHH90000026: MySQL8Dialect has been deprecated; use org.hibernate.dialect.MySQLDialect instead
+2025-12-26T02:51:33.424+01:00  INFO 98379 --- [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
+	Database driver: undefined/unknown
+	Database version: 8.0
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2025-12-26T02:51:33.427+01:00 DEBUG 98379 --- [           main] o.h.t.d.sql.spi.DdlTypeRegistry          : addDescriptor(12, org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType@14d298d6) replaced previous registration(org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType@64af5454)
+2025-12-26T02:51:33.427+01:00 DEBUG 98379 --- [           main] o.h.t.d.sql.spi.DdlTypeRegistry          : addDescriptor(-9, org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType@94aeba1) replaced previous registration(org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType@f6cde7e)
+2025-12-26T02:51:33.427+01:00 DEBUG 98379 --- [           main] o.h.t.d.sql.spi.DdlTypeRegistry          : addDescriptor(-3, org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType@ff8e36d) replaced previous registration(org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType@116b0b32)
+2025-12-26T02:51:33.427+01:00 DEBUG 98379 --- [           main] o.h.t.d.sql.spi.DdlTypeRegistry          : addDescriptor(4003, org.hibernate.type.descriptor.sql.internal.DdlTypeImpl@4f22fd5d) replaced previous registration(org.hibernate.type.descriptor.sql.internal.DdlTypeImpl@26d445e9)
+2025-12-26T02:51:33.427+01:00 DEBUG 98379 --- [           main] o.h.t.d.sql.spi.DdlTypeRegistry          : addDescriptor(4001, org.hibernate.type.descriptor.sql.internal.DdlTypeImpl@6e7f29d5) replaced previous registration(org.hibernate.type.descriptor.sql.internal.DdlTypeImpl@27048db3)
+2025-12-26T02:51:33.427+01:00 DEBUG 98379 --- [           main] o.h.t.d.sql.spi.DdlTypeRegistry          : addDescriptor(4002, org.hibernate.type.descriptor.sql.internal.DdlTypeImpl@7f94541b) replaced previous registration(org.hibernate.type.descriptor.sql.internal.DdlTypeImpl@7bebad0d)
+2025-12-26T02:51:33.427+01:00 DEBUG 98379 --- [           main] o.h.t.d.sql.spi.DdlTypeRegistry          : addDescriptor(2004, org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType@6c4d0224) replaced previous registration(org.hibernate.type.descriptor.sql.internal.DdlTypeImpl@6f27730b)
+2025-12-26T02:51:33.427+01:00 DEBUG 98379 --- [           main] o.h.t.d.sql.spi.DdlTypeRegistry          : addDescriptor(2005, org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType@32cec678) replaced previous registration(org.hibernate.type.descriptor.sql.internal.DdlTypeImpl@14eb96e9)
+2025-12-26T02:51:33.427+01:00 DEBUG 98379 --- [           main] o.h.t.d.sql.spi.DdlTypeRegistry          : addDescriptor(2011, org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType@10b3ea72) replaced previous registration(org.hibernate.type.descriptor.sql.internal.DdlTypeImpl@44587c44)
+2025-12-26T02:51:33.647+01:00 DEBUG 98379 --- [           main] h.e.i.EntityCopyObserverFactoryInitiator : Configured EntityCopyObserver strategy: disallow
+2025-12-26T02:51:33.906+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     : Static SQL for entity: com.bookify.backendbookify_saas.models.entities.ServiceBooking
+2025-12-26T02:51:33.906+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Version select: select id from bookings where id=?
+2025-12-26T02:51:33.906+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Insert (0): insert into bookings (created_at,date,end_time,notes,price,start_time,status,updated_at) values (?,?,?,?,?,?,?,?)
+2025-12-26T02:51:33.906+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Insert (1): insert into service_bookings (business_client_id,client_id,service_id,staff_id,id) values (?,?,?,?,?)
+2025-12-26T02:51:33.906+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Update (0): update bookings set date=?,end_time=?,notes=?,price=?,start_time=?,status=?,updated_at=? where id=?
+2025-12-26T02:51:33.906+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Update (1): update service_bookings set business_client_id=?,client_id=?,service_id=?,staff_id=? where id=?
+2025-12-26T02:51:33.906+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Delete (0): delete from service_bookings where id=?
+2025-12-26T02:51:33.906+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Delete (1): delete from bookings where id=?
+2025-12-26T02:51:33.907+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     : Static SQL for entity: com.bookify.backendbookify_saas.models.entities.Booking
+2025-12-26T02:51:33.907+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Version select: select id from bookings where id=?
+2025-12-26T02:51:33.907+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Insert (0): insert into bookings (created_at,date,end_time,notes,price,start_time,status,updated_at) values (?,?,?,?,?,?,?,?)
+2025-12-26T02:51:33.907+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Update (0): update bookings set date=?,end_time=?,notes=?,price=?,start_time=?,status=?,updated_at=? where id=?
+2025-12-26T02:51:33.907+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Delete (0): delete from bookings where id=?
+2025-12-26T02:51:33.907+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     : Static SQL for entity: com.bookify.backendbookify_saas.models.entities.BusinessImage
+2025-12-26T02:51:33.907+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Version select: select id from business_images where id=?
+2025-12-26T02:51:33.907+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Insert (0): insert into business_images (business_id,display_order,image_url,uploaded_at) values (?,?,?,?)
+2025-12-26T02:51:33.907+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Update (0): update business_images set business_id=?,display_order=?,image_url=? where id=?
+2025-12-26T02:51:33.907+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Delete (0): delete from business_images where id=?
+2025-12-26T02:51:33.908+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     : Static SQL for entity: com.bookify.backendbookify_saas.models.entities.Resource
+2025-12-26T02:51:33.908+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Version select: select id from resources where id=?
+2025-12-26T02:51:33.908+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Insert (0): insert into resources (business_id,created_at,description,name,price_per_hour,status,type,updated_at) values (?,?,?,?,?,?,?,?)
+2025-12-26T02:51:33.908+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Update (0): update resources set business_id=?,description=?,name=?,price_per_hour=?,status=?,type=?,updated_at=? where id=?
+2025-12-26T02:51:33.908+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Delete (0): delete from resources where id=?
+2025-12-26T02:51:33.908+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     : Static SQL for entity: com.bookify.backendbookify_saas.models.entities.ResourceAvailability
+2025-12-26T02:51:33.908+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Version select: select id from resource_availabilities where id=?
+2025-12-26T02:51:33.908+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Insert (0): insert into resource_availabilities (created_at,date,end_time,resource_id,start_time,status,updated_at) values (?,?,?,?,?,?,?)
+2025-12-26T02:51:33.908+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Update (0): update resource_availabilities set date=?,end_time=?,resource_id=?,start_time=?,status=?,updated_at=? where id=?
+2025-12-26T02:51:33.908+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Delete (0): delete from resource_availabilities where id=?
+2025-12-26T02:51:33.909+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     : Static SQL for entity: com.bookify.backendbookify_saas.models.entities.Rating
+2025-12-26T02:51:33.909+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Version select: select id from ratings where id=?
+2025-12-26T02:51:33.909+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Insert (0): insert into ratings (comment,created_at,date,score) values (?,?,?,?)
+2025-12-26T02:51:33.909+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Update (0): update ratings set comment=?,date=?,score=? where id=?
+2025-12-26T02:51:33.909+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Delete (0): delete from ratings where id=?
+2025-12-26T02:51:33.909+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     : Static SQL for entity: com.bookify.backendbookify_saas.models.entities.ResourceRating
+2025-12-26T02:51:33.909+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Version select: select id from ratings where id=?
+2025-12-26T02:51:33.909+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Insert (0): insert into ratings (comment,created_at,date,score) values (?,?,?,?)
+2025-12-26T02:51:33.909+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Insert (1): insert into resource_ratings (client_id,resource_id,id) values (?,?,?)
+2025-12-26T02:51:33.909+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Update (0): update ratings set comment=?,date=?,score=? where id=?
+2025-12-26T02:51:33.909+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Update (1): update resource_ratings set client_id=?,resource_id=? where id=?
+2025-12-26T02:51:33.909+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Delete (0): delete from resource_ratings where id=?
+2025-12-26T02:51:33.909+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Delete (1): delete from ratings where id=?
+2025-12-26T02:51:33.909+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     : Static SQL for entity: com.bookify.backendbookify_saas.models.entities.BusinessClient
+2025-12-26T02:51:33.909+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Version select: select id from business_clients where id=?
+2025-12-26T02:51:33.909+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Insert (0): insert into business_clients (business_id,created_at,email,name,notes,phone,updated_at) values (?,?,?,?,?,?,?)
+2025-12-26T02:51:33.909+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Update (0): update business_clients set business_id=?,email=?,name=?,notes=?,phone=?,updated_at=? where id=?
+2025-12-26T02:51:33.909+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Delete (0): delete from business_clients where id=?
+2025-12-26T02:51:33.909+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     : Static SQL for entity: com.bookify.backendbookify_saas.models.entities.BusinessEvaluation
+2025-12-26T02:51:33.909+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Version select: select id from business_evaluations where id=?
+2025-12-26T02:51:33.909+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Insert (0): insert into business_evaluations (branding_details,branding_score,branding_suggestions,business_id,category_details,category_score,created_at,description_details,description_professionalism_score,description_suggestions,email_details,email_professionalism_score,email_suggestions,location_details,location_score,name_details,name_professionalism_score,name_suggestions,overall_score,source) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+2025-12-26T02:51:33.909+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Update (0): update business_evaluations set branding_details=?,branding_score=?,branding_suggestions=?,business_id=?,category_details=?,category_score=?,description_details=?,description_professionalism_score=?,description_suggestions=?,email_details=?,email_professionalism_score=?,email_suggestions=?,location_details=?,location_score=?,name_details=?,name_professionalism_score=?,name_suggestions=?,overall_score=?,source=? where id=?
+2025-12-26T02:51:33.910+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Delete (0): delete from business_evaluations where id=?
+2025-12-26T02:51:33.910+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     : Static SQL for entity: com.bookify.backendbookify_saas.models.entities.Staff
+2025-12-26T02:51:33.910+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Version select: select id from users where id=?
+2025-12-26T02:51:33.910+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Insert (0): insert into users (avatar_url,created_at,email,name,password,password_reset_expires_at,password_reset_token,phone_number,role,status,updated_at) values (?,?,?,?,?,?,?,?,?,?,?)
+2025-12-26T02:51:33.910+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Insert (1): insert into staff (default_end_time,default_start_time,start_working_at,id) values (?,?,?,?)
+2025-12-26T02:51:33.910+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Update (0): update users set avatar_url=?,email=?,name=?,password=?,password_reset_expires_at=?,password_reset_token=?,phone_number=?,role=?,status=?,updated_at=? where id=?
+2025-12-26T02:51:33.910+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Update (1): update staff set default_end_time=?,default_start_time=? where id=?
+2025-12-26T02:51:33.910+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Delete (0): delete from staff where id=?
+2025-12-26T02:51:33.910+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Delete (1): delete from users where id=?
+2025-12-26T02:51:33.910+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     : Static SQL for entity: com.bookify.backendbookify_saas.models.entities.Service
+2025-12-26T02:51:33.910+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Version select: select id from services where id=?
+2025-12-26T02:51:33.910+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Insert (0): insert into services (active,business_id,created_at,created_by,description,duration_minutes,image_url,name,price,tenant_id,updated_at) values (?,?,?,?,?,?,?,?,?,?,?)
+2025-12-26T02:51:33.910+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Update (0): update services set active=?,business_id=?,created_by=?,description=?,duration_minutes=?,image_url=?,name=?,price=?,tenant_id=?,updated_at=? where id=?
+2025-12-26T02:51:33.910+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Delete (0): delete from services where id=?
+2025-12-26T02:51:33.910+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     : Static SQL for entity: com.bookify.backendbookify_saas.models.entities.BusinessRating
+2025-12-26T02:51:33.910+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Version select: select id from ratings where id=?
+2025-12-26T02:51:33.911+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Insert (0): insert into ratings (comment,created_at,date,score) values (?,?,?,?)
+2025-12-26T02:51:33.911+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Insert (1): insert into business_ratings (business_id,client_id,id) values (?,?,?)
+2025-12-26T02:51:33.911+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Update (0): update ratings set comment=?,date=?,score=? where id=?
+2025-12-26T02:51:33.911+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Update (1): update business_ratings set business_id=?,client_id=? where id=?
+2025-12-26T02:51:33.911+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Delete (0): delete from business_ratings where id=?
+2025-12-26T02:51:33.911+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Delete (1): delete from ratings where id=?
+2025-12-26T02:51:33.911+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     : Static SQL for entity: com.bookify.backendbookify_saas.models.entities.ServiceRating
+2025-12-26T02:51:33.911+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Version select: select id from ratings where id=?
+2025-12-26T02:51:33.911+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Insert (0): insert into ratings (comment,created_at,date,score) values (?,?,?,?)
+2025-12-26T02:51:33.911+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Insert (1): insert into service_ratings (client_id,service_id,id) values (?,?,?)
+2025-12-26T02:51:33.911+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Update (0): update ratings set comment=?,date=?,score=? where id=?
+2025-12-26T02:51:33.911+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Update (1): update service_ratings set client_id=?,service_id=? where id=?
+2025-12-26T02:51:33.911+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Delete (0): delete from service_ratings where id=?
+2025-12-26T02:51:33.911+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Delete (1): delete from ratings where id=?
+2025-12-26T02:51:33.911+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     : Static SQL for entity: com.bookify.backendbookify_saas.models.entities.Review
+2025-12-26T02:51:33.911+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Version select: select id from reviews where id=?
+2025-12-26T02:51:33.911+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Insert (0): insert into reviews (booking_id,comment,created_at,rating,response,tenant_id,updated_at) values (?,?,?,?,?,?,?)
+2025-12-26T02:51:33.911+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Update (0): update reviews set booking_id=?,comment=?,rating=?,response=?,tenant_id=?,updated_at=? where id=?
+2025-12-26T02:51:33.911+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Delete (0): delete from reviews where id=?
+2025-12-26T02:51:33.911+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     : Static SQL for entity: com.bookify.backendbookify_saas.models.entities.ActivationToken
+2025-12-26T02:51:33.911+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Version select: select id from activation_tokens where id=?
+2025-12-26T02:51:33.911+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Insert (0): insert into activation_tokens (created_at,expiry_date,token,user_id) values (?,?,?,?)
+2025-12-26T02:51:33.911+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Update (0): update activation_tokens set expiry_date=?,token=?,user_id=? where id=?
+2025-12-26T02:51:33.911+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Delete (0): delete from activation_tokens where id=?
+2025-12-26T02:51:33.911+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     : Static SQL for entity: com.bookify.backendbookify_saas.models.entities.Business
+2025-12-26T02:51:33.911+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Version select: select id from businesses where id=?
+2025-12-26T02:51:33.912+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Insert (0): insert into businesses (category_id,created_at,description,email,location,name,owner_id,phone,status,updated_at,weekend_day) values (?,?,?,?,?,?,?,?,?,?,?)
+2025-12-26T02:51:33.912+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Update (0): update businesses set category_id=?,description=?,email=?,location=?,name=?,owner_id=?,phone=?,status=?,updated_at=?,weekend_day=? where id=?
+2025-12-26T02:51:33.912+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Delete (0): delete from businesses where id=?
+2025-12-26T02:51:33.912+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     : Static SQL for entity: com.bookify.backendbookify_saas.models.entities.Subscription
+2025-12-26T02:51:33.912+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Version select: select id from subscriptions where id=?
+2025-12-26T02:51:33.912+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Insert (0): insert into subscriptions (business_id,cancelled_at,created_at,end_date,plan_name,price,start_date,status,updated_at) values (?,?,?,?,?,?,?,?,?)
+2025-12-26T02:51:33.912+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Update (0): update subscriptions set business_id=?,cancelled_at=?,end_date=?,plan_name=?,price=?,start_date=?,status=?,updated_at=? where id=?
+2025-12-26T02:51:33.912+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Delete (0): delete from subscriptions where id=?
+2025-12-26T02:51:33.912+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     : Static SQL for entity: com.bookify.backendbookify_saas.models.entities.Payment
+2025-12-26T02:51:33.912+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Version select: select id from payments where id=?
+2025-12-26T02:51:33.912+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Insert (0): insert into payments (amount,booking_id,created_at,method,status,subscription_id,transaction_ref) values (?,?,?,?,?,?,?)
+2025-12-26T02:51:33.912+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Update (0): update payments set amount=?,booking_id=?,method=?,status=?,subscription_id=?,transaction_ref=? where id=?
+2025-12-26T02:51:33.912+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Delete (0): delete from payments where id=?
+2025-12-26T02:51:33.912+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     : Static SQL for entity: com.bookify.backendbookify_saas.models.entities.StaffAvailability
+2025-12-26T02:51:33.912+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Version select: select id from staff_availabilities where id=?
+2025-12-26T02:51:33.912+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Insert (0): insert into staff_availabilities (created_at,date,end_time,staff_id,start_time,status,updated_at,user_edited) values (?,?,?,?,?,?,?,?)
+2025-12-26T02:51:33.912+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Update (0): update staff_availabilities set date=?,end_time=?,staff_id=?,start_time=?,status=?,updated_at=?,user_edited=? where id=?
+2025-12-26T02:51:33.912+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Delete (0): delete from staff_availabilities where id=?
+2025-12-26T02:51:33.912+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     : Static SQL for entity: com.bookify.backendbookify_saas.models.entities.Category
+2025-12-26T02:51:33.913+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Version select: select id from categories where id=?
+2025-12-26T02:51:33.913+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Insert (0): insert into categories (created_at,created_by,description,icon,name,updated_at) values (?,?,?,?,?,?)
+2025-12-26T02:51:33.913+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Update (0): update categories set created_by=?,description=?,icon=?,name=?,updated_at=? where id=?
+2025-12-26T02:51:33.913+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Delete (0): delete from categories where id=?
+2025-12-26T02:51:33.913+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     : Static SQL for entity: com.bookify.backendbookify_saas.models.entities.ResourceReservation
+2025-12-26T02:51:33.913+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Version select: select id from bookings where id=?
+2025-12-26T02:51:33.913+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Insert (0): insert into bookings (created_at,date,end_time,notes,price,start_time,status,updated_at) values (?,?,?,?,?,?,?,?)
+2025-12-26T02:51:33.913+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Insert (1): insert into resource_reservations (client_id,resource_availability_id,id) values (?,?,?)
+2025-12-26T02:51:33.913+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Update (0): update bookings set date=?,end_time=?,notes=?,price=?,start_time=?,status=?,updated_at=? where id=?
+2025-12-26T02:51:33.913+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Update (1): update resource_reservations set client_id=?,resource_availability_id=? where id=?
+2025-12-26T02:51:33.913+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Delete (0): delete from resource_reservations where id=?
+2025-12-26T02:51:33.913+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Delete (1): delete from bookings where id=?
+2025-12-26T02:51:33.913+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     : Static SQL for entity: com.bookify.backendbookify_saas.models.entities.User
+2025-12-26T02:51:33.913+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Version select: select id from users where id=?
+2025-12-26T02:51:33.913+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Insert (0): insert into users (avatar_url,created_at,email,name,password,password_reset_expires_at,password_reset_token,phone_number,role,status,updated_at) values (?,?,?,?,?,?,?,?,?,?,?)
+2025-12-26T02:51:33.913+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Update (0): update users set avatar_url=?,email=?,name=?,password=?,password_reset_expires_at=?,password_reset_token=?,phone_number=?,role=?,status=?,updated_at=? where id=?
+2025-12-26T02:51:33.913+01:00 DEBUG 98379 --- [           main] o.h.p.entity.AbstractEntityPersister     :  Delete (0): delete from users where id=?
+2025-12-26T02:51:33.939+01:00  INFO 98379 --- [           main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-12-26T02:51:34.019+01:00 DEBUG 98379 --- [           main] org.hibernate.SQL                        : 
+    alter table businesses 
+       modify column status enum ('ACTIVE','DELETED','DRAFT','INACTIVE','PENDING','SUSPENDED') not null
+Hibernate: 
+    alter table businesses 
+       modify column status enum ('ACTIVE','DELETED','DRAFT','INACTIVE','PENDING','SUSPENDED') not null
+2025-12-26T02:51:34.027+01:00 DEBUG 98379 --- [           main] org.hibernate.SQL                        : 
+    alter table businesses 
+       modify column weekend_day enum ('FRIDAY','MONDAY','SATURDAY','SUNDAY','THURSDAY','TUESDAY','WEDNESDAY')
+Hibernate: 
+    alter table businesses 
+       modify column weekend_day enum ('FRIDAY','MONDAY','SATURDAY','SUNDAY','THURSDAY','TUESDAY','WEDNESDAY')
+2025-12-26T02:51:34.067+01:00  INFO 98379 --- [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-12-26T02:51:34.214+01:00  INFO 98379 --- [           main] o.s.d.j.r.query.QueryEnhancerFactory     : Hibernate is in classpath; If applicable, HQL parser will be used.
+         =========================================================
+        |                                                         |
+        |         ✅ Dotenv loaded and system properties.         |
+        |                                                         |
+         =========================================================
+2025-12-26T02:51:35.007+01:00  WARN 98379 --- [           main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-12-26T02:51:35.331+01:00  INFO 98379 --- [           main] c.b.b.s.impl.BusinessEvaluationService   : Gemini AI is configured; evaluations will use model 'gemini-2.0-flash-exp'
+2025-12-26T02:51:35.380+01:00  INFO 98379 --- [           main] eAuthenticationProviderManagerConfigurer : Global AuthenticationManager configured with AuthenticationProvider bean with name authenticationProvider
+2025-12-26T02:51:35.381+01:00  WARN 98379 --- [           main] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with an AuthenticationProvider bean. UserDetailsService beans will not be used by Spring Security for automatically configuring username/password login. Consider removing the AuthenticationProvider bean. Alternatively, consider using the UserDetailsService in a manually instantiated DaoAuthenticationProvider. If the current configuration is intentional, to turn off this warning, increase the logging level of 'org.springframework.security.config.annotation.authentication.configuration.InitializeUserDetailsBeanManagerConfigurer' to ERROR
+2025-12-26T02:51:36.657+01:00  INFO 98379 --- [           main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 1 endpoint beneath base path '/actuator'
+2025-12-26T02:51:36.882+01:00  INFO 98379 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8088 (http) with context path '/api'
+2025-12-26T02:51:36.890+01:00  INFO 98379 --- [           main] c.b.b.BackendBookifySaasApplication      : Started BackendBookifySaasApplication in 4.896 seconds (process running for 5.186)
+
+----------------------------------------------------------
+🚀 Bookify SaaS Server is running!
+    📡 Local:   http://localhost:8088/api
+    🌐 Network: http://127.0.0.1:8088/api
+    ⚙️  API Documentation: http://localhost:8088/api/swagger-ui.html
+SPRING_MAIL_PASSWORD from .env: jmnwfcjezsscpdkb
+GEMINI_API_KEY from .env: AIzaSyDfYE_M-N7P6tbDS2bbcvETEo6-WI1a6Cw
+----------------------------------------------------------
+
+2025-12-26T02:51:36.928+01:00  INFO 98379 --- [           main] c.b.b.config.RequestMappingPrinter       : === Registered request mappings ===
+2025-12-26T02:51:36.928+01:00  INFO 98379 --- [           main] c.b.b.config.RequestMappingPrinter       : mapping: [PUT] [] -> com.bookify.backendbookify_saas.controllers.BusinessOwnerController#changeStatus(Authentication, Long, Map)
+2025-12-26T02:51:36.928+01:00  INFO 98379 --- [           main] c.b.b.config.RequestMappingPrinter       : mapping: [DELETE] [] -> com.bookify.backendbookify_saas.controllers.BusinessServiceController#deleteService(Authentication, Long, Long)
+2025-12-26T02:51:36.928+01:00  INFO 98379 --- [           main] c.b.b.config.RequestMappingPrinter       : mapping: [GET] [] -> com.bookify.backendbookify_saas.controllers.BookingController#getBookingsForStaffOnDate(Long, String)
+2025-12-26T02:51:36.928+01:00  INFO 98379 --- [           main] c.b.b.config.RequestMappingPrinter       : mapping: [GET] [] -> com.bookify.backendbookify_saas.controllers.BusinessServiceController#listServices(Long)
+2025-12-26T02:51:36.928+01:00  INFO 98379 --- [           main] c.b.b.config.RequestMappingPrinter       : mapping: [GET] [] -> com.bookify.backendbookify_saas.controllers.CategoryController#getPreviewCategories()
+2025-12-26T02:51:36.928+01:00  INFO 98379 --- [           main] c.b.b.config.RequestMappingPrinter       : mapping: [POST] [] -> com.bookify.backendbookify_saas.controllers.SystemCronController#syncWeekendDays()
+2025-12-26T02:51:36.928+01:00  INFO 98379 --- [           main] c.b.b.config.RequestMappingPrinter       : mapping: [PUT] [] -> com.bookify.backendbookify_saas.controllers.BusinessClientController#updateClient(Long, Long, BusinessClientUpdateRequest, Authentication)
+2025-12-26T02:51:36.928+01:00  INFO 98379 --- [           main] c.b.b.config.RequestMappingPrinter       : mapping: [GET] [] -> com.bookify.backendbookify_saas.controllers.BookingController#getMyBookings(Authentication)
+2025-12-26T02:51:36.928+01:00  INFO 98379 --- [           main] c.b.b.config.RequestMappingPrinter       : mapping: [PUT] [] -> com.bookify.backendbookify_saas.controllers.BookingController#updateBookingStatus(Long, Map)
+2025-12-26T02:51:36.928+01:00  INFO 98379 --- [           main] c.b.b.config.RequestMappingPrinter       : mapping: [GET] [] -> com.bookify.backendbookify_saas.controllers.BusinessPublicController#searchByName(String)
+2025-12-26T02:51:36.928+01:00  INFO 98379 --- [           main] c.b.b.config.RequestMappingPrinter       : mapping: [POST] [] -> com.bookify.backendbookify_saas.controllers.BusinessServiceController#linkSelfToService(Authentication, Long, Long)
+2025-12-26T02:51:36.928+01:00  INFO 98379 --- [           main] c.b.b.config.RequestMappingPrinter       : mapping: [POST] [] -> com.bookify.backendbookify_saas.controllers.AuthController#signup(SignupRequest, HttpServletResponse)
+2025-12-26T02:51:36.928+01:00  INFO 98379 --- [           main] c.b.b.config.RequestMappingPrinter       : mapping: [PUT] [] -> com.bookify.backendbookify_saas.controllers.BusinessOwnerController#updateBusiness(Authentication, Long, BusinessUpdateRequest)
+2025-12-26T02:51:36.928+01:00  INFO 98379 --- [           main] c.b.b.config.RequestMappingPrinter       : mapping: [GET] [] -> com.bookify.backendbookify_saas.controllers.AuthController#getCurrentUser(Authentication)
+2025-12-26T02:51:36.928+01:00  INFO 98379 --- [           main] c.b.b.config.RequestMappingPrinter       : mapping: [PATCH] [] -> com.bookify.backendbookify_saas.controllers.StaffController#patchAvailability(Authentication, Long, Long, StaffAvailabilityUpdateRequest)
+2025-12-26T02:51:36.928+01:00  INFO 98379 --- [           main] c.b.b.config.RequestMappingPrinter       : mapping: [POST] [] -> com.bookify.backendbookify_saas.controllers.BusinessClientController#createClient(Long, BusinessClientCreateRequest, Authentication)
+2025-12-26T02:51:36.928+01:00  INFO 98379 --- [           main] c.b.b.config.RequestMappingPrinter       : mapping: [GET] [] -> com.bookify.backendbookify_saas.email_SMTP.EmailActivationController#activateAccount(String)
+2025-12-26T02:51:36.928+01:00  INFO 98379 --- [           main] c.b.b.config.RequestMappingPrinter       : mapping: [POST] [] -> com.bookify.backendbookify_saas.controllers.CategoryController#createCategoryNoAuth(CategoryCreateRequest)
+2025-12-26T02:51:36.928+01:00  INFO 98379 --- [           main] c.b.b.config.RequestMappingPrinter       : mapping: [GET] [] -> com.bookify.backendbookify_saas.controllers.StaffController#listForStaff(Long, String, String)
+2025-12-26T02:51:36.928+01:00  INFO 98379 --- [           main] c.b.b.config.RequestMappingPrinter       : mapping: [POST] [] -> com.bookify.backendbookify_saas.controllers.BusinessOwnerController#createBusiness(Authentication, BusinessCreateRequest)
+2025-12-26T02:51:36.928+01:00  INFO 98379 --- [           main] c.b.b.config.RequestMappingPrinter       : mapping: [GET] [] -> org.springdoc.webmvc.ui.SwaggerWelcomeWebMvc#redirectToUi(HttpServletRequest)
+2025-12-26T02:51:36.928+01:00  INFO 98379 --- [           main] c.b.b.config.RequestMappingPrinter       : mapping: [POST] [] -> com.bookify.backendbookify_saas.controllers.AuthController#refresh(HttpServletRequest, HttpServletResponse)
+2025-12-26T02:51:36.928+01:00  INFO 98379 --- [           main] c.b.b.config.RequestMappingPrinter       : mapping: [GET] [] -> org.springdoc.webmvc.api.OpenApiWebMvcResource#openapiYaml(HttpServletRequest, String, Locale)
+2025-12-26T02:51:36.928+01:00  INFO 98379 --- [           main] c.b.b.config.RequestMappingPrinter       : mapping: [PUT] [] -> com.bookify.backendbookify_saas.controllers.BusinessImageController#reorderImages(Authentication, Long, Map)
+2025-12-26T02:51:36.928+01:00  INFO 98379 --- [           main] c.b.b.config.RequestMappingPrinter       : mapping: [POST] [] -> com.bookify.backendbookify_saas.controllers.BookingController#cancelBooking(Long, Map)
+2025-12-26T02:51:36.928+01:00  INFO 98379 --- [           main] c.b.b.config.RequestMappingPrinter       : mapping: [GET] [] -> com.bookify.backendbookify_saas.controllers.BusinessServiceController#getService(Long, Long)
+2025-12-26T02:51:36.928+01:00  INFO 98379 --- [           main] c.b.b.config.RequestMappingPrinter       : mapping: [GET] [] -> com.bookify.backendbookify_saas.controllers.BusinessOwnerController#getMyBusiness(Authentication)
+2025-12-26T02:51:36.928+01:00  INFO 98379 --- [           main] c.b.b.config.RequestMappingPrinter       : mapping: [GET] [] -> com.bookify.backendbookify_saas.controllers.BusinessClientController#getAllClients(Long, Authentication)
+2025-12-26T02:51:36.928+01:00  INFO 98379 --- [           main] c.b.b.config.RequestMappingPrinter       : mapping: [POST] [] -> com.bookify.backendbookify_saas.controllers.CategoryController#testPostEndpoint(String)
+2025-12-26T02:51:36.928+01:00  INFO 98379 --- [           main] c.b.b.config.RequestMappingPrinter       : mapping: [PATCH] [] -> com.bookify.backendbookify_saas.controllers.StaffController#updateMyHours(Authentication, Long, StaffHoursUpdateRequest)
+2025-12-26T02:51:36.928+01:00  INFO 98379 --- [           main] c.b.b.config.RequestMappingPrinter       : mapping: [DELETE] [] -> com.bookify.backendbookify_saas.controllers.BusinessClientController#deleteClient(Long, Long, Authentication)
+2025-12-26T02:51:36.928+01:00  INFO 98379 --- [           main] c.b.b.config.RequestMappingPrinter       : mapping: [POST] [] -> com.bookify.backendbookify_saas.controllers.SystemCronController#generateStaffAvailabilities()
+2025-12-26T02:51:36.928+01:00  INFO 98379 --- [           main] c.b.b.config.RequestMappingPrinter       : mapping: [DELETE] [] -> com.bookify.backendbookify_saas.controllers.BusinessOwnerController#deleteBusiness(Authentication, Long)
+2025-12-26T02:51:36.928+01:00  INFO 98379 --- [           main] c.b.b.config.RequestMappingPrinter       : mapping: [GET] [] -> com.bookify.backendbookify_saas.controllers.BookingController#getBookingById(Long)
+2025-12-26T02:51:36.928+01:00  INFO 98379 --- [           main] c.b.b.config.RequestMappingPrinter       : mapping: [POST] [] -> com.bookify.backendbookify_saas.controllers.AuthController#forgotPassword(ForgotPasswordRequest)
+2025-12-26T02:51:36.928+01:00  INFO 98379 --- [           main] c.b.b.config.RequestMappingPrinter       : mapping: [POST] [] -> com.bookify.backendbookify_saas.controllers.AuthController#logout(Authentication, HttpServletRequest, HttpServletResponse)
+2025-12-26T02:51:36.928+01:00  INFO 98379 --- [           main] c.b.b.config.RequestMappingPrinter       : mapping: [POST] [] -> com.bookify.backendbookify_saas.controllers.CategoryController#createCategory(CategoryCreateRequest, Authentication)
+2025-12-26T02:51:36.929+01:00  INFO 98379 --- [           main] c.b.b.config.RequestMappingPrinter       : mapping: [GET] [] -> com.bookify.backendbookify_saas.controllers.BusinessPublicController#advancedSearch(String, String, Long)
+2025-12-26T02:51:36.929+01:00  INFO 98379 --- [           main] c.b.b.config.RequestMappingPrinter       : mapping: [GET] [] -> com.bookify.backendbookify_saas.controllers.BusinessPublicController#listAll()
+2025-12-26T02:51:36.929+01:00  INFO 98379 --- [           main] c.b.b.config.RequestMappingPrinter       : mapping: [POST] [] -> com.bookify.backendbookify_saas.controllers.BusinessImageController#uploadImage(Authentication, Long, Map)
+2025-12-26T02:51:36.929+01:00  INFO 98379 --- [           main] c.b.b.config.RequestMappingPrinter       : mapping: [GET] [] -> com.bookify.backendbookify_saas.controllers.StaffPublicController#listBusinessStaff(Long)
+2025-12-26T02:51:36.929+01:00  INFO 98379 --- [           main] c.b.b.config.RequestMappingPrinter       : mapping: [DELETE] [] -> com.bookify.backendbookify_saas.controllers.BusinessStaffController#removeStaff(Authentication, Long, Long)
+2025-12-26T02:51:36.929+01:00  INFO 98379 --- [           main] c.b.b.config.RequestMappingPrinter       : mapping: [GET] [] -> org.springdoc.webmvc.api.OpenApiWebMvcResource#openapiJson(HttpServletRequest, String, Locale)
+2025-12-26T02:51:36.929+01:00  INFO 98379 --- [           main] c.b.b.config.RequestMappingPrinter       : mapping: [GET] [] -> com.bookify.backendbookify_saas.controllers.CategoryController#testEndpoint()
+2025-12-26T02:51:36.929+01:00  INFO 98379 --- [           main] c.b.b.config.RequestMappingPrinter       : mapping: [GET] [] -> org.springdoc.webmvc.ui.SwaggerConfigResource#openapiJson(HttpServletRequest)
+2025-12-26T02:51:36.929+01:00  INFO 98379 --- [           main] c.b.b.config.RequestMappingPrinter       : mapping: [] [] -> org.springframework.boot.autoconfigure.web.servlet.error.BasicErrorController#error(HttpServletRequest)
+2025-12-26T02:51:36.929+01:00  INFO 98379 --- [           main] c.b.b.config.RequestMappingPrinter       : mapping: [GET] [] -> com.bookify.backendbookify_saas.controllers.BookingController#getBookingsForBusiness(Long, String, String)
+2025-12-26T02:51:36.929+01:00  INFO 98379 --- [           main] c.b.b.config.RequestMappingPrinter       : mapping: [] [] -> org.springframework.boot.autoconfigure.web.servlet.error.BasicErrorController#errorHtml(HttpServletRequest, HttpServletResponse)
+2025-12-26T02:51:36.929+01:00  INFO 98379 --- [           main] c.b.b.config.RequestMappingPrinter       : mapping: [GET] [] -> com.bookify.backendbookify_saas.controllers.StaffServicesPublicController#listServicesForStaff(Long)
+2025-12-26T02:51:36.929+01:00  INFO 98379 --- [           main] c.b.b.config.RequestMappingPrinter       : mapping: [PUT] [] -> com.bookify.backendbookify_saas.controllers.BusinessServiceController#updateService(Authentication, Long, Long, ServiceUpdateRequest)
+2025-12-26T02:51:36.929+01:00  INFO 98379 --- [           main] c.b.b.config.RequestMappingPrinter       : mapping: [GET] [] -> com.bookify.backendbookify_saas.controllers.BusinessClientController#getClientById(Long, Long, Authentication)
+2025-12-26T02:51:36.929+01:00  INFO 98379 --- [           main] c.b.b.config.RequestMappingPrinter       : mapping: [GET] [] -> com.bookify.backendbookify_saas.controllers.CategoryController#getAllCategories()
+2025-12-26T02:51:36.929+01:00  INFO 98379 --- [           main] c.b.b.config.RequestMappingPrinter       : mapping: [POST] [] -> com.bookify.backendbookify_saas.controllers.AuthController#login(LoginRequest, HttpServletResponse)
+2025-12-26T02:51:36.929+01:00  INFO 98379 --- [           main] c.b.b.config.RequestMappingPrinter       : mapping: [DELETE] [] -> com.bookify.backendbookify_saas.controllers.BusinessImageController#deleteImage(Authentication, Long, Long)
+2025-12-26T02:51:36.929+01:00  INFO 98379 --- [           main] c.b.b.config.RequestMappingPrinter       : mapping: [GET] [] -> com.bookify.backendbookify_saas.controllers.BusinessPublicController#getById(Long)
+2025-12-26T02:51:36.929+01:00  INFO 98379 --- [           main] c.b.b.config.RequestMappingPrinter       : mapping: [GET] [] -> com.bookify.backendbookify_saas.controllers.BusinessImageController#getImages(Long)
+2025-12-26T02:51:36.929+01:00  INFO 98379 --- [           main] c.b.b.config.RequestMappingPrinter       : mapping: [GET] [] -> com.bookify.backendbookify_saas.controllers.StaffController#getCalendar(Authentication, Long)
+2025-12-26T02:51:36.929+01:00  INFO 98379 --- [           main] c.b.b.config.RequestMappingPrinter       : mapping: [POST] [] -> com.bookify.backendbookify_saas.controllers.BusinessServiceController#createService(Authentication, Long, ServiceCreateRequest)
+2025-12-26T02:51:36.929+01:00  INFO 98379 --- [           main] c.b.b.config.RequestMappingPrinter       : mapping: [GET] [] -> com.bookify.backendbookify_saas.controllers.BusinessPublicController#getBusinessImages(Long)
+2025-12-26T02:51:36.929+01:00  INFO 98379 --- [           main] c.b.b.config.RequestMappingPrinter       : mapping: [POST] [] -> com.bookify.backendbookify_saas.controllers.BookingController#createBooking(Authentication, ServiceBookingCreateRequest)
+2025-12-26T02:51:36.929+01:00  INFO 98379 --- [           main] c.b.b.config.RequestMappingPrinter       : mapping: [GET] [] -> com.bookify.backendbookify_saas.controllers.AiHealthController#ai()
+2025-12-26T02:51:36.929+01:00  INFO 98379 --- [           main] c.b.b.config.RequestMappingPrinter       : mapping: [POST] [] -> com.bookify.backendbookify_saas.controllers.AuthController#resetPassword(ResetPasswordRequest)
+2025-12-26T02:51:36.929+01:00  INFO 98379 --- [           main] c.b.b.config.RequestMappingPrinter       : mapping: [POST] [] -> com.bookify.backendbookify_saas.controllers.BusinessStaffController#addStaffByEmail(Authentication, Long, Map)
+2025-12-26T02:51:36.929+01:00  INFO 98379 --- [           main] c.b.b.config.RequestMappingPrinter       : === End mappings ===
+2025-12-26T02:52:15.373+01:00  INFO 98379 --- [nio-8088-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/api]    : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-12-26T02:52:15.374+01:00  INFO 98379 --- [nio-8088-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2025-12-26T02:52:15.380+01:00  INFO 98379 --- [nio-8088-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 5 ms
+╔════════════════════════════════════════════════════════════╗
+║ JWT FILTER - REQUEST RECEIVED
+║ Method: POST
+║ Path: /api/v1/bookings
+╚════════════════════════════════════════════════════════════╝
+Authorization header: Present (Bearer...)
+✓ JWT Token extracted: eyJhbGciOiJIUzI1NiJ9...
+✓ Token subject (userId) extracted: 3
+✓ Parsed userId: 3
+→ Loading user details for ID: 3
+2025-12-26T02:52:15.493+01:00  INFO 98379 --- [nio-8088-exec-1] c.b.b.config.ApplicationConfig           : UserDetailsService called with username: 3
+2025-12-26T02:52:15.493+01:00  INFO 98379 --- [nio-8088-exec-1] c.b.b.config.ApplicationConfig           : Parsed userId: 3
+2025-12-26T02:52:15.518+01:00 DEBUG 98379 --- [nio-8088-exec-1] org.hibernate.SQL                        : 
+    select
+        u1_0.id,
+        case 
+            when u1_1.id is not null 
+                then 1 
+            when u1_0.id is not null 
+                then 0 
+        end,
+        u1_0.avatar_url,
+        u1_0.created_at,
+        u1_0.email,
+        u1_0.name,
+        u1_0.password,
+        u1_0.password_reset_expires_at,
+        u1_0.password_reset_token,
+        u1_0.phone_number,
+        u1_0.role,
+        u1_0.status,
+        u1_0.updated_at,
+        u1_1.default_end_time,
+        u1_1.default_start_time,
+        u1_1.start_working_at 
+    from
+        users u1_0 
+    left join
+        staff u1_1 
+            on u1_0.id=u1_1.id 
+    where
+        u1_0.id=?
+Hibernate: 
+    select
+        u1_0.id,
+        case 
+            when u1_1.id is not null 
+                then 1 
+            when u1_0.id is not null 
+                then 0 
+        end,
+        u1_0.avatar_url,
+        u1_0.created_at,
+        u1_0.email,
+        u1_0.name,
+        u1_0.password,
+        u1_0.password_reset_expires_at,
+        u1_0.password_reset_token,
+        u1_0.phone_number,
+        u1_0.role,
+        u1_0.status,
+        u1_0.updated_at,
+        u1_1.default_end_time,
+        u1_1.default_start_time,
+        u1_1.start_working_at 
+    from
+        users u1_0 
+    left join
+        staff u1_1 
+            on u1_0.id=u1_1.id 
+    where
+        u1_0.id=?
+2025-12-26T02:52:15.536+01:00 DEBUG 98379 --- [nio-8088-exec-1] org.hibernate.SQL                        : 
+    select
+        b1_0.id,
+        b1_0.category_id,
+        b1_0.created_at,
+        b1_0.description,
+        b1_0.email,
+        b1_0.location,
+        b1_0.name,
+        b1_0.owner_id,
+        b1_0.phone,
+        b1_0.status,
+        b1_0.updated_at,
+        b1_0.weekend_day 
+    from
+        businesses b1_0 
+    where
+        b1_0.owner_id=?
+Hibernate: 
+    select
+        b1_0.id,
+        b1_0.category_id,
+        b1_0.created_at,
+        b1_0.description,
+        b1_0.email,
+        b1_0.location,
+        b1_0.name,
+        b1_0.owner_id,
+        b1_0.phone,
+        b1_0.status,
+        b1_0.updated_at,
+        b1_0.weekend_day 
+    from
+        businesses b1_0 
+    where
+        b1_0.owner_id=?
+2025-12-26T02:52:15.548+01:00  INFO 98379 --- [nio-8088-exec-1] c.b.b.config.ApplicationConfig           : User found - ID: 3, Role: CLIENT
+2025-12-26T02:52:15.548+01:00  INFO 98379 --- [nio-8088-exec-1] c.b.b.config.ApplicationConfig           : Authority being set: ROLE_CLIENT
+✓ User loaded successfully
+  Username: 3
+  Authorities: [ROLE_CLIENT]
+=== JWT AUTHENTICATION DEBUG ===
+User ID from token: 3
+UserDetails username: 3
+UserDetails authorities: [ROLE_CLIENT]
+================================
+Token validation result: VALID ✓
+✓ Authentication set in SecurityContext
+→ Passing request to next filter in chain...
+2025-12-26T02:52:15.608+01:00  INFO 98379 --- [nio-8088-exec-1] c.b.b.controllers.BookingController      : Creating booking: serviceId=7, staffId=2, date=2025-12-27, startTime=12:00
+2025-12-26T02:52:15.609+01:00 DEBUG 98379 --- [nio-8088-exec-1] org.hibernate.SQL                        : 
+    select
+        s1_0.id,
+        s1_0.active,
+        s1_0.business_id,
+        s1_0.created_at,
+        s1_0.created_by,
+        s1_0.description,
+        s1_0.duration_minutes,
+        s1_0.image_url,
+        s1_0.name,
+        s1_0.price,
+        s1_0.tenant_id,
+        s1_0.updated_at 
+    from
+        services s1_0 
+    where
+        s1_0.id=?
+Hibernate: 
+    select
+        s1_0.id,
+        s1_0.active,
+        s1_0.business_id,
+        s1_0.created_at,
+        s1_0.created_by,
+        s1_0.description,
+        s1_0.duration_minutes,
+        s1_0.image_url,
+        s1_0.name,
+        s1_0.price,
+        s1_0.tenant_id,
+        s1_0.updated_at 
+    from
+        services s1_0 
+    where
+        s1_0.id=?
+2025-12-26T02:52:15.613+01:00  INFO 98379 --- [nio-8088-exec-1] c.b.b.services.impl.BookingServiceImpl   : Attempting to fetch staff with ID: 2
+2025-12-26T02:52:15.625+01:00 DEBUG 98379 --- [nio-8088-exec-1] o.h.e.i.AbstractFlushingEventListener    : Processing flush-time cascades
+2025-12-26T02:52:15.627+01:00 DEBUG 98379 --- [nio-8088-exec-1] o.h.e.i.AbstractFlushingEventListener    : Dirty checking collections
+2025-12-26T02:52:15.642+01:00 DEBUG 98379 --- [nio-8088-exec-1] o.h.e.i.AbstractFlushingEventListener    : Flushed: 0 insertions, 0 updates, 0 deletions to 1 objects
+2025-12-26T02:52:15.642+01:00 DEBUG 98379 --- [nio-8088-exec-1] o.h.e.i.AbstractFlushingEventListener    : Flushed: 0 (re)creations, 0 updates, 0 removals to 3 collections
+2025-12-26T02:52:15.643+01:00 DEBUG 98379 --- [nio-8088-exec-1] org.hibernate.SQL                        : 
+    select
+        s1_0.id,
+        s1_1.avatar_url,
+        b1_0.id,
+        b1_0.category_id,
+        b1_0.created_at,
+        b1_0.description,
+        b1_0.email,
+        b1_0.location,
+        b1_0.name,
+        b1_0.owner_id,
+        b1_0.phone,
+        b1_0.status,
+        b1_0.updated_at,
+        b1_0.weekend_day,
+        s1_1.created_at,
+        s1_1.email,
+        s1_1.name,
+        s1_1.password,
+        s1_1.password_reset_expires_at,
+        s1_1.password_reset_token,
+        s1_1.phone_number,
+        s1_1.role,
+        s1_1.status,
+        s1_1.updated_at,
+        s1_0.default_end_time,
+        s1_0.default_start_time,
+        s1_0.start_working_at 
+    from
+        staff s1_0 
+    join
+        users s1_1 
+            on s1_0.id=s1_1.id 
+    left join
+        businesses b1_0 
+            on s1_1.id=b1_0.owner_id 
+    where
+        s1_0.id=?
+Hibernate: 
+    select
+        s1_0.id,
+        s1_1.avatar_url,
+        b1_0.id,
+        b1_0.category_id,
+        b1_0.created_at,
+        b1_0.description,
+        b1_0.email,
+        b1_0.location,
+        b1_0.name,
+        b1_0.owner_id,
+        b1_0.phone,
+        b1_0.status,
+        b1_0.updated_at,
+        b1_0.weekend_day,
+        s1_1.created_at,
+        s1_1.email,
+        s1_1.name,
+        s1_1.password,
+        s1_1.password_reset_expires_at,
+        s1_1.password_reset_token,
+        s1_1.phone_number,
+        s1_1.role,
+        s1_1.status,
+        s1_1.updated_at,
+        s1_0.default_end_time,
+        s1_0.default_start_time,
+        s1_0.start_working_at 
+    from
+        staff s1_0 
+    join
+        users s1_1 
+            on s1_0.id=s1_1.id 
+    left join
+        businesses b1_0 
+            on s1_1.id=b1_0.owner_id 
+    where
+        s1_0.id=?
+2025-12-26T02:52:15.646+01:00  INFO 98379 --- [nio-8088-exec-1] c.b.b.services.impl.BookingServiceImpl   : Found staff: ID=2, Name=disso mac Staff, Business=NULL
+2025-12-26T02:52:15.647+01:00 ERROR 98379 --- [nio-8088-exec-1] c.b.b.controllers.BookingController      : Booking creation failed: Staff does not have a business associated. Staff ID: 2
+✓ Request completed successfully
+╔════════════════════════════════════════════════════════════╗
+║ JWT FILTER - REQUEST RECEIVED
+║ Method: POST
+║ Path: /api/v1/bookings
+╚════════════════════════════════════════════════════════════╝
+Authorization header: Present (Bearer...)
+✓ JWT Token extracted: eyJhbGciOiJIUzI1NiJ9...
+✓ Token subject (userId) extracted: 3
+✓ Parsed userId: 3
+→ Loading user details for ID: 3
+2025-12-26T02:52:24.947+01:00  INFO 98379 --- [nio-8088-exec-2] c.b.b.config.ApplicationConfig           : UserDetailsService called with username: 3
+2025-12-26T02:52:24.948+01:00  INFO 98379 --- [nio-8088-exec-2] c.b.b.config.ApplicationConfig           : Parsed userId: 3
+2025-12-26T02:52:24.963+01:00 DEBUG 98379 --- [nio-8088-exec-2] org.hibernate.SQL                        : 
+    select
+        u1_0.id,
+        case 
+            when u1_1.id is not null 
+                then 1 
+            when u1_0.id is not null 
+                then 0 
+        end,
+        u1_0.avatar_url,
+        u1_0.created_at,
+        u1_0.email,
+        u1_0.name,
+        u1_0.password,
+        u1_0.password_reset_expires_at,
+        u1_0.password_reset_token,
+        u1_0.phone_number,
+        u1_0.role,
+        u1_0.status,
+        u1_0.updated_at,
+        u1_1.default_end_time,
+        u1_1.default_start_time,
+        u1_1.start_working_at 
+    from
+        users u1_0 
+    left join
+        staff u1_1 
+            on u1_0.id=u1_1.id 
+    where
+        u1_0.id=?
+Hibernate: 
+    select
+        u1_0.id,
+        case 
+            when u1_1.id is not null 
+                then 1 
+            when u1_0.id is not null 
+                then 0 
+        end,
+        u1_0.avatar_url,
+        u1_0.created_at,
+        u1_0.email,
+        u1_0.name,
+        u1_0.password,
+        u1_0.password_reset_expires_at,
+        u1_0.password_reset_token,
+        u1_0.phone_number,
+        u1_0.role,
+        u1_0.status,
+        u1_0.updated_at,
+        u1_1.default_end_time,
+        u1_1.default_start_time,
+        u1_1.start_working_at 
+    from
+        users u1_0 
+    left join
+        staff u1_1 
+            on u1_0.id=u1_1.id 
+    where
+        u1_0.id=?
+2025-12-26T02:52:24.975+01:00 DEBUG 98379 --- [nio-8088-exec-2] org.hibernate.SQL                        : 
+    select
+        b1_0.id,
+        b1_0.category_id,
+        b1_0.created_at,
+        b1_0.description,
+        b1_0.email,
+        b1_0.location,
+        b1_0.name,
+        b1_0.owner_id,
+        b1_0.phone,
+        b1_0.status,
+        b1_0.updated_at,
+        b1_0.weekend_day 
+    from
+        businesses b1_0 
+    where
+        b1_0.owner_id=?
+Hibernate: 
+    select
+        b1_0.id,
+        b1_0.category_id,
+        b1_0.created_at,
+        b1_0.description,
+        b1_0.email,
+        b1_0.location,
+        b1_0.name,
+        b1_0.owner_id,
+        b1_0.phone,
+        b1_0.status,
+        b1_0.updated_at,
+        b1_0.weekend_day 
+    from
+        businesses b1_0 
+    where
+        b1_0.owner_id=?
+2025-12-26T02:52:24.992+01:00  INFO 98379 --- [nio-8088-exec-2] c.b.b.config.ApplicationConfig           : User found - ID: 3, Role: CLIENT
+2025-12-26T02:52:24.992+01:00  INFO 98379 --- [nio-8088-exec-2] c.b.b.config.ApplicationConfig           : Authority being set: ROLE_CLIENT
+✓ User loaded successfully
+  Username: 3
+  Authorities: [ROLE_CLIENT]
+=== JWT AUTHENTICATION DEBUG ===
+User ID from token: 3
+UserDetails username: 3
+UserDetails authorities: [ROLE_CLIENT]
+================================
+Token validation result: VALID ✓
+✓ Authentication set in SecurityContext
+→ Passing request to next filter in chain...
+2025-12-26T02:52:24.998+01:00  INFO 98379 --- [nio-8088-exec-2] c.b.b.controllers.BookingController      : Creating booking: serviceId=7, staffId=2, date=2025-12-27, startTime=12:00
+2025-12-26T02:52:24.999+01:00 DEBUG 98379 --- [nio-8088-exec-2] org.hibernate.SQL                        : 
+    select
+        s1_0.id,
+        s1_0.active,
+        s1_0.business_id,
+        s1_0.created_at,
+        s1_0.created_by,
+        s1_0.description,
+        s1_0.duration_minutes,
+        s1_0.image_url,
+        s1_0.name,
+        s1_0.price,
+        s1_0.tenant_id,
+        s1_0.updated_at 
+    from
+        services s1_0 
+    where
+        s1_0.id=?
+Hibernate: 
+    select
+        s1_0.id,
+        s1_0.active,
+        s1_0.business_id,
+        s1_0.created_at,
+        s1_0.created_by,
+        s1_0.description,
+        s1_0.duration_minutes,
+        s1_0.image_url,
+        s1_0.name,
+        s1_0.price,
+        s1_0.tenant_id,
+        s1_0.updated_at 
+    from
+        services s1_0 
+    where
+        s1_0.id=?
+2025-12-26T02:52:25.001+01:00  INFO 98379 --- [nio-8088-exec-2] c.b.b.services.impl.BookingServiceImpl   : Attempting to fetch staff with ID: 2
+2025-12-26T02:52:25.005+01:00 DEBUG 98379 --- [nio-8088-exec-2] o.h.e.i.AbstractFlushingEventListener    : Processing flush-time cascades
+2025-12-26T02:52:25.005+01:00 DEBUG 98379 --- [nio-8088-exec-2] o.h.e.i.AbstractFlushingEventListener    : Dirty checking collections
+2025-12-26T02:52:25.029+01:00 DEBUG 98379 --- [nio-8088-exec-2] o.h.e.i.AbstractFlushingEventListener    : Flushed: 0 insertions, 0 updates, 0 deletions to 1 objects
+2025-12-26T02:52:25.029+01:00 DEBUG 98379 --- [nio-8088-exec-2] o.h.e.i.AbstractFlushingEventListener    : Flushed: 0 (re)creations, 0 updates, 0 removals to 3 collections
+2025-12-26T02:52:25.029+01:00 DEBUG 98379 --- [nio-8088-exec-2] org.hibernate.SQL                        : 
+    select
+        s1_0.id,
+        s1_1.avatar_url,
+        b1_0.id,
+        b1_0.category_id,
+        b1_0.created_at,
+        b1_0.description,
+        b1_0.email,
+        b1_0.location,
+        b1_0.name,
+        b1_0.owner_id,
+        b1_0.phone,
+        b1_0.status,
+        b1_0.updated_at,
+        b1_0.weekend_day,
+        s1_1.created_at,
+        s1_1.email,
+        s1_1.name,
+        s1_1.password,
+        s1_1.password_reset_expires_at,
+        s1_1.password_reset_token,
+        s1_1.phone_number,
+        s1_1.role,
+        s1_1.status,
+        s1_1.updated_at,
+        s1_0.default_end_time,
+        s1_0.default_start_time,
+        s1_0.start_working_at 
+    from
+        staff s1_0 
+    join
+        users s1_1 
+            on s1_0.id=s1_1.id 
+    left join
+        businesses b1_0 
+            on s1_1.id=b1_0.owner_id 
+    where
+        s1_0.id=?
+Hibernate: 
+    select
+        s1_0.id,
+        s1_1.avatar_url,
+        b1_0.id,
+        b1_0.category_id,
+        b1_0.created_at,
+        b1_0.description,
+        b1_0.email,
+        b1_0.location,
+        b1_0.name,
+        b1_0.owner_id,
+        b1_0.phone,
+        b1_0.status,
+        b1_0.updated_at,
+        b1_0.weekend_day,
+        s1_1.created_at,
+        s1_1.email,
+        s1_1.name,
+        s1_1.password,
+        s1_1.password_reset_expires_at,
+        s1_1.password_reset_token,
+        s1_1.phone_number,
+        s1_1.role,
+        s1_1.status,
+        s1_1.updated_at,
+        s1_0.default_end_time,
+        s1_0.default_start_time,
+        s1_0.start_working_at 
+    from
+        staff s1_0 
+    join
+        users s1_1 
+            on s1_0.id=s1_1.id 
+    left join
+        businesses b1_0 
+            on s1_1.id=b1_0.owner_id 
+    where
+        s1_0.id=?
+2025-12-26T02:52:25.032+01:00  INFO 98379 --- [nio-8088-exec-2] c.b.b.services.impl.BookingServiceImpl   : Found staff: ID=2, Name=disso mac Staff, Business=NULL
+2025-12-26T02:52:25.033+01:00 ERROR 98379 --- [nio-8088-exec-2] c.b.b.controllers.BookingController      : Booking creation failed: Staff does not have a business associated. Staff ID: 2
+✓ Request completed successfully
+2025-12-26T02:53:14.003+01:00  INFO 98379 --- [ionShutdownHook] o.s.b.w.e.tomcat.GracefulShutdown        : Commencing graceful shutdown. Waiting for active requests to complete
+2025-12-26T02:53:14.021+01:00  INFO 98379 --- [tomcat-shutdown] o.s.b.w.e.tomcat.GracefulShutdown        : Graceful shutdown complete
+2025-12-26T02:53:14.057+01:00  INFO 98379 --- [ionShutdownHook] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
+2025-12-26T02:53:14.070+01:00  INFO 98379 --- [ionShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2025-12-26T02:53:14.091+01:00  INFO 98379 --- [ionShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.

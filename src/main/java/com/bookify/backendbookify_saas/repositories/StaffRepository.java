@@ -1,6 +1,7 @@
 package com.bookify.backendbookify_saas.repositories;
 
 import com.bookify.backendbookify_saas.models.entities.Staff;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.jpa.repository.Modifying;
@@ -46,6 +47,12 @@ public interface StaffRepository extends JpaRepository<Staff, Long> {
            "s.id, s.name, s.email, s.phoneNumber, s.role, s.status, s.avatarUrl, null, null, null, s.defaultStartTime, s.defaultEndTime) " +
            "FROM Staff s WHERE s.business.id = :businessId")
     List<com.bookify.backendbookify_saas.models.dtos.UserProfileResponse> findUserProfileResponsesByBusinessId(@Param("businessId") Long businessId);
+
+    // Fetch staff with business eagerly loaded (to avoid LazyInitializationException)
+    // Using EntityGraph to explicitly fetch the business relationship
+    @EntityGraph(attributePaths = {"business"})
+    @Query("SELECT s FROM Staff s WHERE s.id = :id")
+    Optional<Staff> findByIdWithBusiness(@Param("id") Long id);
 
     // Native query fallback: join users and staff tables to get complete Staff entity data
     @Query(value = "SELECT u.*, s.default_start_time, s.default_end_time, s.start_working_at, s.business_id " +

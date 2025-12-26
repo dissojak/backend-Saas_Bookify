@@ -61,7 +61,7 @@ public class AuthServiceImpl implements AuthService {
         // 3. Créer un utilisateur
         User user = new User();
 
-        // 4. Définir les champs communs
+        // 4. Définir les champs communs (single display name)
         user.setName(request.getName());
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));

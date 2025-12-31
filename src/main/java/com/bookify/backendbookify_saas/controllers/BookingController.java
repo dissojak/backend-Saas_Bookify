@@ -173,4 +173,38 @@ public class BookingController {
             return ResponseEntity.notFound().build();
         }
     }
+
+    /**
+     * Reschedule a booking to a new date/time.
+     */
+    @PutMapping("/{bookingId}/reschedule")
+    @Operation(summary = "Reschedule a booking", description = "Reschedule a booking to a new date and time")
+    public ResponseEntity<?> rescheduleBooking(
+            @PathVariable Long bookingId,
+            @RequestBody Map<String, String> body
+    ) {
+        try {
+            String newDate = body.get("date");
+            String newStartTime = body.get("startTime");
+            String newEndTime = body.get("endTime");
+            
+            if (newDate == null || newStartTime == null) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Date and start time are required"));
+            }
+            
+            LocalDate date = LocalDate.parse(newDate);
+            java.time.LocalTime startTime = java.time.LocalTime.parse(newStartTime);
+            java.time.LocalTime endTime = newEndTime != null 
+                ? java.time.LocalTime.parse(newEndTime) 
+                : null;
+            
+            ServiceBookingResponse response = bookingService.rescheduleBooking(bookingId, date, startTime, endTime);
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (RuntimeException e) {
+            log.error("Reschedule failed: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
 }

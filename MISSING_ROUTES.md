@@ -96,3 +96,4 @@ AI / OAuth:
 
 /v1/business/{businessId}/clients/{clientId}/history : client booking/history 
 
+needed for the image detection and read : teseract ocr

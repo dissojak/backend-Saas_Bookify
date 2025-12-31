@@ -25,6 +25,11 @@ public class ServiceBookingResponse {
     private Long id;
     private Long serviceId;
     private String serviceName;
+    private Integer serviceDuration; // Duration in minutes
+
+    // Business information (derived from service)
+    private Long businessId;
+    private String businessName;
 
     // Client information (either User or BusinessClient)
     private Long clientId;

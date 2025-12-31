@@ -277,6 +277,50 @@ public class BookingServiceImpl implements BookingService {
         serviceBookingRepository.deleteById(id);
     }
 
+    @Override
+    @Transactional
+    public ServiceBookingResponse rescheduleBooking(Long bookingId, LocalDate newDate, LocalTime newStartTime, LocalTime newEndTime) {
+        // Use the query that eagerly loads Service and Business to avoid LAZY loading issues
+        ServiceBooking booking = serviceBookingRepository.findByIdWithServiceAndBusiness(bookingId)
+                .orElseThrow(() -> new RuntimeException("Booking not found"));
+
+        // Validate booking can be rescheduled (not cancelled or completed)
+        if (booking.getStatus() == BookingStatusEnum.CANCELLED || booking.getStatus() == BookingStatusEnum.COMPLETED) {
+            throw new IllegalArgumentException("Cannot reschedule a " + booking.getStatus().name().toLowerCase() + " booking");
+        }
+
+        // Calculate end time if not provided (use service duration)
+        if (newEndTime == null) {
+            Integer durationMinutes = booking.getService().getDurationMinutes();
+            if (durationMinutes == null) durationMinutes = 30; // default 30 minutes
+            newEndTime = newStartTime.plusMinutes(durationMinutes);
+        }
+
+        // Check if the new time slot is available using existing repository method
+        Long staffId = booking.getStaff().getId();
+        List<ServiceBooking> conflictingBookings = serviceBookingRepository.findByStaffIdAndDateExcludingCancelled(staffId, newDate);
+        
+        for (ServiceBooking existing : conflictingBookings) {
+            if (existing.getId().equals(bookingId)) continue; // Skip self
+            if (newStartTime.isBefore(existing.getEndTime()) && newEndTime.isAfter(existing.getStartTime())) {
+                throw new IllegalArgumentException("The selected time slot is not available");
+            }
+        }
+
+        // Update booking
+        booking.setDate(newDate);
+        booking.setStartTime(newStartTime);
+        booking.setEndTime(newEndTime);
+        booking.setStatus(BookingStatusEnum.PENDING); // Reset to pending after reschedule
+        
+        serviceBookingRepository.save(booking);
+        
+        // Re-fetch with all associations to avoid lazy loading issues when mapping to response
+        ServiceBooking saved = serviceBookingRepository.findByIdWithServiceAndBusiness(bookingId)
+                .orElseThrow(() -> new RuntimeException("Booking not found after save"));
+        return mapToResponse(saved);
+    }
+
     /**
      * Map ServiceBooking entity to response DTO
      */
@@ -285,6 +329,9 @@ public class BookingServiceImpl implements BookingService {
                 .id(booking.getId())
                 .serviceId(booking.getService().getId())
                 .serviceName(booking.getService().getName())
+                .serviceDuration(booking.getService().getDurationMinutes())
+                .businessId(booking.getService().getBusiness() != null ? booking.getService().getBusiness().getId() : null)
+                .businessName(booking.getService().getBusiness() != null ? booking.getService().getBusiness().getName() : null)
                 .date(booking.getDate())
                 .startTime(booking.getStartTime())
                 .endTime(booking.getEndTime())
@@ -348,10 +395,11 @@ public class BookingServiceImpl implements BookingService {
 
     /**
      * Get bookings for a client (User) as DTOs.
+     * Uses eager loading to fetch Service and Business to avoid LAZY loading issues.
      */
     @Transactional(readOnly = true)
     public List<ServiceBookingResponse> getBookingsForClientDto(Long clientId) {
-        List<ServiceBooking> bookings = serviceBookingRepository.findByClientId(clientId);
+        List<ServiceBooking> bookings = serviceBookingRepository.findByClientIdWithServiceAndBusiness(clientId);
         return bookings.stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());

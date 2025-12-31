@@ -1,5 +1,6 @@
 package com.bookify.backendbookify_saas.services;
 
+import com.bookify.backendbookify_saas.models.dtos.ServiceBookingResponse;
 import com.bookify.backendbookify_saas.models.entities.User;
 import com.bookify.backendbookify_saas.models.entities.Service;
 import com.bookify.backendbookify_saas.models.entities.ServiceBooking;
@@ -36,4 +37,6 @@ public interface BookingService {
     void cancelServiceBooking(Long id, String reason);
 
     void deleteServiceBooking(Long id);
+
+    ServiceBookingResponse rescheduleBooking(Long bookingId, LocalDate newDate, LocalTime newStartTime, LocalTime newEndTime);
 }

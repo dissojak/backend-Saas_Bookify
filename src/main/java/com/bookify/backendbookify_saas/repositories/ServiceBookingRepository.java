@@ -81,4 +81,28 @@ public interface ServiceBookingRepository extends JpaRepository<ServiceBooking, 
      */
     @Query("SELECT sb FROM ServiceBooking sb WHERE sb.client.id = :clientId")
     List<ServiceBooking> findByClientId(@Param("clientId") Long clientId);
+
+    /**
+     * Find booking by ID with Service and Business eagerly loaded.
+     * Explicitly fetch the business to avoid LAZY loading issues.
+     */
+    @Query("SELECT sb FROM ServiceBooking sb " +
+           "LEFT JOIN FETCH sb.service s " +
+           "LEFT JOIN FETCH s.business " +
+           "LEFT JOIN FETCH sb.client " +
+           "LEFT JOIN FETCH sb.staff " +
+           "WHERE sb.id = :bookingId")
+    java.util.Optional<ServiceBooking> findByIdWithServiceAndBusiness(@Param("bookingId") Long bookingId);
+
+    /**
+     * Find bookings by client (User) ID with Service and Business eagerly loaded.
+     * Explicitly fetch the business to avoid LAZY loading issues.
+     */
+    @Query("SELECT DISTINCT sb FROM ServiceBooking sb " +
+           "LEFT JOIN FETCH sb.service s " +
+           "LEFT JOIN FETCH s.business " +
+           "LEFT JOIN FETCH sb.client " +
+           "LEFT JOIN FETCH sb.staff " +
+           "WHERE sb.client.id = :clientId")
+    List<ServiceBooking> findByClientIdWithServiceAndBusiness(@Param("clientId") Long clientId);
 }

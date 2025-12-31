@@ -30,6 +30,9 @@ public class Review {
     @Column(nullable = false)
     private Integer rating;
 
+    @Column(name = "business_rating")
+    private Integer businessRating;
+
     @Column(length = 1000)
     private String comment;
 

@@ -7,7 +7,6 @@ import com.bookify.backendbookify_saas.models.entities.Business;
 import com.bookify.backendbookify_saas.models.entities.BusinessImage;
 import com.bookify.backendbookify_saas.repositories.BusinessImageRepository;
 import com.bookify.backendbookify_saas.repositories.BusinessRepository;
-import com.bookify.backendbookify_saas.repositories.ReviewRepository;
 import com.bookify.backendbookify_saas.services.BusinessImageService;
 import com.bookify.backendbookify_saas.services.BusinessService;
 import lombok.RequiredArgsConstructor;
@@ -33,7 +32,6 @@ public class BusinessPublicController {
     private final BusinessService businessService;
     private final BusinessImageService businessImageService;
     private final BusinessImageRepository businessImageRepository;
-    private final ReviewRepository reviewRepository;
 
     @GetMapping
     public ResponseEntity<List<BusinessResponse>> listAll() {

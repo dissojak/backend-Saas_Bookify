@@ -91,6 +91,27 @@ public class BookingController {
     }
 
     /**
+     * Get bookings for a staff member within a date range.
+     */
+    @GetMapping("/staff/{staffId}")
+    @Operation(summary = "Get bookings for staff", description = "Returns all bookings for a staff member within an optional date range")
+    public ResponseEntity<List<ServiceBookingResponse>> getBookingsForStaff(
+            @PathVariable Long staffId,
+            @RequestParam(required = false) String from,
+            @RequestParam(required = false) String to
+    ) {
+        try {
+            LocalDate startDate = from != null ? LocalDate.parse(from) : LocalDate.now().minusMonths(1);
+            LocalDate endDate = to != null ? LocalDate.parse(to) : LocalDate.now().plusMonths(1);
+            List<ServiceBookingResponse> bookings = bookingService.getBookingsForStaffBetweenDatesDto(staffId, startDate, endDate);
+            return ResponseEntity.ok(bookings);
+        } catch (Exception e) {
+            log.error("Error fetching bookings for staff {}: {}", staffId, e.getMessage());
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    /**
      * Get bookings for a business within a date range.
      */
     @GetMapping("/business/{businessId}")

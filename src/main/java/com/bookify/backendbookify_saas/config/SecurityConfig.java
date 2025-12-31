@@ -101,6 +101,8 @@ public class SecurityConfig {
                         // Allow public access to staff bookings for slot filtering (read-only)
                         .requestMatchers(
                                 HttpMethod.GET,
+                                "/v1/bookings/staff/*",
+                                "/api/v1/bookings/staff/*",
                                 "/v1/bookings/staff/*/date/*",
                                 "/api/v1/bookings/staff/*/date/*"
                         ).permitAll()

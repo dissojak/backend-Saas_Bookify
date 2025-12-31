@@ -383,6 +383,17 @@ public class BookingServiceImpl implements BookingService {
     }
 
     /**
+     * Get bookings for a staff member between dates as DTOs.
+     */
+    @Transactional(readOnly = true)
+    public List<ServiceBookingResponse> getBookingsForStaffBetweenDatesDto(Long staffId, LocalDate startDate, LocalDate endDate) {
+        List<ServiceBooking> bookings = serviceBookingRepository.findByStaffIdAndDateBetween(staffId, startDate, endDate);
+        return bookings.stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    /**
      * Get bookings for a business between dates as DTOs.
      */
     @Transactional(readOnly = true)

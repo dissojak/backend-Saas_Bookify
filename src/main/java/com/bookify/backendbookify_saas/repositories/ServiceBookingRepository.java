@@ -70,6 +70,12 @@ public interface ServiceBookingRepository extends JpaRepository<ServiceBooking, 
     List<ServiceBooking> findByStaffIdAndDateBetweenExcludingCancelled(@Param("staffId") Long staffId, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 
     /**
+     * Find all bookings for a specific staff member within a date range (including all statuses).
+     */
+    @Query("SELECT sb FROM ServiceBooking sb WHERE sb.staff.id = :staffId AND sb.date BETWEEN :startDate AND :endDate")
+    List<ServiceBooking> findByStaffIdAndDateBetween(@Param("staffId") Long staffId, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+
+    /**
      * Check for overlapping bookings for a staff member (correct conflict detection).
      * Uses LocalTime for start/end since Booking entity uses LocalTime.
      */

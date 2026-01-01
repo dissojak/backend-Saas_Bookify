@@ -26,6 +26,9 @@ public interface ServiceRepository extends JpaRepository<Service, Long> {
 
     List<Service> findByBusinessIdAndActiveTrue(Long businessId);
 
+    // Find all services for a business (including inactive)
+    List<Service> findByBusinessId(Long businessId);
+
     // Fetch services that a given staff member is linked to (active only)
     List<Service> findByStaff_IdAndActiveTrue(Long staffId);
 

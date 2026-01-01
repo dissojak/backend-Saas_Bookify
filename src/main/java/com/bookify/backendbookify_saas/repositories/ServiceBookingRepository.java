@@ -111,4 +111,16 @@ public interface ServiceBookingRepository extends JpaRepository<ServiceBooking, 
            "LEFT JOIN FETCH sb.staff " +
            "WHERE sb.client.id = :clientId")
     List<ServiceBooking> findByClientIdWithServiceAndBusiness(@Param("clientId") Long clientId);
+
+    /**
+     * Count all bookings for a specific service (for delete safety check)
+     */
+    @Query("SELECT COUNT(sb) FROM ServiceBooking sb WHERE sb.service.id = :serviceId")
+    long countByServiceId(@Param("serviceId") Long serviceId);
+
+    /**
+     * Count pending/confirmed bookings for a specific service (active bookings)
+     */
+    @Query("SELECT COUNT(sb) FROM ServiceBooking sb WHERE sb.service.id = :serviceId AND sb.status IN (com.bookify.backendbookify_saas.models.enums.BookingStatusEnum.PENDING, com.bookify.backendbookify_saas.models.enums.BookingStatusEnum.CONFIRMED)")
+    long countActiveBookingsByServiceId(@Param("serviceId") Long serviceId);
 }

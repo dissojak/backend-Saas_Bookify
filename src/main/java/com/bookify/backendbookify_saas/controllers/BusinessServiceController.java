@@ -9,6 +9,7 @@ import com.bookify.backendbookify_saas.models.entities.Service;
 import com.bookify.backendbookify_saas.models.entities.User;
 import com.bookify.backendbookify_saas.repositories.BusinessRepository;
 import com.bookify.backendbookify_saas.repositories.ServiceRepository;
+import com.bookify.backendbookify_saas.repositories.ServiceBookingRepository;
 import com.bookify.backendbookify_saas.services.StaffValidationService;
 import com.bookify.backendbookify_saas.services.impl.ServiceCreationService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -32,12 +33,20 @@ public class BusinessServiceController {
 
     private final ServiceRepository serviceRepository;
     private final BusinessRepository businessRepository;
+    private final ServiceBookingRepository serviceBookingRepository;
     private final StaffValidationService staffValidationService;
     private final ServiceCreationService serviceCreationService;
 
     // Helper: map entity -> DTO
     private ServiceResponse toDto(Service s) {
         List<Long> staffIds = s.getStaff() == null ? List.of() : s.getStaff().stream().map(User::getId).toList();
+        List<ServiceResponse.StaffInfo> staffProviders = s.getStaff() == null ? List.of() : s.getStaff().stream()
+                .map(staff -> ServiceResponse.StaffInfo.builder()
+                        .id(staff.getId())
+                        .name(staff.getName())
+                        .avatarUrl(staff.getAvatarUrl())
+                        .build())
+                .toList();
         return ServiceResponse.builder()
                 .id(s.getId())
                 .name(s.getName())
@@ -49,6 +58,7 @@ public class BusinessServiceController {
                 .createdById(s.getCreatedBy() != null ? s.getCreatedBy().getId() : null)
                 .createdByName(s.getCreatedBy() != null ? s.getCreatedBy().getName() : null)
                 .staffIds(staffIds)
+                .staffProviders(staffProviders)
                 .createdAt(s.getCreatedAt())
                 .updatedAt(s.getUpdatedAt())
                 .build();
@@ -164,9 +174,104 @@ public class BusinessServiceController {
         return ResponseEntity.ok(toDto(reloaded));
     }
 
-    // Delete service (owner OR creator)
+    // Check if service can be safely deleted (no bookings)
+    @GetMapping("/{serviceId}/delete-check")
+    @Operation(summary = "Check if service can be safely deleted", description = "Returns booking counts to determine if deletion is safe")
+    public ResponseEntity<?> checkServiceDeleteSafety(
+            Authentication authentication,
+            @PathVariable Long businessId,
+            @PathVariable Long serviceId
+    ) {
+        Long actorId = Long.parseLong(authentication.getName());
+        Service s = serviceRepository.findById(serviceId).orElseThrow(() -> new IllegalArgumentException("Service not found"));
+        if (s.getBusiness() == null || !s.getBusiness().getId().equals(businessId)) {
+            throw new IllegalArgumentException("Service does not belong to business");
+        }
+        
+        // Permission check
+        boolean isOwner = s.getBusiness().getOwner() != null && s.getBusiness().getOwner().getId().equals(actorId);
+        boolean isCreator = s.getCreatedBy() != null && s.getCreatedBy().getId().equals(actorId);
+        if (!isOwner && !isCreator) {
+            throw new UnauthorizedAccessException("Only owner or creator can check delete safety");
+        }
+
+        long totalBookings = serviceBookingRepository.countByServiceId(serviceId);
+        long activeBookings = serviceBookingRepository.countActiveBookingsByServiceId(serviceId);
+        boolean safeToDelete = totalBookings == 0;
+        
+        return ResponseEntity.ok(java.util.Map.of(
+            "serviceId", serviceId,
+            "serviceName", s.getName(),
+            "totalBookings", totalBookings,
+            "activeBookings", activeBookings,
+            "safeToDelete", safeToDelete,
+            "message", safeToDelete 
+                ? "This service has no bookings and can be safely deleted."
+                : activeBookings > 0 
+                    ? "Warning: This service has " + activeBookings + " active booking(s). Deleting may cause issues for clients."
+                    : "This service has " + totalBookings + " historical booking(s). These records will become orphaned."
+        ));
+    }
+
+    // Deactivate service (soft delete - hides from booking but preserves data)
+    @PatchMapping("/{serviceId}/deactivate")
+    @Operation(summary = "Deactivate service", description = "Owner or creator can deactivate. Service will be hidden from bookings but data is preserved.")
+    public ResponseEntity<java.util.Map<String, Object>> deactivateService(
+            Authentication authentication,
+            @PathVariable Long businessId,
+            @PathVariable Long serviceId
+    ) {
+        Long actorId = Long.parseLong(authentication.getName());
+        Service s = serviceRepository.findById(serviceId).orElseThrow(() -> new IllegalArgumentException("Service not found"));
+        if (s.getBusiness() == null || !s.getBusiness().getId().equals(businessId)) {
+            throw new IllegalArgumentException("Service does not belong to business");
+        }
+        boolean isOwner = s.getBusiness().getOwner() != null && s.getBusiness().getOwner().getId().equals(actorId);
+        boolean isCreator = s.getCreatedBy() != null && s.getCreatedBy().getId().equals(actorId);
+        if (!isOwner && !isCreator) throw new UnauthorizedAccessException("Only owner or creator can deactivate this service");
+
+        s.setActive(false);
+        serviceRepository.save(s);
+        
+        return ResponseEntity.ok(java.util.Map.of(
+            "serviceId", serviceId,
+            "serviceName", s.getName(),
+            "action", "deactivated",
+            "message", "Service deactivated. It will no longer appear for new bookings but all data is preserved."
+        ));
+    }
+
+    // Reactivate service (restore from soft delete)
+    @PatchMapping("/{serviceId}/activate")
+    @Operation(summary = "Reactivate service", description = "Owner or creator can reactivate a deactivated service.")
+    public ResponseEntity<java.util.Map<String, Object>> reactivateService(
+            Authentication authentication,
+            @PathVariable Long businessId,
+            @PathVariable Long serviceId
+    ) {
+        Long actorId = Long.parseLong(authentication.getName());
+        Service s = serviceRepository.findById(serviceId).orElseThrow(() -> new IllegalArgumentException("Service not found"));
+        if (s.getBusiness() == null || !s.getBusiness().getId().equals(businessId)) {
+            throw new IllegalArgumentException("Service does not belong to business");
+        }
+        boolean isOwner = s.getBusiness().getOwner() != null && s.getBusiness().getOwner().getId().equals(actorId);
+        boolean isCreator = s.getCreatedBy() != null && s.getCreatedBy().getId().equals(actorId);
+        if (!isOwner && !isCreator) throw new UnauthorizedAccessException("Only owner or creator can reactivate this service");
+
+        s.setActive(true);
+        serviceRepository.save(s);
+        
+        return ResponseEntity.ok(java.util.Map.of(
+            "serviceId", serviceId,
+            "serviceName", s.getName(),
+            "action", "activated",
+            "message", "Service reactivated. It will now appear for new bookings."
+        ));
+    }
+
+    // Delete service (owner OR creator) - permanent deletion
     @DeleteMapping("/{serviceId}")
-    @Operation(summary = "Delete service", description = "Owner or creator can delete")
+    @Operation(summary = "Delete service", description = "Owner or creator can delete. This is permanent.")
     public ResponseEntity<Void> deleteService(
             Authentication authentication,
             @PathVariable Long businessId,
@@ -192,7 +297,9 @@ public class BusinessServiceController {
             @PathVariable Long businessId,
             @PathVariable Long serviceId
     ) {
-        Service s = serviceRepository.findById(serviceId).orElseThrow(() -> new IllegalArgumentException("Service not found"));
+        // Use findByIdWithStaffAndCreator to eagerly fetch staff and creator to avoid LazyInitializationException
+        Service s = serviceRepository.findByIdWithStaffAndCreator(serviceId)
+                .orElseThrow(() -> new IllegalArgumentException("Service not found"));
         if (s.getBusiness() == null || !s.getBusiness().getId().equals(businessId)) {
             return ResponseEntity.notFound().build();
         }
@@ -201,9 +308,17 @@ public class BusinessServiceController {
 
     // List services offered by business
     @GetMapping
-    @Operation(summary = "List services for business")
-    public ResponseEntity<List<ServiceResponse>> listServices(@PathVariable Long businessId) {
-        List<Service> list = serviceRepository.findByBusinessIdAndActiveTrue(businessId);
+    @Operation(summary = "List services for business", description = "By default returns only active services. Use includeInactive=true to get all services.")
+    public ResponseEntity<List<ServiceResponse>> listServices(
+            @PathVariable Long businessId,
+            @RequestParam(required = false, defaultValue = "false") boolean includeInactive
+    ) {
+        List<Service> list;
+        if (includeInactive) {
+            list = serviceRepository.findByBusinessId(businessId);
+        } else {
+            list = serviceRepository.findByBusinessIdAndActiveTrue(businessId);
+        }
         List<ServiceResponse> dto = list.stream().map(this::toDto).collect(Collectors.toList());
         return ResponseEntity.ok(dto);
     }
@@ -240,6 +355,37 @@ public class BusinessServiceController {
 
         // Insert join row(s) using the existing robust helper
         serviceCreationService.addStaffToService(serviceId, staffIdsToAdd);
+
+        // Reload and return updated service with staff
+        Service reloaded = serviceRepository.findByIdWithStaffAndCreator(serviceId).orElse(s);
+        return ResponseEntity.ok(toDto(reloaded));
+    }
+
+    // Allow a staff member to unlink themselves from a service
+    @DeleteMapping("/{serviceId}/staff/me")
+    @Operation(summary = "Unlink authenticated staff from service", description = "Staff can remove themselves from a service they're linked to")
+    public ResponseEntity<ServiceResponse> unlinkSelfFromService(
+            Authentication authentication,
+            @PathVariable Long businessId,
+            @PathVariable Long serviceId
+    ) {
+        Long actorId = Long.parseLong(authentication.getName());
+
+        // Load service
+        Service s = serviceRepository.findById(serviceId).orElseThrow(() -> new IllegalArgumentException("Service not found"));
+        if (s.getBusiness() == null || !s.getBusiness().getId().equals(businessId)) {
+            throw new IllegalArgumentException("Service does not belong to business");
+        }
+
+        // Permission: allow business owner OR any staff of the business to unlink themselves
+        boolean isOwner = s.getBusiness().getOwner() != null && s.getBusiness().getOwner().getId().equals(actorId);
+        boolean isStaff = staffValidationService.isStaffForBusiness(actorId, businessId);
+        if (!isOwner && !isStaff) {
+            throw new UnauthorizedAccessException("Only owner or staff of this business can modify service staff links");
+        }
+
+        // Remove the staff from the service
+        serviceCreationService.removeStaffFromService(serviceId, actorId);
 
         // Reload and return updated service with staff
         Service reloaded = serviceRepository.findByIdWithStaffAndCreator(serviceId).orElse(s);

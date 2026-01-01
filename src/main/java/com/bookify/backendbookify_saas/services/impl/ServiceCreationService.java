@@ -106,4 +106,18 @@ public class ServiceCreationService {
             }
         }
     }
+
+    /**
+     * Remove staff from a service by deleting the join table row.
+     */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void removeStaffFromService(Long serviceId, Long staffId) {
+        try {
+            int deleted = staffRepository.deleteServiceStaffRow(serviceId, staffId);
+            log.info("removeStaffFromService: deleted {} row(s) for serviceId={}, staffId={}", deleted, serviceId, staffId);
+        } catch (Exception ex) {
+            log.error("removeStaffFromService: failed to delete service_staff row for serviceId={}, staffId={}", serviceId, staffId, ex);
+            throw new RuntimeException("Failed to unlink staff from service", ex);
+        }
+    }
 }

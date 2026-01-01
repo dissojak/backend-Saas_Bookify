@@ -4,7 +4,10 @@ import com.bookify.backendbookify_saas.exceptions.UnauthorizedAccessException;
 import com.bookify.backendbookify_saas.models.dtos.StaffAvailabilityResponse;
 import com.bookify.backendbookify_saas.models.dtos.StaffHoursResponse;
 import com.bookify.backendbookify_saas.models.dtos.StaffHoursUpdateRequest;
+import com.bookify.backendbookify_saas.models.entities.Business;
+import com.bookify.backendbookify_saas.models.entities.Staff;
 import com.bookify.backendbookify_saas.repositories.StaffRepository;
+import com.bookify.backendbookify_saas.repositories.BusinessRepository;
 import com.bookify.backendbookify_saas.services.StaffAvailabilityService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -17,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
 import java.util.List;
+import java.util.Optional;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -30,9 +34,71 @@ public class StaffController {
 
     private final StaffRepository staffRepository;
     private final StaffAvailabilityService staffAvailabilityService;
+    private final BusinessRepository businessRepository;
 
     @PersistenceContext
     private EntityManager entityManager;
+
+    @GetMapping("/me")
+    @Operation(summary = "Get current staff member's info", description = "Returns the authenticated staff member's info including their business details")
+    public ResponseEntity<?> getMyInfo(Authentication authentication) {
+        if (authentication == null) {
+            throw new UnauthorizedAccessException("Authentication required");
+        }
+        
+        Long staffId;
+        try {
+            staffId = Long.parseLong(authentication.getName());
+        } catch (NumberFormatException ex) {
+            throw new UnauthorizedAccessException("Invalid authenticated user id");
+        }
+        
+        log.info("GET /v1/staff/me called for staffId={}", staffId);
+        
+        // First, get the staff member basic info
+        Optional<Staff> maybeStaff = staffRepository.findById(staffId);
+        if (maybeStaff.isEmpty()) {
+            log.warn("Staff not found for id={}", staffId);
+            return ResponseEntity.ok(java.util.Map.of(
+                "staffId", staffId,
+                "hasBusiness", false,
+                "message", "Staff record not found"
+            ));
+        }
+        
+        Staff staff = maybeStaff.get();
+        var responseBuilder = java.util.HashMap.<String, Object>newHashMap(10);
+        responseBuilder.put("staffId", staff.getId());
+        responseBuilder.put("name", staff.getName());
+        responseBuilder.put("email", staff.getEmail());
+        responseBuilder.put("defaultStartTime", staff.getDefaultStartTime());
+        responseBuilder.put("defaultEndTime", staff.getDefaultEndTime());
+        
+        // Use native query to get business_id from staff table directly
+        // This avoids Hibernate's confusion between User.business and Staff.business
+        Optional<Long> maybeBusinessId = staffRepository.findBusinessIdById(staffId);
+        log.info("Staff {} business_id from native query: {}", staffId, maybeBusinessId.orElse(null));
+        
+        if (maybeBusinessId.isPresent()) {
+            Long businessId = maybeBusinessId.get();
+            Optional<Business> maybeBusiness = businessRepository.findById(businessId);
+            if (maybeBusiness.isPresent()) {
+                var b = maybeBusiness.get();
+                responseBuilder.put("hasBusiness", true);
+                responseBuilder.put("businessId", b.getId());
+                responseBuilder.put("businessName", b.getName());
+                log.info("Staff {} is linked to business {} ({})", staffId, b.getId(), b.getName());
+            } else {
+                responseBuilder.put("hasBusiness", false);
+                log.warn("Business {} not found for staff {}", businessId, staffId);
+            }
+        } else {
+            responseBuilder.put("hasBusiness", false);
+            log.info("Staff {} has no business_id in database", staffId);
+        }
+        
+        return ResponseEntity.ok(responseBuilder);
+    }
 
     @PatchMapping(path = "/{staffId}/workTime", consumes = "application/json", produces = "application/json")
     @Operation(summary = "Update staff default hours , work time ", description = "Staff can update their own default start and end times")

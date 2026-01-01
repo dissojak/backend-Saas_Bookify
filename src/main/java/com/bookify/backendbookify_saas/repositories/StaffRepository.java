@@ -48,10 +48,9 @@ public interface StaffRepository extends JpaRepository<Staff, Long> {
            "FROM Staff s WHERE s.business.id = :businessId")
     List<com.bookify.backendbookify_saas.models.dtos.UserProfileResponse> findUserProfileResponsesByBusinessId(@Param("businessId") Long businessId);
 
-    // Fetch staff with business eagerly loaded (to avoid LazyInitializationException)
-    // Using EntityGraph to explicitly fetch the business relationship
-    @EntityGraph(attributePaths = {"business"})
-    @Query("SELECT s FROM Staff s WHERE s.id = :id")
+    // Fetch staff with business eagerly loaded using explicit JOIN FETCH
+    // This ensures we get the Staff.business relationship, not User.business
+    @Query("SELECT s FROM Staff s LEFT JOIN FETCH s.business WHERE s.id = :id")
     Optional<Staff> findByIdWithBusiness(@Param("id") Long id);
 
     // Native query fallback: join users and staff tables to get complete Staff entity data
@@ -82,6 +81,11 @@ public interface StaffRepository extends JpaRepository<Staff, Long> {
     // New: check if service_staff row exists to avoid duplicate insert
     @Query(value = "SELECT COUNT(1) FROM service_staff WHERE service_id = :serviceId AND staff_id = :staffId", nativeQuery = true)
     int countServiceStaffRow(@Param("serviceId") Long serviceId, @Param("staffId") Long staffId);
+
+    // Delete row from service_staff join table (native) - for unlinking staff from service
+    @Modifying(clearAutomatically = true)
+    @Query(value = "DELETE FROM service_staff WHERE service_id = :serviceId AND staff_id = :staffId", nativeQuery = true)
+    int deleteServiceStaffRow(@Param("serviceId") Long serviceId, @Param("staffId") Long staffId);
 
     // Update staff default working times using JPQL to avoid touching collections
     @org.springframework.transaction.annotation.Transactional

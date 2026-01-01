@@ -77,7 +77,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         System.out.println("╚════════════════════════════════════════════════════════════╝");
 
         // Skip JWT authentication for public endpoints
-        String matched = getMatchingPublicPrefix(requestPath);
+        String matched = getMatchingPublicPrefix(requestPath, requestMethod);
         if (matched != null) {
             // Special-case: the staff availabilities pattern should be public ONLY for GET requests
             // and only when both 'from' and 'to' query parameters are present.
@@ -215,15 +215,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     /**
      * Return the matching public prefix for debugging, or null if none
+     * Now also takes HTTP method into account for endpoints that should only be public for GET
      */
-    private String getMatchingPublicPrefix(String requestPath) {
+    private String getMatchingPublicPrefix(String requestPath, String requestMethod) {
+        boolean isGet = "GET".equalsIgnoreCase(requestMethod);
+        
         // First check parameterized endpoints using regexes - these must be matched before literal prefix checks
         String staffServicesRegex = "^/((api/)?)v1/staff/\\d+/services/?$";
         if (requestPath.matches(staffServicesRegex)) return "REGEX:/v1/staff/{id}/services";
 
-        // business services listing
+        // business services listing - ONLY public for GET requests
         String businessServicesRegex = "^/((api/)?)v1/businesses/\\d+/services/?$";
-        if (requestPath.matches(businessServicesRegex)) return "REGEX:/v1/businesses/{id}/services";
+        if (requestPath.matches(businessServicesRegex) && isGet) return "REGEX:/v1/businesses/{id}/services";
 
         // business staff members
         String staffRegex = "^/((api/)?)v1/businesses/\\d+/staffMembers/?$";

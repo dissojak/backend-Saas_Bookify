@@ -9,6 +9,7 @@ import com.bookify.backendbookify_saas.models.enums.RoleEnum;
 import com.bookify.backendbookify_saas.models.enums.UserStatusEnum;
 import com.bookify.backendbookify_saas.repositories.ActivationTokenRepository;
 import com.bookify.backendbookify_saas.repositories.BusinessRepository;
+import com.bookify.backendbookify_saas.repositories.StaffRepository;
 import com.bookify.backendbookify_saas.repositories.UserRepository;
 import com.bookify.backendbookify_saas.security.JwtService;
 import com.bookify.backendbookify_saas.services.AuthService;
@@ -43,6 +44,7 @@ public class AuthServiceImpl implements AuthService {
     private final AuthenticationManager authenticationManager;
     private final MailService mailService;
     private final BusinessRepository businessRepository;
+    private final StaffRepository staffRepository;
 
     /**
      * Inscription d'un nouveau client/utilisateur avec rôle optionnel
@@ -226,6 +228,17 @@ public class AuthServiceImpl implements AuthService {
             builder.hasBusiness(hasBusiness)
                     .businessId(businessId)
                     .businessName(businessName);
+        }
+
+        // 6. If staff — include their business info in response
+        if (user.getRole() == RoleEnum.STAFF) {
+            Optional<Staff> maybeStaff = staffRepository.findByIdWithBusiness(user.getId());
+            if (maybeStaff.isPresent() && maybeStaff.get().getBusiness() != null) {
+                Business b = maybeStaff.get().getBusiness();
+                builder.hasBusiness(true)
+                        .businessId(b.getId())
+                        .businessName(b.getName());
+            }
         }
 
         // message and build

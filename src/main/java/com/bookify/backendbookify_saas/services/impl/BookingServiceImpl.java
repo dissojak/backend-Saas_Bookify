@@ -346,11 +346,13 @@ public class BookingServiceImpl implements BookingService {
             builder.clientId(booking.getClient().getId())
                     .clientName(booking.getClient().getName())
                     .clientEmail(booking.getClient().getEmail())
+                    .clientPhone(booking.getClient().getPhoneNumber())
                     .clientType("USER");
         } else if (booking.getBusinessClient() != null) {
             builder.clientId(booking.getBusinessClient().getId())
                     .clientName(booking.getBusinessClient().getName())
                     .clientEmail(booking.getBusinessClient().getEmail())
+                    .clientPhone(booking.getBusinessClient().getPhone())
                     .clientType("BUSINESS_CLIENT");
         }
 

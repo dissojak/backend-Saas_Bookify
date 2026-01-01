@@ -35,6 +35,7 @@ public class ServiceBookingResponse {
     private Long clientId;
     private String clientName;
     private String clientEmail;
+    private String clientPhone;
     private String clientType; // "USER" or "BUSINESS_CLIENT"
 
     private Long staffId;

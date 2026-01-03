@@ -3,6 +3,7 @@ package com.bookify.backendbookify_saas.services.impl;
 import com.bookify.backendbookify_saas.models.entities.Business;
 import com.bookify.backendbookify_saas.models.entities.BusinessEvaluation;
 import com.bookify.backendbookify_saas.repositories.BusinessEvaluationRepository;
+import com.bookify.backendbookify_saas.repositories.BusinessImageRepository;
 import com.bookify.backendbookify_saas.services.BusinessProfile;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -29,6 +30,7 @@ import java.util.regex.Pattern;
 public class BusinessEvaluationService {
 
     private final BusinessEvaluationRepository evaluationRepository;
+    private final BusinessImageRepository imageRepository;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Value("${gemini.api.key:}")
@@ -74,7 +76,8 @@ public class BusinessEvaluationService {
 
     @Transactional
     public BusinessEvaluation evaluateAndSave(Business business) {
-        BusinessProfile profile = new BusinessProfileAdapter(business);
+        int imageCount = imageRepository.findByBusinessIdOrderByDisplayOrderAsc(business.getId()).size();
+        BusinessProfile profile = new BusinessProfileAdapter(business, imageCount);
         EvaluationResult res = null;
 
         if (aiEnabled) {
@@ -136,7 +139,8 @@ public class BusinessEvaluationService {
             return existing; // nothing to do
         }
 
-        BusinessProfile profile = new BusinessProfileAdapter(business);
+        int imageCount = imageRepository.findByBusinessIdOrderByDisplayOrderAsc(business.getId()).size();
+        BusinessProfile profile = new BusinessProfileAdapter(business, imageCount);
         EvaluationResult res = null;
         if (aiEnabled) {
             try {
@@ -226,46 +230,42 @@ public class BusinessEvaluationService {
     // --- AI one-shot evaluation across all dimensions ---
     private EvaluationResult aiEvaluateAll(BusinessProfile p) throws Exception {
         String prompt = """
-            You are an expert business evaluator. Score and improve the following business data.
-            Return ONLY valid JSON matching this schema:
-            {
-              "name":        { "score": 0-100, "details": string, "suggestion": string|null },
-              "location":    { "score": 0-100, "details": string, "suggestion": string|null },
-              "email":       { "score": 0-100, "details": string, "enhancement": string|null },
-              "description": { "score": 0-100, "details": string, "suggestion": string|null },
-              "category":    { "score": 0-100, "details": string, "suggestion": string|null },
-              "branding":    { "score": 0-100, "details": string, "suggestion": string|null },
-              "ai_overall": { "score": 0-100, "summary": string }
-            }
-
-            Scoring objective:
-            - name: clarity, professionalism, uniqueness; suggestions only if score < 70.
-            - location: clarity and standardized format (e.g., number, street, postal code, city, country); suggestion only if score < 80.
-            - email: format validity and brand alignment; enhancement only if score < 85.
-            - description: grammar, clarity, tone, content; suggestion only if score < 65 and provide a rewritten version.
-            - category: alignment of name/description with selected category; if mismatch, low score and suggest a better category.
-            - branding: consistency across name, email, description tone; if weak (score < 65), suggest fixes for brand consistency.
-
-            Business:
-            - Name: %s
-            - Location: %s
-            - Email: %s
-            - Category: %s
-            - Description: %s
+            You are evaluating a business profile. Return ONLY JSON with scores.
+            
+            EVALUATION RULES - FOLLOW EXACTLY:
+            name score: If name exists and not empty = 95. Else = 50.
+            email score: If valid email with custom domain = 98. If valid email any format = 90. Else = 50.
+            location score: If has street + city + country = 98. If has city + country = 95. Else = 70.
+            description score: If describes services/business = 95. If empty = 60.
+            category score: If matches business = 98. If reasonable = 90. If poor match = 70.
+            branding score: IMPORTANT - consider images! If 3+ images = 98. If 1-2 images = 90. If 0 images but good name/description = 75. If 0 images and weak profile = 60.
+            
+            Business Details:
+            Name: %s
+            Email: %s
+            Location: %s
+            Category: %s
+            Description: %s
+            Images Count: %d
+            
+            Return ONLY valid JSON (no markdown, no explanations, just JSON):
+            {"name":{"score":95,"details":"test"},"email":{"score":90,"details":"test"},"location":{"score":95,"details":"test"},"description":{"score":95,"details":"test"},"category":{"score":95,"details":"test"},"branding":{"score":95,"details":"test"},"ai_overall":{"score":95,"summary":"test"}}
+            
+            Now evaluate the above business and return the correct scores.
             """.formatted(
-                nz(p.getName()), nz(p.getLocation()), nz(p.getEmail()), nz(p.getCategoryName()), nz(p.getDescription())
+                nz(p.getName()), nz(p.getEmail()), nz(p.getLocation()), nz(p.getCategoryName()), nz(p.getDescription()), p.getImageCount()
         );
 
         String body = objectMapper.writeValueAsString(java.util.Map.of(
-                "contents", new Object[]{
-                        java.util.Map.of("parts", new Object[]{
-                                java.util.Map.of("text", prompt)
-                        })
-                },
-                "generationConfig", java.util.Map.of(
-                        "temperature", temperature,
-                        "maxOutputTokens", maxTokens
-                )
+            "contents", new Object[]{
+                java.util.Map.of("parts", new Object[]{
+                    java.util.Map.of("text", prompt)
+                })
+            },
+            "generationConfig", java.util.Map.of(
+                "temperature", 0.0,
+                "maxOutputTokens", maxTokens
+            )
         ));
 
         HttpRequest req = HttpRequest.newBuilder()
@@ -288,6 +288,7 @@ public class BusinessEvaluationService {
         if (content.isBlank()) throw new Exception("Empty Gemini content");
 
         String cleaned = content.trim();
+        // Remove markdown code block markers
         if (cleaned.startsWith("```json")) cleaned = cleaned.substring(7);
         if (cleaned.startsWith("```") ) {
             int s = cleaned.indexOf('{');
@@ -295,6 +296,16 @@ public class BusinessEvaluationService {
             if (s >= 0 && e > s) cleaned = cleaned.substring(s, e + 1);
         }
         if (cleaned.endsWith("```") ) cleaned = cleaned.substring(0, cleaned.length() - 3);
+        
+        // Extract just the JSON object if there's extra text
+        int firstBrace = cleaned.indexOf('{');
+        int lastBrace = cleaned.lastIndexOf('}');
+        if (firstBrace >= 0 && lastBrace > firstBrace) {
+            cleaned = cleaned.substring(firstBrace, lastBrace + 1);
+        }
+        
+        // Sanitize common JSON issues from LLM output
+        cleaned = sanitizeJsonString(cleaned);
 
         JsonNode json = objectMapper.readTree(cleaned.trim());
         EvaluationResult r = new EvaluationResult();
@@ -415,6 +426,77 @@ public class BusinessEvaluationService {
 
     private static boolean isBlank(String s) { return s == null || s.isBlank(); }
     private static String nullIfBlank(String s) { return (s == null || s.isBlank()) ? null : s; }
+
+    /**
+     * Sanitize JSON string from LLM output to fix common issues:
+     * - Unescaped newlines inside string values
+     * - Unescaped quotes inside string values
+     * - Truncated strings (try to close them)
+     */
+    private String sanitizeJsonString(String json) {
+        if (json == null) return null;
+        
+        StringBuilder result = new StringBuilder();
+        boolean inString = false;
+        boolean escaped = false;
+        
+        for (int i = 0; i < json.length(); i++) {
+            char c = json.charAt(i);
+            
+            if (escaped) {
+                result.append(c);
+                escaped = false;
+                continue;
+            }
+            
+            if (c == '\\') {
+                escaped = true;
+                result.append(c);
+                continue;
+            }
+            
+            if (c == '"') {
+                inString = !inString;
+                result.append(c);
+                continue;
+            }
+            
+            if (inString) {
+                // Escape problematic characters inside strings
+                if (c == '\n') {
+                    result.append("\\n");
+                } else if (c == '\r') {
+                    result.append("\\r");
+                } else if (c == '\t') {
+                    result.append("\\t");
+                } else {
+                    result.append(c);
+                }
+            } else {
+                result.append(c);
+            }
+        }
+        
+        // If we ended inside a string, close it
+        if (inString) {
+            result.append('"');
+        }
+        
+        // Try to balance braces/brackets
+        String s = result.toString();
+        int openBraces = 0, openBrackets = 0;
+        for (char c : s.toCharArray()) {
+            if (c == '{') openBraces++;
+            else if (c == '}') openBraces--;
+            else if (c == '[') openBrackets++;
+            else if (c == ']') openBrackets--;
+        }
+        StringBuilder balanced = new StringBuilder(s);
+        while (openBrackets > 0) { balanced.append(']'); openBrackets--; }
+        while (openBraces > 0) { balanced.append('}'); openBraces--; }
+        
+        return balanced.toString();
+    }
 
     // --- existing NOT USED methods ---
     private EvaluationResult evaluateField(BusinessProfile profile, String fieldName) {

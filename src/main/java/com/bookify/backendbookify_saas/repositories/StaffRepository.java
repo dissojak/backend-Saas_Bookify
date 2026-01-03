@@ -25,32 +25,32 @@ public interface StaffRepository extends JpaRepository<Staff, Long> {
     int countByIdAndBusinessIdRaw(@Param("id") Long id, @Param("businessId") Long businessId);
 
     // JPQL alternative: safer and avoids native flush/crosstalk issues with entity mappings
-    @Query("SELECT COUNT(s) FROM Staff s WHERE s.id = :id AND s.business.id = :businessId")
+    @Query("SELECT COUNT(s) FROM Staff s WHERE s.id = :id AND s.employerBusiness.id = :businessId")
     int countByIdAndBusinessId(@Param("id") Long id, @Param("businessId") Long businessId);
 
     // Spring Data derived query returning boolean — simplest and safest to check membership
-    boolean existsByIdAndBusiness_Id(Long id, Long businessId);
+    boolean existsByIdAndEmployerBusiness_Id(Long id, Long businessId);
 
     // Fetch all staff members that belong to a business (used by public listing endpoint)
-    List<Staff> findByBusiness_Id(Long businessId);
+    List<Staff> findByEmployerBusiness_Id(Long businessId);
 
     // Explicit JPQL version to avoid ambiguity with inherited User.business property
-    @Query("SELECT s FROM Staff s JOIN FETCH s.business b WHERE b.id = :businessId")
+    @Query("SELECT s FROM Staff s JOIN FETCH s.employerBusiness b WHERE b.id = :businessId")
     List<Staff> findStaffByBusinessId(@Param("businessId") Long businessId);
 
     // Simple JPQL that selects Staff by business id (no fetch) - use this as the primary query
-    @Query("SELECT s FROM Staff s WHERE s.business.id = :businessId")
+    @Query("SELECT s FROM Staff s WHERE s.employerBusiness.id = :businessId")
     List<Staff> findStaffByBusinessIdSimple(@Param("businessId") Long businessId);
 
     // Return DTOs directly using JPQL constructor expression to avoid manual mapping in controllers
     @Query("SELECT new com.bookify.backendbookify_saas.models.dtos.UserProfileResponse(" +
            "s.id, s.name, s.email, s.phoneNumber, s.role, s.status, s.avatarUrl, null, null, null, s.defaultStartTime, s.defaultEndTime) " +
-           "FROM Staff s WHERE s.business.id = :businessId")
+           "FROM Staff s WHERE s.employerBusiness.id = :businessId")
     List<com.bookify.backendbookify_saas.models.dtos.UserProfileResponse> findUserProfileResponsesByBusinessId(@Param("businessId") Long businessId);
 
     // Fetch staff with business eagerly loaded using explicit JOIN FETCH
-    // This ensures we get the Staff.business relationship, not User.business
-    @Query("SELECT s FROM Staff s LEFT JOIN FETCH s.business WHERE s.id = :id")
+    // This ensures we get the Staff.employerBusiness relationship, not User.business
+    @Query("SELECT s FROM Staff s LEFT JOIN FETCH s.employerBusiness WHERE s.id = :id")
     Optional<Staff> findByIdWithBusiness(@Param("id") Long id);
 
     // Native query fallback: join users and staff tables to get complete Staff entity data
@@ -72,6 +72,13 @@ public interface StaffRepository extends JpaRepository<Staff, Long> {
     @Modifying(clearAutomatically = true)
     @Query(value = "INSERT INTO staff (id, business_id, start_working_at) VALUES (:id, :businessId, CURRENT_DATE)", nativeQuery = true)
     int insertStaffRow(@Param("id") Long id, @Param("businessId") Long businessId);
+
+    // Insert staff row with work hours (native SQL) - times passed as strings in HH:mm:ss format
+    @Modifying(clearAutomatically = true)
+    @Query(value = "INSERT INTO staff (id, business_id, start_working_at, default_start_time, default_end_time) VALUES (:id, :businessId, CURRENT_DATE, CAST(:startTime AS TIME), CAST(:endTime AS TIME))", nativeQuery = true)
+    int insertStaffRowWithWorkHours(@Param("id") Long id, @Param("businessId") Long businessId, 
+                                     @Param("startTime") String startTime, 
+                                     @Param("endTime") String endTime);
 
     // Insert row into service_staff join table (native)
     @Modifying(clearAutomatically = true)
@@ -98,4 +105,8 @@ public interface StaffRepository extends JpaRepository<Staff, Long> {
     @Query(value = "SELECT s.id, s.default_start_time, s.default_end_time, u.name " +
                    "FROM staff s INNER JOIN users u ON s.id = u.id WHERE s.business_id = :businessId", nativeQuery = true)
     List<Object[]> findStaffBasicInfoByBusinessId(@Param("businessId") Long businessId);
+
+    // Get staff name by ID using native query (avoids loading full entity)
+    @Query(value = "SELECT u.name FROM users u WHERE u.id = :staffId", nativeQuery = true)
+    Optional<String> findStaffNameById(@Param("staffId") Long staffId);
 }

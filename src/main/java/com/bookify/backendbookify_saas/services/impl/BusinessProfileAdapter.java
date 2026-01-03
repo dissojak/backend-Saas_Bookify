@@ -6,9 +6,11 @@ import com.bookify.backendbookify_saas.services.BusinessProfile;
 public class BusinessProfileAdapter implements BusinessProfile {
 
     private final Business b;
+    private final int imageCount;
 
-    public BusinessProfileAdapter(Business business) {
+    public BusinessProfileAdapter(Business business, int imageCount) {
         this.b = business;
+        this.imageCount = imageCount;
     }
 
     @Override
@@ -38,11 +40,13 @@ public class BusinessProfileAdapter implements BusinessProfile {
 
     @Override
     public String getDescription() {
-        // L’entité Business n’a pas de champ description; on en dérive une basique.
-        String base = (b.getCategory()!=null? nz(b.getCategory().getName()):"") + " " + nz(b.getLocation());
-        return base.trim();
+        return nz(b.getDescription());
+    }
+
+    @Override
+    public int getImageCount() {
+        return imageCount;
     }
 
     private static String nz(String s) { return s == null ? "" : s; }
 }
-

@@ -6,10 +6,12 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
@@ -22,9 +24,22 @@ public class BusinessImageController {
 
     private final BusinessImageService imageService;
 
+    @PostMapping(value = "/{businessId}/images/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('BUSINESS_OWNER')")
+    @Operation(summary = "Upload business image file", description = "Upload image file to Cloudinary")
+    public ResponseEntity<BusinessImageResponse> uploadImageFile(
+            Authentication authentication,
+            @PathVariable Long businessId,
+            @RequestParam("file") MultipartFile file
+    ) {
+        Long ownerId = Long.parseLong(authentication.getName());
+        BusinessImageResponse response = imageService.uploadImageFile(businessId, file, ownerId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
     @PostMapping("/{businessId}/images")
     @PreAuthorize("hasRole('BUSINESS_OWNER')")
-    @Operation(summary = "Upload business image", description = "Add new image to business")
+    @Operation(summary = "Upload business image by URL", description = "Add new image to business by URL")
     public ResponseEntity<BusinessImageResponse> uploadImage(
             Authentication authentication,
             @PathVariable Long businessId,

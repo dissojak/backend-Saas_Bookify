@@ -123,4 +123,29 @@ public interface ServiceBookingRepository extends JpaRepository<ServiceBooking, 
      */
     @Query("SELECT COUNT(sb) FROM ServiceBooking sb WHERE sb.service.id = :serviceId AND sb.status IN (com.bookify.backendbookify_saas.models.enums.BookingStatusEnum.PENDING, com.bookify.backendbookify_saas.models.enums.BookingStatusEnum.CONFIRMED)")
     long countActiveBookingsByServiceId(@Param("serviceId") Long serviceId);
+
+    /**
+     * Count all bookings for a specific business client (for delete safety check)
+     */
+    @Query("SELECT COUNT(sb) FROM ServiceBooking sb WHERE sb.businessClient.id = :businessClientId")
+    long countByBusinessClientId(@Param("businessClientId") Long businessClientId);
+
+    /**
+     * Count bookings for a specific business client with specific statuses
+     */
+    @Query("SELECT COUNT(sb) FROM ServiceBooking sb WHERE sb.businessClient.id = :businessClientId AND sb.status IN :statuses")
+    long countByBusinessClientIdAndStatusIn(@Param("businessClientId") Long businessClientId, @Param("statuses") java.util.List<com.bookify.backendbookify_saas.models.enums.BookingStatusEnum> statuses);
+    
+       /**
+        * Delete all bookings for a specific business client
+        */
+       @org.springframework.data.jpa.repository.Modifying(clearAutomatically = true)
+       void deleteByBusinessClientId(Long businessClientId);
+    
+       /**
+        * Delete all bookings for a specific business client with specific statuses
+        */
+       @org.springframework.data.jpa.repository.Modifying(clearAutomatically = true)
+       @Query("DELETE FROM ServiceBooking sb WHERE sb.businessClient.id = :businessClientId AND sb.status IN :statuses")
+       void deleteByBusinessClientIdAndStatusIn(@Param("businessClientId") Long businessClientId, @Param("statuses") java.util.List<com.bookify.backendbookify_saas.models.enums.BookingStatusEnum> statuses);
 }

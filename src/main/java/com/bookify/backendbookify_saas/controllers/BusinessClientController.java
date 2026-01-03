@@ -3,6 +3,7 @@ package com.bookify.backendbookify_saas.controllers;
 import com.bookify.backendbookify_saas.models.dtos.BusinessClientCreateRequest;
 import com.bookify.backendbookify_saas.models.dtos.BusinessClientResponse;
 import com.bookify.backendbookify_saas.models.dtos.BusinessClientUpdateRequest;
+import com.bookify.backendbookify_saas.models.dtos.BusinessClientBookingSummary;
 import com.bookify.backendbookify_saas.services.BusinessClientService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -91,6 +92,19 @@ public class BusinessClientController {
         Long userId = getUserIdFromAuthentication(authentication);
         businessClientService.deleteClient(businessId, clientId, userId);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{clientId}/bookings/summary")
+    @PreAuthorize("hasAnyRole('BUSINESS_OWNER', 'STAFF')")
+    @Operation(summary = "Get booking summary for a client", description = "Returns counts and status info about client's bookings")
+    public ResponseEntity<BusinessClientBookingSummary> getClientBookingsSummary(
+            @PathVariable Long businessId,
+            @PathVariable Long clientId,
+            Authentication authentication
+    ) {
+        Long userId = getUserIdFromAuthentication(authentication);
+        BusinessClientBookingSummary summary = businessClientService.getClientBookingsSummary(businessId, clientId, userId);
+        return ResponseEntity.ok(summary);
     }
 
     /**

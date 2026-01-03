@@ -20,11 +20,11 @@ public class StaffValidationService {
 
         // Fast-path: derived exists check (simplest and most reliable in JPA)
         try {
-            boolean exists = staffRepository.existsByIdAndBusiness_Id(staffId, businessId);
-            log.info("staffValidation: existsByIdAndBusiness_Id({}, {}) -> {}", staffId, businessId, exists);
+            boolean exists = staffRepository.existsByIdAndEmployerBusiness_Id(staffId, businessId);
+            log.info("staffValidation: existsByIdAndEmployerBusiness_Id({}, {}) -> {}", staffId, businessId, exists);
             if (exists) return true;
         } catch (Exception e) {
-            log.warn("staffValidation: existsByIdAndBusiness_Id failed for ({}, {}) -> {}", staffId, businessId, e.toString());
+            log.warn("staffValidation: existsByIdAndEmployerBusiness_Id failed for ({}, {}) -> {}", staffId, businessId, e.toString());
         }
 
         // Next: JPQL count query

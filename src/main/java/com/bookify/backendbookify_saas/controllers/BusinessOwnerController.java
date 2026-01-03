@@ -11,6 +11,7 @@ import com.bookify.backendbookify_saas.models.entities.Category;
 import com.bookify.backendbookify_saas.repositories.BusinessEvaluationRepository;
 import com.bookify.backendbookify_saas.repositories.BusinessImageRepository;
 import com.bookify.backendbookify_saas.services.BusinessService;
+import com.bookify.backendbookify_saas.services.impl.BusinessEvaluationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -36,6 +37,7 @@ public class BusinessOwnerController {
     private final BusinessEvaluationRepository evaluationRepository;
     private final BusinessImageRepository imageRepository;
     private final com.bookify.backendbookify_saas.services.WeekendDaySyncService weekendDaySyncService;
+    private final BusinessEvaluationService evaluationService;
 
     @PostMapping
     @PreAuthorize("hasRole('BUSINESS_OWNER')")
@@ -275,6 +277,79 @@ public class BusinessOwnerController {
         }
 
         return ResponseEntity.ok(Map.of("message", "Business status updated", "status", changed.getStatus()));
+    }
+
+    @PostMapping("/{businessId}/reevaluate")
+    @PreAuthorize("hasRole('BUSINESS_OWNER')")
+    @Operation(summary = "Re-evaluate business with AI", description = "Force a new AI evaluation of the business and return updated business data")
+    public ResponseEntity<BusinessResponse> reevaluateBusiness(
+            Authentication authentication,
+            @PathVariable Long businessId
+    ) {
+        // Verify ownership
+        var business = businessService.getBusinessById(businessId, null)
+                .orElseThrow(() -> new IllegalArgumentException("Business not found"));
+        
+        Long currentUserId;
+        try {
+            currentUserId = Long.parseLong(authentication.getName());
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Invalid authenticated user id");
+        }
+
+        if (business.getOwner() == null || business.getOwner().getId() == null ||
+                !business.getOwner().getId().equals(currentUserId)) {
+            throw new IllegalArgumentException("You can only re-evaluate your own business");
+        }
+
+        // Trigger fresh evaluation
+        log.info("Re-evaluating business id={} for owner id={}", businessId, currentUserId);
+        BusinessEvaluation newEval = evaluationService.evaluateAndSave(business);
+        log.info("Re-evaluation completed for business id={}, overall score={}", businessId, newEval.getOverallScore());
+
+        // Build response with new evaluation
+        BusinessEvaluationResponse evalDto = BusinessEvaluationResponse.builder()
+                .id(newEval.getId())
+                .brandingScore(newEval.getBrandingScore())
+                .nameProfessionalismScore(newEval.getNameProfessionalismScore())
+                .emailProfessionalismScore(newEval.getEmailProfessionalismScore())
+                .descriptionProfessionalismScore(newEval.getDescriptionProfessionalismScore())
+                .locationScore(newEval.getLocationScore())
+                .categoryScore(newEval.getCategoryScore())
+                .overallScore(newEval.getOverallScore())
+                .nameDetails(newEval.getNameDetails())
+                .emailDetails(newEval.getEmailDetails())
+                .descriptionDetails(newEval.getDescriptionDetails())
+                .brandingDetails(newEval.getBrandingDetails())
+                .locationDetails(newEval.getLocationDetails())
+                .categoryDetails(newEval.getCategoryDetails())
+                .nameSuggestions(newEval.getNameSuggestions())
+                .emailSuggestions(newEval.getEmailSuggestions())
+                .descriptionSuggestions(newEval.getDescriptionSuggestions())
+                .brandingSuggestions(newEval.getBrandingSuggestions())
+                .source(newEval.getSource())
+                .createdAt(newEval.getCreatedAt())
+                .build();
+
+        String firstImage = getFirstImageUrl(business.getId());
+
+        BusinessResponse response = BusinessResponse.builder()
+                .id(business.getId())
+                .name(business.getName())
+                .location(business.getLocation())
+                .phone(business.getPhone())
+                .email(business.getEmail())
+                .status(business.getStatus())
+                .categoryId(business.getCategory() != null ? business.getCategory().getId() : null)
+                .categoryName(business.getCategory() != null ? business.getCategory().getName() : null)
+                .ownerId(business.getOwner() != null ? business.getOwner().getId() : null)
+                .description(business.getDescription())
+                .evaluation(evalDto)
+                .firstImageUrl(firstImage)
+                .weekendDay(business.getWeekendDay())
+                .build();
+
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{businessId}")

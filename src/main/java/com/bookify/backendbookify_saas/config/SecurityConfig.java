@@ -55,6 +55,9 @@ public class SecurityConfig {
                                 "/api/v1/auth/reset-password",
                                 "/api/v1/businesses/{businessId}/staffMembers",
                                 "/api/v1/staff/{staffId}/services",
+                                // Health check endpoints (public)
+                                "/v1/health/**",
+                                "/api/v1/health/**",
                                 // Swagger/OpenAPI - include both default and custom paths
                                 "/v3/api-docs/**",
                                 "/api/v3/api-docs/**",

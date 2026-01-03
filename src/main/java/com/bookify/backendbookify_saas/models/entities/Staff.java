@@ -29,10 +29,30 @@ public class Staff extends User {
     @Column(name = "start_working_at")
     private LocalDate startWorkingAt;
 
+    /**
+     * The business this staff member works for.
+     * Named 'employerBusiness' to avoid conflict with User.business (which is for BUSINESS_OWNER role).
+     */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "business_id", nullable = false,
             foreignKey = @ForeignKey(name = "fk_staff_business"))
-    private Business business;
+    private Business employerBusiness;
+
+    /**
+     * Get the business this staff works for.
+     * This overrides the parent User.getBusiness() to return the employer business.
+     */
+    @Override
+    public Business getBusiness() {
+        return employerBusiness;
+    }
+
+    /**
+     * Set the business this staff works for.
+     */
+    public void setEmployerBusiness(Business business) {
+        this.employerBusiness = business;
+    }
 
     @ManyToMany(mappedBy = "staff", fetch = FetchType.LAZY)
     private List<Service> services;

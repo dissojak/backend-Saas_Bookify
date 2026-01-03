@@ -55,6 +55,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // Make business search public
             "/v1/businesses/search",
             "/api/v1/businesses/search",
+            // Health check endpoints (public)
+            "/v1/health/",
+            "/api/v1/health/",
             "/v3/api-docs/",
             "/swagger-ui/",
             "/swagger-ui.html",

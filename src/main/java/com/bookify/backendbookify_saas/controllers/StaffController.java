@@ -9,6 +9,7 @@ import com.bookify.backendbookify_saas.models.entities.Staff;
 import com.bookify.backendbookify_saas.repositories.StaffRepository;
 import com.bookify.backendbookify_saas.repositories.BusinessRepository;
 import com.bookify.backendbookify_saas.services.StaffAvailabilityService;
+import com.bookify.backendbookify_saas.services.StaffAvailabilityGeneratorService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +35,7 @@ public class StaffController {
 
     private final StaffRepository staffRepository;
     private final StaffAvailabilityService staffAvailabilityService;
+    private final StaffAvailabilityGeneratorService availabilityGeneratorService;
     private final BusinessRepository businessRepository;
 
     @PersistenceContext
@@ -179,6 +181,19 @@ public class StaffController {
 
         // Read back and return the updated times via repository (safe now)
         var saved = staffRepository.findById(staffId).orElseThrow(() -> new IllegalArgumentException("Staff not found after update"));
+
+        // If BOTH start and end times are now set, auto-generate availabilities
+        if (saved.getDefaultStartTime() != null && saved.getDefaultEndTime() != null) {
+            try {
+                int generated = availabilityGeneratorService.generateForSingleStaff(
+                        staffId, saved.getDefaultStartTime(), saved.getDefaultEndTime());
+                log.info("Auto-generated {} availabilities for staff {} after work hours update", generated, staffId);
+            } catch (Exception ex) {
+                log.error("Failed to auto-generate availabilities for staff {}: {}", staffId, ex.getMessage());
+                // Don't fail the request, availability generation is best-effort
+            }
+        }
+
         return ResponseEntity.ok(StaffHoursResponse.builder()
                 .staffId(saved.getId())
                 .defaultStartTime(saved.getDefaultStartTime())

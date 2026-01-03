@@ -34,6 +34,7 @@ public class BookingServiceImpl implements BookingService {
     private final BookingRepository bookingRepository;
     private final StaffRepository staffRepository;
     private final StaffAvailabilityRepository staffAvailabilityRepository;
+    private final BusinessRepository businessRepository;
 
     @Override
     @Transactional
@@ -71,16 +72,26 @@ public class BookingServiceImpl implements BookingService {
         Staff staff = staffRepository.findByIdWithBusiness(request.getStaffId())
                 .orElseThrow(() -> new RuntimeException("Staff not found"));
         
+        // Workaround: If business is null due to entity mapping issues, fetch it using native query
+        Business staffBusiness = staff.getBusiness();
+        if (staffBusiness == null) {
+            Optional<Long> businessIdOpt = staffRepository.findBusinessIdById(staff.getId());
+            if (businessIdOpt.isPresent()) {
+                staffBusiness = businessRepository.findById(businessIdOpt.get()).orElse(null);
+                log.info("Fetched business via native query: {}", staffBusiness != null ? staffBusiness.getId() : "NULL");
+            }
+        }
+        
         log.info("Found staff: ID={}, Name={}, Business={}", 
                 staff.getId(), 
                 staff.getName(), 
-                staff.getBusiness() != null ? staff.getBusiness().getId() : "NULL");
+                staffBusiness != null ? staffBusiness.getId() : "NULL");
 
         // Validate staff belongs to the same business as the service
-        if (staff.getBusiness() == null) {
+        if (staffBusiness == null) {
             throw new RuntimeException("Staff does not have a business associated. Staff ID: " + staff.getId());
         }
-        if (!staff.getBusiness().getId().equals(service.getBusiness().getId())) {
+        if (!staffBusiness.getId().equals(service.getBusiness().getId())) {
             throw new RuntimeException("Staff does not belong to the same business as the service");
         }
 

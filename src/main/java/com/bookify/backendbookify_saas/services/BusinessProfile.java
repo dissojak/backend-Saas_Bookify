@@ -7,5 +7,6 @@ public interface BusinessProfile {
     String getPhone();
     String getEmail();
     String getDescription(); // peut être vide si non disponible sur l'entité
+    int getImageCount();     // number of business images
 }
 

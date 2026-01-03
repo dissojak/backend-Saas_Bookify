@@ -26,6 +26,9 @@ import org.springframework.web.bind.annotation.*;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Optional;
 
@@ -48,7 +51,7 @@ public class BusinessStaffController {
     // Owner adds a staff by email; upgrades user -> staff and links to business
     @PostMapping
     @PreAuthorize("hasRole('BUSINESS_OWNER')")
-    @Operation(summary = "Add staff by email (owner only)")
+    @Operation(summary = "Add staff by email with optional work hours (owner only)")
     public ResponseEntity<?> addStaffByEmail(
             Authentication authentication,
             @PathVariable Long businessId,
@@ -56,6 +59,32 @@ public class BusinessStaffController {
     ) {
         String email = body.get("email");
         if (email == null || email.isBlank()) throw new IllegalArgumentException("email is required");
+
+        // Parse optional work hours
+        String startTimeStr = body.get("startTime");
+        String endTimeStr = body.get("endTime");
+        
+        // Validate: if one time is provided, both must be provided
+        if ((startTimeStr != null && !startTimeStr.isBlank()) != (endTimeStr != null && !endTimeStr.isBlank())) {
+            throw new IllegalArgumentException("Both startTime and endTime must be provided together, or neither");
+        }
+        
+        LocalTime startTime = null;
+        LocalTime endTime = null;
+        
+        if (startTimeStr != null && !startTimeStr.isBlank()) {
+            try {
+                DateTimeFormatter fmt = DateTimeFormatter.ISO_LOCAL_TIME;
+                startTime = LocalTime.parse(startTimeStr, fmt);
+                endTime = LocalTime.parse(endTimeStr, fmt);
+                
+                if (!startTime.isBefore(endTime)) {
+                    throw new IllegalArgumentException("startTime must be before endTime");
+                }
+            } catch (DateTimeParseException ex) {
+                throw new IllegalArgumentException("Time must be in HH:mm or HH:mm:ss format");
+            }
+        }
 
         Long actorId = Long.parseLong(authentication.getName());
 
@@ -81,7 +110,13 @@ public class BusinessStaffController {
 
         // Update role and create staff row in a separate transaction to avoid Hibernate flush/cascade issues
         try {
-            staffService.createStaffAndSetRole(userId, businessId);
+            if (startTime != null && endTime != null) {
+                // Create with work hours and auto-generate availabilities
+                staffService.createStaffAndSetRoleWithWorkHours(userId, businessId, startTime, endTime);
+            } else {
+                // Create without work hours (staff will need to set them later)
+                staffService.createStaffAndSetRole(userId, businessId);
+            }
         } catch (Exception ex) {
             // Defensive: if any exception happened during the isolated creation, check DB state —
             // if the staff row exists, return 409 instead of propagating a 500.
@@ -99,7 +134,8 @@ public class BusinessStaffController {
 
         return ResponseEntity.status(HttpStatus.CREATED).body(java.util.Map.of(
                 "message", "User upgraded to staff and linked to business",
-                "staffId", userId
+                "staffId", userId,
+                "workHoursSet", startTime != null
         ));
     }
 
@@ -149,6 +185,26 @@ public class BusinessStaffController {
             } catch (Exception ex) {
                 log.warn("Failed to delete join row for serviceId={} staffId={} via native query -> {}", svc.getId(), staffId, ex.toString());
             }
+        }
+
+        // Delete staff availabilities first (they reference staff)
+        try {
+            int deletedAvailabilities = em.createNativeQuery("DELETE FROM staff_availabilities WHERE staff_id = :staffId")
+                    .setParameter("staffId", staffId)
+                    .executeUpdate();
+            log.info("Deleted {} staff_availabilities records for staffId={}", deletedAvailabilities, staffId);
+        } catch (Exception ex) {
+            log.warn("Failed to delete staff_availabilities for staffId={}: {}", staffId, ex.getMessage());
+        }
+
+        // Set staff_id to NULL in bookings (keep historical booking records)
+        try {
+            int updatedBookings = em.createNativeQuery("UPDATE service_bookings SET staff_id = NULL WHERE staff_id = :staffId")
+                    .setParameter("staffId", staffId)
+                    .executeUpdate();
+            log.info("Unlinked {} bookings from staffId={}", updatedBookings, staffId);
+        } catch (Exception ex) {
+            log.warn("Failed to unlink bookings from staffId={}: {}", staffId, ex.getMessage());
         }
 
         // delete staff row

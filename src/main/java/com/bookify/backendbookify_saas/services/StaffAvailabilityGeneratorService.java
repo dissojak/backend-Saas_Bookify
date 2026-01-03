@@ -16,6 +16,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Service that generates staff availabilities for a date range.
@@ -110,6 +111,48 @@ public class StaffAvailabilityGeneratorService {
         }
 
         return generatedCount;
+    }
+
+    /**
+     * Generate availabilities for a single staff member.
+     * Called when staff sets their working hours for the first time.
+     *
+     * @param staffId The staff ID
+     * @param startTime The default start time
+     * @param endTime The default end time
+     * @return Number of availabilities created
+     */
+    @Transactional
+    public int generateForSingleStaff(Long staffId, java.time.LocalTime startTime, java.time.LocalTime endTime) {
+        log.info("Generating availabilities for single staff id={} with times {}-{}", staffId, startTime, endTime);
+
+        if (startTime == null || endTime == null) {
+            log.warn("Cannot generate availabilities for staff id={} without both start and end times", staffId);
+            return 0;
+        }
+
+        // Get staff's business
+        Optional<Long> maybeBusinessId = staffRepository.findBusinessIdById(staffId);
+        if (maybeBusinessId.isEmpty()) {
+            log.warn("Staff id={} has no business assigned", staffId);
+            return 0;
+        }
+
+        Long businessId = maybeBusinessId.get();
+        Business business = businessRepository.findById(businessId)
+                .orElseThrow(() -> new IllegalArgumentException("Business not found: " + businessId));
+
+        // Get staff name using native query to avoid Hibernate session issues
+        // (staff was just inserted via native SQL, not in Hibernate cache)
+        String staffName = staffRepository.findStaffNameById(staffId).orElse("Unknown");
+
+        LocalDate today = LocalDate.now();
+        LocalDate endDate = today.plusMonths(1);
+
+        int count = generateForStaffLightweight(business, staffId, staffName, startTime, endTime, today, endDate);
+        log.info("Generated {} availabilities for staff id={} name={}", count, staffId, staffName);
+
+        return count;
     }
 
     /**

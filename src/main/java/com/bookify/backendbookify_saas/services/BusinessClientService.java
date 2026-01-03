@@ -3,6 +3,7 @@ package com.bookify.backendbookify_saas.services;
 import com.bookify.backendbookify_saas.models.dtos.BusinessClientCreateRequest;
 import com.bookify.backendbookify_saas.models.dtos.BusinessClientResponse;
 import com.bookify.backendbookify_saas.models.dtos.BusinessClientUpdateRequest;
+import com.bookify.backendbookify_saas.models.dtos.BusinessClientBookingSummary;
 
 import java.util.List;
 
@@ -35,5 +36,10 @@ public interface BusinessClientService {
      * Delete a client
      */
     void deleteClient(Long businessId, Long clientId, Long authenticatedUserId);
+
+    /**
+     * Get booking summary information for a client (for UI deletion checks)
+     */
+    BusinessClientBookingSummary getClientBookingsSummary(Long businessId, Long clientId, Long authenticatedUserId);
 }
 

@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Moderation Queue - Admin</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #0f3460 0%, #16213e 100%);
+            padding: 24px 32px;
+            border-radius: 16px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .back-btn {
+            padding: 10px 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .content {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 28px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .error {
+            background: rgba(233, 69, 96, 0.2);
+            border: 1px solid rgba(233, 69, 96, 0.4);
+            color: #ff6b6b;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .section {
+            margin-bottom: 32px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #4ecca3;
+        }
+
+        .rating-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .rating-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .rating-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .rating-score {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stars {
+            color: #ffc107;
+            font-size: 18px;
+        }
+
+        .score-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #ff6b6b;
+        }
+
+        .rating-date {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .rating-comment {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 12px;
+            border-radius: 8px;
+            margin: 12px 0;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .rating-meta {
+            display: flex;
+            gap: 20px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .no-items {
+            text-align: center;
+            padding: 60px 20px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .no-items-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .stats {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .stat-card {
+            flex: 1;
+            min-width: 180px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #ff6b6b;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+<script>
+// ============ INLINE TOAST NOTIFICATION SYSTEM ============
+(function() {
+    const style = document.createElement('style');
+    style.textContent = `
+        #toastContainer {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 400px;
+        }
+        @keyframes toastSlideIn {
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes toastSlideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(400px); opacity: 0; }
+        }
+    `;
+    document.head.appendChild(style);
+
+    function getContainer() {
+        let container = document.getElementById('toastContainer');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'toastContainer';
+            document.body.appendChild(container);
+        }
+        return container;
+    }
+
+    window.showToast = function(message, type, duration) {
+        type = type || 'info';
+        duration = duration !== undefined ? duration : 4000;
+
+        const container = getContainer();
+        const toast = document.createElement('div');
+
+        const colors = {
+            success: { bg: '#10b981', border: '#059669', icon: '✓' },
+            error: { bg: '#ef4444', border: '#dc2626', icon: '✕' },
+            warning: { bg: '#f59e0b', border: '#d97706', icon: '⚠' },
+            info: { bg: '#3b82f6', border: '#2563eb', icon: 'ℹ' }
+        };
+        const c = colors[type] || colors.info;
+
+        toast.style.cssText = `
+            background: ${c.bg};
+            border: 1px solid ${c.border};
+            color: #fff;
+            padding: 16px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: toastSlideIn 0.3s ease;
+            cursor: pointer;
+        `;
+
+        toast.innerHTML = '<span style="font-size:18px;font-weight:bold;">' + c.icon + '</span><span>' + message + '</span>';
+        container.appendChild(toast);
+
+        const remove = function() {
+            toast.style.animation = 'toastSlideOut 0.3s ease';
+            setTimeout(function() { toast.remove(); }, 300);
+        };
+
+        toast.addEventListener('click', remove);
+        if (duration > 0) setTimeout(remove, duration);
+
+        return toast;
+    };
+
+    console.log('Toast system initialized');
+})();
+
+// ============ AUTHENTICATION CHECK ============
+const accessToken = localStorage.getItem('accessToken');
+if (!accessToken) {
+    console.warn('No access token found, redirecting to login');
+    window.location.href = 'LoginAdmin.html';
+}
+</script>
+
+<div class="container">
+    <div class="header">
+        <div class="header-title">⚠️ Moderation Queue</div>
+        <a href="Dashboard.html" class="back-btn">← Back to Dashboard</a>
+    </div>
+
+    <div id="errorContainer"></div>
+
+    <div class="content">
+        <div id="loadingContainer" class="loading">Loading flagged reviews...</div>
+
+        <div id="moderationContainer" style="display: none;">
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalFlagged">0</div>
+                    <div class="stat-label">Total Flagged</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="serviceRatingsCount">0</div>
+                    <div class="stat-label">Service Ratings</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="businessRatingsCount">0</div>
+                    <div class="stat-label">Business Ratings</div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">🔧 Flagged Service Ratings</div>
+                <div id="serviceRatingsContainer"></div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">🏢 Flagged Business Ratings</div>
+                <div id="businessRatingsContainer"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const pathname = window.location.pathname || '/';
+    const segments = pathname.split('/').filter(s => s.length > 0);
+    let basePath = '';
+    if (segments.length > 0) {
+        const first = segments[0];
+        if (!first.includes('.') && !first.toLowerCase().endsWith('.html')) {
+            basePath = '/' + first;
+        }
+    }
+
+    function renderStars(score) {
+        const fullStars = '★'.repeat(score);
+        const emptyStars = '☆'.repeat(5 - score);
+        return fullStars + emptyStars;
+    }
+
+    function formatDate(dateStr) {
+        if (!dateStr) return 'N/A';
+        const date = new Date(dateStr);
+        return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+    }
+
+    async function loadFlaggedRatings() {
+        try {
+            const url = basePath + "/v1/admin/ratings/flagged";
+            const response = await fetch(url);
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            const serviceRatings = data.serviceRatings || [];
+            const businessRatings = data.businessRatings || [];
+
+            // Update stats
+            document.getElementById('totalFlagged').textContent = data.totalCount || 0;
+            document.getElementById('serviceRatingsCount').textContent = serviceRatings.length;
+            document.getElementById('businessRatingsCount').textContent = businessRatings.length;
+
+            // Render service ratings
+            const serviceContainer = document.getElementById('serviceRatingsContainer');
+            if (serviceRatings.length === 0) {
+                serviceContainer.innerHTML = `
+                    <div class="no-items">
+                        <div class="no-items-icon">✅</div>
+                        <div>No flagged service ratings</div>
+                    </div>
+                `;
+            } else {
+                serviceContainer.innerHTML = serviceRatings.map(rating => `
+                    <div class="rating-card">
+                        <div class="rating-header">
+                            <div class="rating-score">
+                                <span class="stars">${renderStars(rating.score)}</span>
+                                <span class="score-value">${rating.score}/5</span>
+                            </div>
+                            <div class="rating-date">${formatDate(rating.createdAt)}</div>
+                        </div>
+                        ${rating.comment ? `<div class="rating-comment">"${rating.comment}"</div>` : '<div class="rating-comment" style="color: rgba(255,255,255,0.5); font-style: italic;">No comment provided</div>'}
+                        <div class="rating-meta">
+                            <div class="meta-item">👤 <strong>Client:</strong> ${rating.client?.name || 'Unknown'}</div>
+                            <div class="meta-item">✉️ <strong>Email:</strong> ${rating.client?.email || 'N/A'}</div>
+                            <div class="meta-item">🔧 <strong>Service:</strong> ${rating.service?.name || 'N/A'}</div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            // Render business ratings
+            const businessContainer = document.getElementById('businessRatingsContainer');
+            if (businessRatings.length === 0) {
+                businessContainer.innerHTML = `
+                    <div class="no-items">
+                        <div class="no-items-icon">✅</div>
+                        <div>No flagged business ratings</div>
+                    </div>
+                `;
+            } else {
+                businessContainer.innerHTML = businessRatings.map(rating => `
+                    <div class="rating-card">
+                        <div class="rating-header">
+                            <div class="rating-score">
+                                <span class="stars">${renderStars(rating.score)}</span>
+                                <span class="score-value">${rating.score}/5</span>
+                            </div>
+                            <div class="rating-date">${formatDate(rating.createdAt)}</div>
+                        </div>
+                        ${rating.comment ? `<div class="rating-comment">"${rating.comment}"</div>` : '<div class="rating-comment" style="color: rgba(255,255,255,0.5); font-style: italic;">No comment provided</div>'}
+                        <div class="rating-meta">
+                            <div class="meta-item">🏢 <strong>Business:</strong> ${rating.business?.name || 'Unknown'}</div>
+                            <div class="meta-item">👤 <strong>Client:</strong> ${rating.client?.name || 'Unknown'}</div>
+                            <div class="meta-item">✉️ <strong>Email:</strong> ${rating.client?.email || 'N/A'}</div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            document.getElementById('loadingContainer').style.display = 'none';
+            document.getElementById('moderationContainer').style.display = 'block';
+        } catch (err) {
+            console.error('Failed to load flagged ratings:', err);
+            document.getElementById('loadingContainer').style.display = 'none';
+            document.getElementById('errorContainer').innerHTML = `
+                <div class="error">
+                    ⚠️ Failed to load moderation queue: ${err.message}
+                </div>
+            `;
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadFlaggedRatings);
+</script>
+
+</body>
+</html>
+

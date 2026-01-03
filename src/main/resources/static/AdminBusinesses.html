@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>All Businesses - Admin</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #0f3460 0%, #16213e 100%);
+            padding: 24px 32px;
+            border-radius: 16px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .back-btn {
+            padding: 10px 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .content {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 28px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .error {
+            background: rgba(233, 69, 96, 0.2);
+            border: 1px solid rgba(233, 69, 96, 0.4);
+            color: #ff6b6b;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .filters {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 10px 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn:hover,
+        .filter-btn.active {
+            background: #4ecca3;
+            border-color: #4ecca3;
+            color: #000;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 14px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        td {
+            padding: 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-active { background: rgba(78, 204, 163, 0.3); color: #4ecca3; }
+        .status-pending { background: rgba(255, 193, 7, 0.3); color: #ffc107; }
+        .status-draft { background: rgba(158, 158, 158, 0.3); color: #9e9e9e; }
+        .status-suspended { background: rgba(233, 69, 96, 0.3); color: #e94560; }
+        .status-inactive { background: rgba(117, 117, 117, 0.3); color: #757575; }
+
+        .search-container {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            font-size: 14px;
+        }
+
+        .search-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .search-btn {
+            padding: 12px 24px;
+            border: 1px solid #4ecca3;
+            border-radius: 10px;
+            background: #4ecca3;
+            color: #000;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .search-btn:hover {
+            background: #3bb896;
+            border-color: #3bb896;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0 4px;
+        }
+
+        .action-btn.edit {
+            background: #4ecca3;
+            color: #000;
+        }
+
+        .action-btn.edit:hover {
+            background: #3bb896;
+        }
+
+        .action-btn.ban {
+            background: #e94560;
+            color: #fff;
+        }
+
+        .action-btn.ban:hover {
+            background: #d62a4a;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+
+        .modal.active {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            padding: 32px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #4ecca3;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            font-size: 14px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .modal-btn.confirm {
+            background: #4ecca3;
+            color: #000;
+        }
+
+        .modal-btn.confirm:hover {
+            background: #3bb896;
+        }
+
+        .modal-btn.cancel {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .modal-btn.cancel:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .business-info {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .info-label {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .info-value {
+            color: #fff;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+<script>
+// ============ INLINE TOAST NOTIFICATION SYSTEM ============
+(function() {
+    const style = document.createElement('style');
+    style.textContent = `
+        #toastContainer {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 400px;
+        }
+        @keyframes toastSlideIn {
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes toastSlideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(400px); opacity: 0; }
+        }
+    `;
+    document.head.appendChild(style);
+
+    function getContainer() {
+        let container = document.getElementById('toastContainer');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'toastContainer';
+            document.body.appendChild(container);
+        }
+        return container;
+    }
+
+    window.showToast = function(message, type, duration) {
+        type = type || 'info';
+        duration = duration !== undefined ? duration : 4000;
+
+        const container = getContainer();
+        const toast = document.createElement('div');
+
+        const colors = {
+            success: { bg: '#10b981', border: '#059669', icon: '✓' },
+            error: { bg: '#ef4444', border: '#dc2626', icon: '✕' },
+            warning: { bg: '#f59e0b', border: '#d97706', icon: '⚠' },
+            info: { bg: '#3b82f6', border: '#2563eb', icon: 'ℹ' }
+        };
+        const c = colors[type] || colors.info;
+
+        toast.style.cssText = `
+            background: ${c.bg};
+            border: 1px solid ${c.border};
+            color: #fff;
+            padding: 16px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: toastSlideIn 0.3s ease;
+            cursor: pointer;
+        `;
+
+        toast.innerHTML = '<span style="font-size:18px;font-weight:bold;">' + c.icon + '</span><span>' + message + '</span>';
+        container.appendChild(toast);
+
+        const remove = function() {
+            toast.style.animation = 'toastSlideOut 0.3s ease';
+            setTimeout(function() { toast.remove(); }, 300);
+        };
+
+        toast.addEventListener('click', remove);
+        if (duration > 0) setTimeout(remove, duration);
+
+        return toast;
+    };
+
+    console.log('Toast system initialized');
+})();
+
+// ============ AUTHENTICATION CHECK ============
+const accessToken = localStorage.getItem('accessToken');
+if (!accessToken) {
+    console.warn('No access token found, redirecting to login');
+    window.location.href = 'LoginAdmin.html';
+}
+</script>
+
+<div class="container">
+    <div class="header">
+        <div class="header-title">🏢 All Businesses</div>
+        <a href="Dashboard.html" class="back-btn">← Back to Dashboard</a>
+    </div>
+
+    <div id="errorContainer"></div>
+
+    <div class="content">
+        <div class="search-container">
+            <input type="text" id="searchInput" class="search-input" placeholder="Search by business name or phone number..." />
+            <button class="search-btn" id="searchBtn">🔍 Search</button>
+        </div>
+
+        <div class="filters">
+            <button class="filter-btn active" data-status="all">All</button>
+            <button class="filter-btn" data-status="ACTIVE">Active</button>
+            <button class="filter-btn" data-status="PENDING">Pending</button>
+            <button class="filter-btn" data-status="DRAFT">Draft</button>
+            <button class="filter-btn" data-status="SUSPENDED">Suspended</button>
+            <button class="filter-btn" data-status="INACTIVE">Inactive</button>
+        </div>
+
+        <div id="loadingContainer" class="loading">Loading businesses...</div>
+
+        <div id="businessesContainer" style="display: none;">
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Location</th>
+                            <th>Category</th>
+                            <th>Owner ID</th>
+                            <th>Status</th>
+                            <th>Phone</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="businessesTable">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Status Change Modal -->
+<div id="statusModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-title">Change Business Status</div>
+        <div class="business-info" id="businessInfo"></div>
+        <div class="form-group">
+            <label class="form-label">New Status</label>
+            <select id="statusSelect" class="form-select">
+                <option value="">Select status...</option>
+                <option value="ACTIVE">Active</option>
+                <option value="PENDING">Pending</option>
+                <option value="DRAFT">Draft</option>
+                <option value="SUSPENDED">Suspended</option>
+                <option value="INACTIVE">Inactive</option>
+            </select>
+        </div>
+        <div class="modal-buttons">
+            <button class="modal-btn confirm" id="confirmStatusBtn">Change Status</button>
+            <button class="modal-btn cancel" id="cancelStatusBtn">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- Ban Modal -->
+<div id="banModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-title">⚠️ Ban Business</div>
+        <div class="business-info" id="banBusinessInfo"></div>
+        <p style="color: #ff6b6b; margin-bottom: 16px;">Are you sure you want to ban this business? This action will suspend the business and prevent it from accepting new bookings.</p>
+        <div class="modal-buttons">
+            <button class="modal-btn confirm" id="confirmBanBtn" style="background: #e94560;">Ban Business</button>
+            <button class="modal-btn cancel" id="cancelBanBtn">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Calculate basePath first
+    const pathname = window.location.pathname || '/';
+    const segments = pathname.split('/').filter(s => s.length > 0);
+    let basePath = '';
+    if (segments.length > 0) {
+        const first = segments[0];
+        if (!first.includes('.') && !first.toLowerCase().endsWith('.html')) {
+            basePath = '/' + first;
+        }
+    }
+
+    console.log('AdminBusinesses.html loaded');
+    console.log('Calculated basePath:', basePath);
+
+    let allBusinesses = [];
+    let currentFilter = 'all';
+    let searchQuery = '';
+    let selectedBusiness = null;
+
+    async function loadBusinesses() {
+        try {
+            // Try admin endpoint first, fallback to public endpoint
+            let url = basePath + "/v1/admin/businesses/all";
+            console.log('Attempting to fetch from:', url);
+
+            let response = await fetch(url);
+
+            // If admin endpoint fails, try public endpoint (only returns ACTIVE)
+            if (!response.ok) {
+                console.warn('Admin endpoint failed with status:', response.status, 'Trying public endpoint');
+                url = basePath + "/v1/businesses";
+                response = await fetch(url);
+            }
+
+            console.log('Response status:', response.status);
+            console.log('Response ok:', response.ok);
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            allBusinesses = await response.json();
+            console.log('Successfully loaded', allBusinesses.length, 'businesses');
+            displayBusinesses();
+
+            document.getElementById('loadingContainer').style.display = 'none';
+            document.getElementById('businessesContainer').style.display = 'block';
+        } catch (err) {
+            console.error('Failed to load businesses:', err);
+            document.getElementById('loadingContainer').style.display = 'none';
+            document.getElementById('errorContainer').innerHTML = `
+                <div class="error">
+                    ⚠️ Failed to load businesses: ${err.message}
+                    <br><small>Check browser console for details. BasePath: ${basePath}</small>
+                </div>
+            `;
+        }
+    }
+
+    function displayBusinesses() {
+        const tbody = document.getElementById('businessesTable');
+        let filtered = allBusinesses;
+
+        // Apply status filter
+        if (currentFilter !== 'all') {
+            filtered = filtered.filter(b => b.status === currentFilter);
+        }
+
+        // Apply search filter
+        if (searchQuery.trim() !== '') {
+            const query = searchQuery.toLowerCase();
+            filtered = filtered.filter(b =>
+                (b.name && b.name.toLowerCase().includes(query)) ||
+                (b.phone && b.phone.toLowerCase().includes(query))
+            );
+        }
+
+        if (filtered.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 40px;">No businesses found</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = filtered.map(business => `
+            <tr>
+                <td>${business.id}</td>
+                <td><strong>${business.name}</strong></td>
+                <td>${business.location || 'N/A'}</td>
+                <td>${business.categoryName || 'N/A'}</td>
+                <td>${business.ownerId || 'N/A'}</td>
+                <td><span class="status-badge status-${business.status.toLowerCase()}">${business.status}</span></td>
+                <td>${business.phone || 'N/A'}</td>
+                <td>
+                    <button class="action-btn edit" onclick="openStatusModal(${business.id})">Change Status</button>
+                    <button class="action-btn ban" onclick="openBanModal(${business.id})">Ban</button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function openStatusModal(businessId) {
+        selectedBusiness = allBusinesses.find(b => b.id === businessId);
+        if (!selectedBusiness) return;
+
+        document.getElementById('businessInfo').innerHTML = `
+            <div class="info-row">
+                <span class="info-label">Business Name:</span>
+                <span class="info-value">${selectedBusiness.name}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Current Status:</span>
+                <span class="info-value">${selectedBusiness.status}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Owner ID:</span>
+                <span class="info-value">${selectedBusiness.ownerId || 'N/A'}</span>
+            </div>
+        `;
+
+        document.getElementById('statusSelect').value = '';
+        document.getElementById('statusModal').classList.add('active');
+    }
+
+    function closeStatusModal() {
+        document.getElementById('statusModal').classList.remove('active');
+        selectedBusiness = null;
+    }
+
+    function openBanModal(businessId) {
+        selectedBusiness = allBusinesses.find(b => b.id === businessId);
+        if (!selectedBusiness) return;
+
+        document.getElementById('banBusinessInfo').innerHTML = `
+            <div class="info-row">
+                <span class="info-label">Business Name:</span>
+                <span class="info-value">${selectedBusiness.name}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Current Status:</span>
+                <span class="info-value">${selectedBusiness.status}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Phone:</span>
+                <span class="info-value">${selectedBusiness.phone || 'N/A'}</span>
+            </div>
+        `;
+
+        document.getElementById('banModal').classList.add('active');
+    }
+
+    function closeBanModal() {
+        document.getElementById('banModal').classList.remove('active');
+        selectedBusiness = null;
+    }
+
+    async function changeBusinessStatus() {
+        if (!selectedBusiness) return;
+
+        const newStatus = document.getElementById('statusSelect').value;
+        if (!newStatus) {
+            showToast('Please select a status', 'warning');
+            return;
+        }
+
+        try {
+            const url = basePath + `/v1/admin/businesses/${selectedBusiness.id}/status`;
+            const response = await fetch(url, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+                },
+                body: JSON.stringify({ status: newStatus })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            // Update local data
+            const index = allBusinesses.findIndex(b => b.id === selectedBusiness.id);
+            if (index !== -1) {
+                allBusinesses[index].status = newStatus;
+            }
+
+            closeStatusModal();
+            displayBusinesses();
+            showToast('Business status updated successfully', 'success');
+        } catch (err) {
+            console.error('Failed to update business status:', err);
+            showToast('Failed to update status: ' + err.message, 'error');
+        }
+    }
+
+    async function banBusiness() {
+        if (!selectedBusiness) return;
+
+        try {
+            const url = basePath + `/v1/admin/businesses/${selectedBusiness.id}/ban`;
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            // Update local data
+            const index = allBusinesses.findIndex(b => b.id === selectedBusiness.id);
+            if (index !== -1) {
+                allBusinesses[index].status = 'SUSPENDED';
+            }
+
+            closeBanModal();
+            displayBusinesses();
+            showToast('Business banned successfully', 'success');
+        } catch (err) {
+            console.error('Failed to ban business:', err);
+            showToast('Failed to ban business: ' + err.message, 'error');
+        }
+    }
+
+    // Initialize when DOM is ready
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOMContentLoaded fired');
+
+        // Set up search button
+        const searchBtn = document.getElementById('searchBtn');
+        if (searchBtn) {
+            searchBtn.addEventListener('click', () => {
+                searchQuery = document.getElementById('searchInput').value;
+                displayBusinesses();
+            });
+        }
+
+        // Set up search input enter key
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+            searchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    searchQuery = document.getElementById('searchInput').value;
+                    displayBusinesses();
+                }
+            });
+        }
+
+        // Set up filter buttons
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentFilter = btn.dataset.status;
+                displayBusinesses();
+            });
+        });
+
+        // Set up modal buttons
+        const confirmStatusBtn = document.getElementById('confirmStatusBtn');
+        if (confirmStatusBtn) {
+            confirmStatusBtn.addEventListener('click', changeBusinessStatus);
+        }
+
+        const cancelStatusBtn = document.getElementById('cancelStatusBtn');
+        if (cancelStatusBtn) {
+            cancelStatusBtn.addEventListener('click', closeStatusModal);
+        }
+
+        const confirmBanBtn = document.getElementById('confirmBanBtn');
+        if (confirmBanBtn) {
+            confirmBanBtn.addEventListener('click', banBusiness);
+        }
+
+        const cancelBanBtn = document.getElementById('cancelBanBtn');
+        if (cancelBanBtn) {
+            cancelBanBtn.addEventListener('click', closeBanModal);
+        }
+
+        // Close modals when clicking outside
+        const statusModal = document.getElementById('statusModal');
+        if (statusModal) {
+            statusModal.addEventListener('click', (e) => {
+                if (e.target.id === 'statusModal') closeStatusModal();
+            });
+        }
+
+        const banModal = document.getElementById('banModal');
+        if (banModal) {
+            banModal.addEventListener('click', (e) => {
+                if (e.target.id === 'banModal') closeBanModal();
+            });
+        }
+
+        // Load businesses
+        console.log('Loading businesses...');
+        loadBusinesses();
+    });
+</script>
+
+</body>
+</html>
+

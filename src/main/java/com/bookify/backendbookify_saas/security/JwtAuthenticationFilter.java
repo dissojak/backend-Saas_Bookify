@@ -55,6 +55,38 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // Make business search public
             "/v1/businesses/search",
             "/api/v1/businesses/search",
+            // Make all business listings public (GET only)
+            "/v1/businesses",
+            "/v1/businesses/",
+            "/api/v1/businesses",
+            "/api/v1/businesses/",
+            // Make all category listings public
+            "/v1/categories",
+            "/v1/categories/",
+            "/api/v1/categories",
+            "/api/v1/categories/",
+            // Admin static pages
+            "/LoginAdmin.html",
+            "/Dashboard.html",
+            "/AdminBusinesses.html",
+            "/AdminCategories.html",
+            "/AdminUsers.html",
+            "/AdminModeration.html",
+            "/api/LoginAdmin.html",
+            "/api/Dashboard.html",
+            "/api/AdminBusinesses.html",
+            "/api/AdminCategories.html",
+            "/api/AdminUsers.html",
+            "/api/AdminModeration.html",
+            // Admin API endpoints (GET only - stats/lists are public)
+            "/v1/admin/stats",
+            "/api/v1/admin/stats",
+            "/v1/admin/businesses/all",
+            "/api/v1/admin/businesses/all",
+            "/v1/admin/ratings/flagged",
+            "/api/v1/admin/ratings/flagged",
+            "/v1/admin/users",
+            "/api/v1/admin/users",
             // Health check endpoints (public)
             "/v1/health/",
             "/api/v1/health/",

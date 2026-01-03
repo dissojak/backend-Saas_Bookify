@@ -55,6 +55,9 @@ public class SecurityConfig {
                                 "/api/v1/auth/reset-password",
                                 "/api/v1/businesses/{businessId}/staffMembers",
                                 "/api/v1/staff/{staffId}/services",
+                                // Admin endpoints (temporary public access for dashboard)
+                                "/v1/admin/**",
+                                "/api/v1/admin/**",
                                 // Health check endpoints (public)
                                 "/v1/health/**",
                                 "/api/v1/health/**",
@@ -82,8 +85,22 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/staff/*/availabilities", "/v1/staff/*/availabilities", "/api/v1/staff/{staffId}/availabilities", "/v1/staff/{staffId}/availabilities").permitAll()
                         // Explicit GET permit for business services listing (public endpoint)
                         .requestMatchers(HttpMethod.GET, "/api/v1/businesses/*/services", "/v1/businesses/*/services").permitAll()
-                        // Make the admin login page public
-                        .requestMatchers(HttpMethod.GET, "/LoginAdmin.html").permitAll()
+                        // Make the admin login page and dashboard public
+                        .requestMatchers(HttpMethod.GET,
+                                "/LoginAdmin.html",
+                                "/Dashboard.html",
+                                "/AdminBusinesses.html",
+                                "/AdminCategories.html",
+                                "/AdminUsers.html",
+                                "/AdminModeration.html",
+                                // Also allow with /api prefix
+                                "/api/LoginAdmin.html",
+                                "/api/Dashboard.html",
+                                "/api/AdminBusinesses.html",
+                                "/api/AdminCategories.html",
+                                "/api/AdminUsers.html",
+                                "/api/AdminModeration.html"
+                        ).permitAll()
                         // Make common static resources public (CSS/JS/images/etc.)
                         .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
                         .requestMatchers(

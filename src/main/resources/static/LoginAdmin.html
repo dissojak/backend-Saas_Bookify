@@ -113,7 +113,24 @@
             }
 
             const data = await res.json();
-            localStorage.setItem("accessToken", data.token);
+            console.log('Login response:', data);
+            // Store token and user info for authenticated requests
+            if (data.token) {
+                localStorage.setItem("accessToken", data.token);
+                console.log('Token stored');
+            }
+            if (data.userId) {
+                localStorage.setItem("adminUserId", String(data.userId));
+                console.log('User ID stored:', data.userId);
+            }
+            if (data.email) localStorage.setItem("adminEmail", data.email);
+            if (data.name) localStorage.setItem("adminName", data.name);
+            if (data.role) localStorage.setItem("adminRole", data.role);
+
+            // Verify token was stored
+            const storedToken = localStorage.getItem("accessToken");
+            console.log('Verified stored token:', storedToken ? storedToken.substring(0, 30) + '...' : 'NONE');
+
             // redirect to dashboard static page, respect basePath
             window.location.href = basePath + "/Dashboard.html";
         } catch (err) {

@@ -3,97 +3,482 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Dashboard</title>
+    <title>Admin Dashboard - Bookify</title>
     <style>
-        body {
+        * {
             margin: 0;
-            font-family: Inter, sans-serif;
-            background-color: #0f0f0f;
-            color: #fff;
+            padding: 0;
+            box-sizing: border-box;
         }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
         .header {
-            background: #1f1f1f;
-            padding: 20px 40px;
+            background: linear-gradient(135deg, #0f3460 0%, #16213e 100%);
+            padding: 24px 32px;
+            border-radius: 16px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.5);
         }
-        .header h1 {
-            margin: 0;
-            font-size: 24px;
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 28px;
+            font-weight: 700;
         }
+
+        .header-title::before {
+            content: "📊";
+            font-size: 32px;
+        }
+
         .logout-btn {
-            padding: 10px 18px;
+            padding: 12px 24px;
             border: none;
-            border-radius: 8px;
-            background: #4f46e5;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #e94560 0%, #d62a4a 100%);
             color: #fff;
             font-size: 14px;
+            font-weight: 600;
             cursor: pointer;
-            transition: 0.2s;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(233, 69, 96, 0.3);
         }
+
         .logout-btn:hover {
-            background: #4338ca;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(233, 69, 96, 0.4);
         }
-        .container {
-            padding: 40px;
+
+        .dashboard-grid {
+            display: grid;
+            gap: 24px;
+            margin-bottom: 30px;
         }
-        .card {
-            background: #1a1a1a;
-            padding: 24px;
+
+        .section {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 16px;
-            margin-bottom: 20px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.4);
+            padding: 28px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
         }
-        .card h2 {
-            margin-top: 0;
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #4ecca3;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, rgba(78, 204, 163, 0.1) 0%, rgba(78, 204, 163, 0.05) 100%);
+            border: 1px solid rgba(78, 204, 163, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(78, 204, 163, 0.2);
+            border-color: rgba(78, 204, 163, 0.4);
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #4ecca3;
+        }
+
+        .stat-badge {
+            display: inline-block;
+            background: rgba(233, 69, 96, 0.2);
+            color: #ff6b6b;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .action-list {
+            list-style: none;
+        }
+
+        .action-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .action-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateX(4px);
+        }
+
+        .action-item::before {
+            content: "⚠️";
             font-size: 20px;
         }
-        .card p {
+
+        .action-item.empty::before {
+            content: "✅";
+        }
+
+        .actions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+        }
+
+        .action-btn {
+            background: linear-gradient(135deg, #533483 0%, #3d2463 100%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 18px;
+            color: #fff;
             font-size: 14px;
-            color: #ccc;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            text-decoration: none;
+            display: block;
+            box-shadow: 0 4px 15px rgba(83, 52, 131, 0.3);
+        }
+
+        .action-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(83, 52, 131, 0.5);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .error {
+            background: rgba(233, 69, 96, 0.2);
+            border: 1px solid rgba(233, 69, 96, 0.4);
+            color: #ff6b6b;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 20px;
         }
     </style>
 </head>
 <body>
+<script>
+// ============ INLINE TOAST NOTIFICATION SYSTEM ============
+(function() {
+    const style = document.createElement('style');
+    style.textContent = `
+        #toastContainer {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 400px;
+        }
+        @keyframes toastSlideIn {
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes toastSlideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(400px); opacity: 0; }
+        }
+    `;
+    document.head.appendChild(style);
 
-<div class="header">
-    <h1>Dashboard</h1>
-    <button class="logout-btn" id="logoutBtn">Logout</button>
-</div>
+    function getContainer() {
+        let container = document.getElementById('toastContainer');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'toastContainer';
+            document.body.appendChild(container);
+        }
+        return container;
+    }
+
+    window.showToast = function(message, type, duration) {
+        type = type || 'info';
+        duration = duration !== undefined ? duration : 4000;
+
+        const container = getContainer();
+        const toast = document.createElement('div');
+
+        const colors = {
+            success: { bg: '#10b981', border: '#059669', icon: '✓' },
+            error: { bg: '#ef4444', border: '#dc2626', icon: '✕' },
+            warning: { bg: '#f59e0b', border: '#d97706', icon: '⚠' },
+            info: { bg: '#3b82f6', border: '#2563eb', icon: 'ℹ' }
+        };
+        const c = colors[type] || colors.info;
+
+        toast.style.cssText = `
+            background: ${c.bg};
+            border: 1px solid ${c.border};
+            color: #fff;
+            padding: 16px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: toastSlideIn 0.3s ease;
+            cursor: pointer;
+        `;
+
+        toast.innerHTML = '<span style="font-size:18px;font-weight:bold;">' + c.icon + '</span><span>' + message + '</span>';
+        container.appendChild(toast);
+
+        const remove = function() {
+            toast.style.animation = 'toastSlideOut 0.3s ease';
+            setTimeout(function() { toast.remove(); }, 300);
+        };
+
+        toast.addEventListener('click', remove);
+        if (duration > 0) setTimeout(remove, duration);
+
+        return toast;
+    };
+
+    console.log('Toast system initialized');
+})();
+
+// ============ AUTHENTICATION CHECK ============
+const accessToken = localStorage.getItem('accessToken');
+if (!accessToken) {
+    console.warn('No access token found, redirecting to login');
+    window.location.href = 'LoginAdmin.html';
+}
+</script>
 
 <div class="container">
-    <div class="card">
-        <h2>Welcome!</h2>
-        <p>This is your dashboard. Your content goes here.</p>
+    <div class="header">
+        <div class="header-title">ADMIN DASHBOARD</div>
+        <button class="logout-btn" id="logoutBtn">Logout</button>
     </div>
-    <div class="card">
-        <h2>Stats</h2>
-        <p>Some statistics or widgets can be placed here.</p>
-    </div>
-    <div class="card">
-        <h2>Recent Activity</h2>
-        <p>Show recent user activity or notifications here.</p>
+
+    <div id="errorContainer"></div>
+    <div id="loadingContainer" class="loading">Loading dashboard data...</div>
+
+    <div id="dashboardContent" style="display: none;">
+        <!-- Quick Stats Section -->
+        <div class="section">
+            <div class="section-title">📈 Quick Stats</div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Total Businesses</div>
+                    <div class="stat-value">
+                        <span id="totalBusinesses">0</span>
+                        <span class="stat-badge" id="pendingBadge">0 pending</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Users</div>
+                    <div class="stat-value" id="totalUsers">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Bookings Today</div>
+                    <div class="stat-value" id="todayBookings">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Issues Flagged</div>
+                    <div class="stat-value" id="flaggedIssues">0</div>
+                </div>
+            </div>
+        </div>
+
+        </br>
+        <!-- Actions Needed Section -->
+        <div class="section">
+            <div class="section-title">⚠️ Actions Needed</div>
+            <ul class="action-list" id="actionsList">
+                <li class="action-item">Loading...</li>
+            </ul>
+        </div>
+
+        </br>
+        <!-- Quick Actions Section -->
+        <div class="section">
+            <div class="section-title">🔧 Quick Actions</div>
+            <div class="actions-grid">
+                <a href="AdminBusinesses.html" class="action-btn">
+                    View All Businesses
+                </a>
+                <a href="AdminCategories.html" class="action-btn">
+                    Manage Categories
+                </a>
+                <a href="AdminUsers.html" class="action-btn">
+                    View All Users
+                </a>
+                <a href="AdminModeration.html" class="action-btn">
+                    Moderation Queue
+                </a>
+            </div>
+        </div>
     </div>
 </div>
 
 <script>
-    const logoutBtn = document.getElementById("logoutBtn");
+    // Robust basePath: take the first non-empty segment if it's not a filename (no dot)
+    const pathname = window.location.pathname || '/';
+    const segments = pathname.split('/').filter(s => s.length > 0);
+    let basePath = '';
+    if (segments.length > 0) {
+        const first = segments[0];
+        // if the first segment contains a dot (file extension) or looks like an HTML file, treat as no prefix
+        if (!first.includes('.') && !first.toLowerCase().endsWith('.html')) {
+            basePath = '/' + first;
+        }
+    }
 
+    // Fetch and display dashboard stats
+    async function loadDashboardStats() {
+        const loadingContainer = document.getElementById('loadingContainer');
+        const errorContainer = document.getElementById('errorContainer');
+        const dashboardContent = document.getElementById('dashboardContent');
+
+        try {
+            const url = basePath + "/v1/admin/stats";
+            const response = await fetch(url);
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const stats = await response.json();
+
+            // Update stats
+            document.getElementById('totalBusinesses').textContent = stats.totalBusinesses || 0;
+            document.getElementById('pendingBadge').textContent = `${stats.pendingBusinesses || 0} pending`;
+            document.getElementById('totalUsers').textContent = stats.totalUsers || 0;
+            document.getElementById('todayBookings').textContent = stats.todayBookings || 0;
+            document.getElementById('flaggedIssues').textContent = stats.flaggedRatings || 0;
+
+            // Update actions needed list
+            const actionsList = document.getElementById('actionsList');
+            actionsList.innerHTML = '';
+
+            const pendingBusinesses = stats.pendingBusinesses || 0;
+            const flaggedRatings = stats.flaggedRatings || 0;
+
+            if (pendingBusinesses === 0 && flaggedRatings === 0) {
+                const emptyItem = document.createElement('li');
+                emptyItem.className = 'action-item empty';
+                emptyItem.textContent = 'No pending actions - all clear!';
+                actionsList.appendChild(emptyItem);
+            } else {
+                if (pendingBusinesses > 0) {
+                    const item = document.createElement('li');
+                    item.className = 'action-item';
+                    item.textContent = `${pendingBusinesses} business${pendingBusinesses > 1 ? 'es' : ''} awaiting approval`;
+                    actionsList.appendChild(item);
+                }
+
+                if (flaggedRatings > 0) {
+                    const item = document.createElement('li');
+                    item.className = 'action-item';
+                    item.textContent = `${flaggedRatings} flagged review${flaggedRatings > 1 ? 's' : ''} to moderate`;
+                    actionsList.appendChild(item);
+                }
+            }
+
+            // Hide loading, show content
+            loadingContainer.style.display = 'none';
+            dashboardContent.style.display = 'block';
+
+        } catch (err) {
+            console.error('Failed to load dashboard stats:', err);
+            loadingContainer.style.display = 'none';
+            errorContainer.innerHTML = `
+                <div class="error">
+                    ⚠️ Failed to load dashboard statistics: ${err.message}
+                    <br><small>Please check if the backend server is running.</small>
+                </div>
+            `;
+        }
+    }
+
+    // Logout functionality
+    const logoutBtn = document.getElementById("logoutBtn");
     logoutBtn.addEventListener("click", async () => {
-        const res = await fetch("/v1/auth/logout", {
-            method: "POST",
-            headers: {
-                "Authorization": `Bearer ${localStorage.getItem("accessToken")}`
-            },
-            credentials: "include"
-        });
-        if(res.ok){
+        const url = basePath + "/v1/auth/logout";
+        try {
+            const res = await fetch(url, {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${localStorage.getItem("accessToken")}`
+                },
+                credentials: "include"
+            });
+            if(res.ok){
+                localStorage.removeItem("accessToken");
+                window.location.href = basePath + "/LoginAdmin.html";
+            }
+        } catch (err) {
+            console.error('Logout failed', err);
+            // Still remove token and redirect on error
             localStorage.removeItem("accessToken");
-            window.location.href = "/login";
+            window.location.href = basePath + "/LoginAdmin.html";
         }
     });
+
+    // Load stats when page loads
+    document.addEventListener('DOMContentLoaded', loadDashboardStats);
 </script>
 
 </body>

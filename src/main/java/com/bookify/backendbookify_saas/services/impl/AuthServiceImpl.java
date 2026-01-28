@@ -215,6 +215,8 @@ public class AuthServiceImpl implements AuthService {
             boolean hasBusiness = false;
             Long businessId = null;
             String businessName = null;
+            boolean isAlsoStaff = false;
+            Long staffId = null;
 
             Optional<Business> maybeBusiness = businessRepository.findByOwnerId(user.getId());
             if (maybeBusiness.isPresent()) {
@@ -224,10 +226,20 @@ public class AuthServiceImpl implements AuthService {
                 businessName = b.getName();
             }
 
+            // Check if this BO also has a staff record in their business
+            Optional<Staff> maybeStaff = staffRepository.findByIdWithBusiness(user.getId());
+            if (maybeStaff.isPresent()) {
+                Staff staff = maybeStaff.get();
+                isAlsoStaff = true;
+                staffId = staff.getId();
+            }
+
             // attach owner-specific fields (will be serialized only for owners)
             builder.hasBusiness(hasBusiness)
                     .businessId(businessId)
-                    .businessName(businessName);
+                    .businessName(businessName)
+                    .isAlsoStaff(isAlsoStaff)
+                    .staffId(staffId);
         }
 
         // 6. If staff — include their business info in response
@@ -425,5 +437,44 @@ public class AuthServiceImpl implements AuthService {
                 .message("Password has been reset successfully. You can now login with your new password")
                 .email(user.getEmail())
                 .build();
+    }
+
+    /**
+     * Switch context between BUSINESS_OWNER and STAFF modes
+     * Only allowed for BO who also has a staff record
+     */
+    @Override
+    public java.util.Map<String, Object> switchContext(String userId, String activeMode) {
+        Long id = Long.parseLong(userId);
+
+        var user = userRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        // Only BUSINESS_OWNER can switch context
+        if (user.getRole() != RoleEnum.BUSINESS_OWNER) {
+            throw new IllegalArgumentException("Only business owners can switch context");
+        }
+
+        // Check if user has a staff record
+        var staffRecord = staffRepository.findByIdWithBusiness(id);
+        if (staffRecord.isEmpty()) {
+            throw new IllegalArgumentException("You do not have a staff record. Cannot switch to staff mode.");
+        }
+
+        // Validate activeMode value
+        if (!activeMode.equals("owner") && !activeMode.equals("staff")) {
+            throw new IllegalArgumentException("activeMode must be 'owner' or 'staff'");
+        }
+
+        logger.info("User {} switched context to {}", id, activeMode);
+
+        // For now, we return the mode to be stored in localStorage on frontend
+        // In a more advanced setup, this could include a new token with an effectiveRole claim
+        return java.util.Map.of(
+                "message", "Context switched successfully",
+                "userId", id,
+                "activeMode", activeMode,
+                "isAlsoStaff", true
+        );
     }
 }

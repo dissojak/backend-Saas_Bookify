@@ -209,4 +209,28 @@ public class AuthController {
         PasswordResetResponse response = authService.resetPassword(request);
         return ResponseEntity.ok(response);
     }
+
+    /**
+     * Switch context between BUSINESS_OWNER and STAFF modes
+     * Used when a BO who also works as staff wants to switch operational modes
+     */
+    @PostMapping("/switch-context")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "Switch between Business Owner and Staff modes", description = "For users who are both owner and staff")
+    public ResponseEntity<Map<String, Object>> switchContext(
+            org.springframework.security.core.Authentication authentication,
+            @Valid @RequestBody SwitchContextRequest request) {
+
+        if (authentication == null) {
+            authentication = SecurityContextHolder.getContext().getAuthentication();
+        }
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        String userId = authentication.getName();
+        Map<String, Object> response = authService.switchContext(userId, request.getActiveMode());
+        return ResponseEntity.ok(response);
+    }
 }

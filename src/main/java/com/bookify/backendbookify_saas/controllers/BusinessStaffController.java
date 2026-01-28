@@ -12,6 +12,7 @@ import com.bookify.backendbookify_saas.repositories.ServiceRepository;
 import com.bookify.backendbookify_saas.repositories.StaffRepository;
 import com.bookify.backendbookify_saas.repositories.UserRepository;
 import com.bookify.backendbookify_saas.services.StaffService;
+import com.bookify.backendbookify_saas.services.StaffAvailabilityGeneratorService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -44,6 +45,7 @@ public class BusinessStaffController {
     private final ServiceRepository serviceRepository;
     private final StaffRepository staffRepository;
     private final StaffService staffService;
+    private final StaffAvailabilityGeneratorService availabilityGeneratorService;
 
     @PersistenceContext
     private EntityManager em;
@@ -218,5 +220,177 @@ public class BusinessStaffController {
         userRepository.save(user);
 
         return ResponseEntity.noContent().build();
+    }
+
+    // Business Owner registers themselves as staff in their own business with optional work hours
+    @PostMapping("/self")
+    @PreAuthorize("hasRole('BUSINESS_OWNER')")
+    @Transactional
+    @Operation(summary = "Business owner adds themselves as staff with optional work hours")
+    public ResponseEntity<?> addSelfAsStaff(
+            Authentication authentication,
+            @PathVariable Long businessId,
+            @RequestBody(required = false) java.util.Map<String, String> body
+    ) {
+        Long actorId = Long.parseLong(authentication.getName());
+
+        // Parse optional work hours from request body
+        String startTimeStr = body != null ? body.get("startTime") : null;
+        String endTimeStr = body != null ? body.get("endTime") : null;
+        
+        LocalTime startTime = null;
+        LocalTime endTime = null;
+        
+        if (startTimeStr != null && !startTimeStr.isBlank() && endTimeStr != null && !endTimeStr.isBlank()) {
+            try {
+                DateTimeFormatter fmt = DateTimeFormatter.ISO_LOCAL_TIME;
+                startTime = LocalTime.parse(startTimeStr, fmt);
+                endTime = LocalTime.parse(endTimeStr, fmt);
+                
+                if (!startTime.isBefore(endTime)) {
+                    throw new IllegalArgumentException("startTime must be before endTime");
+                }
+            } catch (DateTimeParseException ex) {
+                throw new IllegalArgumentException("Time must be in HH:mm or HH:mm:ss format");
+            }
+        }
+
+        Business business = businessRepository.findById(businessId)
+                .orElseThrow(() -> new IllegalArgumentException("Business not found"));
+
+        // Verify this BO owns the business
+        if (business.getOwner() == null || !business.getOwner().getId().equals(actorId)) {
+            throw new UnauthorizedAccessException("Only the business owner can perform this action");
+        }
+
+        // Check if already staff
+        Optional<Long> maybeBusinessId = staffRepository.findBusinessIdById(actorId);
+        if (maybeBusinessId.isPresent()) {
+            Long existingBusinessId = maybeBusinessId.get();
+            if (existingBusinessId.equals(businessId)) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body(java.util.Map.of("message", "You are already working as staff in this business"));
+            } else {
+                throw new UserAlreadyStaffException("You are already staff for another business");
+            }
+        }
+
+        // Create staff row and optionally generate availabilities
+        try {
+            if (startTime != null && endTime != null) {
+                // Insert staff row with work hours
+                String startStr = startTime.toString();
+                String endStr = endTime.toString();
+                staffRepository.insertStaffRowWithWorkHours(actorId, businessId, startStr, endStr);
+                
+                // Auto-generate availabilities for next month
+                try {
+                    int generated = availabilityGeneratorService.generateForSingleStaff(actorId, startTime, endTime);
+                    log.info("Auto-generated {} availabilities for BO-as-staff {}", generated, actorId);
+                } catch (Exception genEx) {
+                    log.error("Failed to auto-generate availabilities for BO {}: {}", actorId, genEx.getMessage());
+                    // Don't fail the staff creation if availability generation fails
+                }
+            } else {
+                // Insert without work hours - will need to set later
+                staffRepository.insertStaffRow(actorId, businessId);
+            }
+
+            log.info("Business owner {} added themselves as staff in business {}", actorId, businessId);
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(java.util.Map.of(
+                    "message", "You are now working as staff",
+                    "staffId", actorId,
+                    "workHoursSet", startTime != null,
+                    "needsServiceAssignment", true
+            ));
+        } catch (Exception ex) {
+            log.error("Failed to add BO as staff: {}", ex.getMessage());
+            // Check if it was a duplicate insert that slipped through
+            Optional<Long> check = staffRepository.findBusinessIdById(actorId);
+            if (check.isPresent()) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body(java.util.Map.of("message", "You are already working as staff in this business"));
+            }
+            throw ex;
+        }
+    }
+
+    // Business Owner removes themselves from staff in their business
+    @DeleteMapping("/self")
+    @PreAuthorize("hasRole('BUSINESS_OWNER')")
+    @Transactional
+    @Operation(summary = "Business owner removes themselves from staff")
+    public ResponseEntity<?> removeSelfAsStaff(
+            Authentication authentication,
+            @PathVariable Long businessId
+    ) {
+        Long actorId = Long.parseLong(authentication.getName());
+
+        Business business = businessRepository.findById(businessId)
+                .orElseThrow(() -> new IllegalArgumentException("Business not found"));
+
+        // Verify this BO owns the business
+        if (business.getOwner() == null || !business.getOwner().getId().equals(actorId)) {
+            throw new UnauthorizedAccessException("Only the business owner can perform this action");
+        }
+
+        // Verify they are actually staff
+        Optional<Integer> staffBusinessIntOpt = staffRepository.findBusinessIdIntById(actorId);
+        if (staffBusinessIntOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(java.util.Map.of("message", "You are not currently working as staff"));
+        }
+
+        long foundBusinessId = staffBusinessIntOpt.get().longValue();
+        if (foundBusinessId != businessId.longValue()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(java.util.Map.of("message", "Staff record found for a different business"));
+        }
+
+        try {
+            // Remove from all services
+            List<Service> services = serviceRepository.findByBusinessIdAndActiveTrue(businessId);
+            for (Service svc : services) {
+                try {
+                    em.createNativeQuery("DELETE FROM service_staff WHERE service_id = :serviceId AND staff_id = :staffId")
+                            .setParameter("serviceId", svc.getId())
+                            .setParameter("staffId", actorId)
+                            .executeUpdate();
+                } catch (Exception ex) {
+                    log.warn("Failed to delete join row for serviceId={} staffId={}: {}", svc.getId(), actorId, ex.toString());
+                }
+            }
+
+            // Delete availabilities
+            try {
+                em.createNativeQuery("DELETE FROM staff_availabilities WHERE staff_id = :staffId")
+                        .setParameter("staffId", actorId)
+                        .executeUpdate();
+            } catch (Exception ex) {
+                log.warn("Failed to delete availabilities for staffId={}: {}", actorId, ex.getMessage());
+            }
+
+            // Set staff_id to NULL in bookings (keep history)
+            try {
+                em.createNativeQuery("UPDATE service_bookings SET staff_id = NULL WHERE staff_id = :staffId")
+                        .setParameter("staffId", actorId)
+                        .executeUpdate();
+            } catch (Exception ex) {
+                log.warn("Failed to unlink bookings from staffId={}: {}", actorId, ex.getMessage());
+            }
+
+            // Delete staff row (but user role stays BUSINESS_OWNER)
+            em.createNativeQuery("DELETE FROM staff WHERE id = ?")
+                    .setParameter(1, actorId)
+                    .executeUpdate();
+
+            log.info("Business owner {} removed themselves from staff", actorId);
+
+            return ResponseEntity.ok(java.util.Map.of("message", "You have stopped working as staff"));
+        } catch (Exception ex) {
+            log.error("Failed to remove BO from staff: {}", ex.getMessage());
+            throw ex;
+        }
     }
 }

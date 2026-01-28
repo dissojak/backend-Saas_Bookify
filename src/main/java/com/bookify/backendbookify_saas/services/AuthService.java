@@ -1,6 +1,7 @@
 package com.bookify.backendbookify_saas.services;
 
 import com.bookify.backendbookify_saas.models.dtos.*;
+import java.util.Map;
 
 public interface AuthService {
     AuthResponse signup(SignupRequest request);
@@ -12,4 +13,5 @@ public interface AuthService {
     String generateRefreshTokenForUser(Long userId);
     PasswordResetResponse forgotPassword(ForgotPasswordRequest request);
     PasswordResetResponse resetPassword(ResetPasswordRequest request);
+    Map<String, Object> switchContext(String userId, String activeMode);
 }

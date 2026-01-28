@@ -33,5 +33,9 @@ public class AuthResponse {
     private Boolean hasBusiness;  // Use wrapper types so null means "not present" and Jackson will omit fields for non-owners
     private Long businessId;
     private String businessName;
+
+    // New fields for BO acting as staff in their own business
+    private Boolean isAlsoStaff;  // Whether this BO also has a staff record in their business
+    private Long staffId;  // The staff ID for this BO (if isAlsoStaff = true)
 }
 

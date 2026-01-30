@@ -29,15 +29,5 @@ public class ServiceResponse {
     private List<StaffInfo> staffProviders;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    
-    @Data
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class StaffInfo {
-        private Long id;
-        private String name;
-        private String avatarUrl;
-    }
 }
 

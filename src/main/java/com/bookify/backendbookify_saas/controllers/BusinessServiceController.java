@@ -4,6 +4,7 @@ import com.bookify.backendbookify_saas.exceptions.UnauthorizedAccessException;
 import com.bookify.backendbookify_saas.models.dtos.ServiceCreateRequest;
 import com.bookify.backendbookify_saas.models.dtos.ServiceResponse;
 import com.bookify.backendbookify_saas.models.dtos.ServiceUpdateRequest;
+import com.bookify.backendbookify_saas.models.dtos.StaffInfo;
 import com.bookify.backendbookify_saas.models.entities.Business;
 import com.bookify.backendbookify_saas.models.entities.Service;
 import com.bookify.backendbookify_saas.models.entities.User;
@@ -40,10 +41,11 @@ public class BusinessServiceController {
     // Helper: map entity -> DTO
     private ServiceResponse toDto(Service s) {
         List<Long> staffIds = s.getStaff() == null ? List.of() : s.getStaff().stream().map(User::getId).toList();
-        List<ServiceResponse.StaffInfo> staffProviders = s.getStaff() == null ? List.of() : s.getStaff().stream()
-                .map(staff -> ServiceResponse.StaffInfo.builder()
+        List<StaffInfo> staffProviders = s.getStaff() == null ? List.of() : s.getStaff().stream()
+                .map(staff -> StaffInfo.builder()
                         .id(staff.getId())
                         .name(staff.getName())
+                        .email(staff.getEmail())
                         .avatarUrl(staff.getAvatarUrl())
                         .build())
                 .toList();

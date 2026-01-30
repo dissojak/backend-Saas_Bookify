@@ -3,6 +3,7 @@ package com.bookify.backendbookify_saas.models.entities;
 import com.bookify.backendbookify_saas.models.enums.ResourceAvailabilityStatusEnum;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -21,6 +22,7 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class ResourceAvailability {
 
     @Id

@@ -86,4 +86,23 @@ public class StaffSecurityService {
 
         return staffRepository.findBusinessIdById(userId).isPresent();
     }
+
+    /**
+     * Check if a user can manage a specific resource
+     * Returns true if:
+     * - User is the business owner of the resource's business
+     * - User is a staff member assigned to this resource via resource_staff table
+     */
+    public boolean canManageResource(Long userId, Long resourceId) {
+        // Check if user is in resource_staff table
+        var resourceStaffCount = staffRepository.countResourceStaffRow(resourceId, userId);
+        if (resourceStaffCount > 0) {
+            return true;
+        }
+
+        // Check if user is business owner (would need to verify resource's business owner)
+        // This is done at controller level for now
+        return false;
+    }
 }
+

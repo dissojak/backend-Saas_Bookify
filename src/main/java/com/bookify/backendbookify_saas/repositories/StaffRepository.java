@@ -109,4 +109,40 @@ public interface StaffRepository extends JpaRepository<Staff, Long> {
     // Get staff name by ID using native query (avoids loading full entity)
     @Query(value = "SELECT u.name FROM users u WHERE u.id = :staffId", nativeQuery = true)
     Optional<String> findStaffNameById(@Param("staffId") Long staffId);
+
+    // ============================================================================
+    // RESOURCE_STAFF JOIN TABLE METHODS
+    // ============================================================================
+
+    /**
+     * Find staff members assigned to a specific resource
+     */
+    @Query("SELECT s FROM Staff s JOIN s.assignedResources r WHERE r.id = :resourceId")
+    List<Staff> findByAssignedResourceId(@Param("resourceId") Long resourceId);
+
+    /**
+     * Check if staff is assigned to a resource
+     */
+    @Query(value = "SELECT COUNT(1) FROM resource_staff WHERE resource_id = :resourceId AND staff_id = :staffId", nativeQuery = true)
+    int countResourceStaffRow(@Param("resourceId") Long resourceId, @Param("staffId") Long staffId);
+
+    /**
+     * Insert row into resource_staff join table
+     */
+    @Modifying(clearAutomatically = true)
+    @Query(value = "INSERT INTO resource_staff (resource_id, staff_id) VALUES (:resourceId, :staffId)", nativeQuery = true)
+    int insertResourceStaffRow(@Param("resourceId") Long resourceId, @Param("staffId") Long staffId);
+
+    /**
+     * Delete row from resource_staff join table
+     */
+    @Modifying(clearAutomatically = true)
+    @Query(value = "DELETE FROM resource_staff WHERE resource_id = :resourceId AND staff_id = :staffId", nativeQuery = true)
+    int deleteResourceStaffRow(@Param("resourceId") Long resourceId, @Param("staffId") Long staffId);
+
+    /**
+     * Find resource IDs assigned to a staff member
+     */
+    @Query(value = "SELECT resource_id FROM resource_staff WHERE staff_id = :staffId", nativeQuery = true)
+    List<Long> findAssignedResourceIds(@Param("staffId") Long staffId);
 }
